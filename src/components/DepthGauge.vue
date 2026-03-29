@@ -53,7 +53,7 @@ const drillSpeedDisplay = computed(() => {
   border-radius: var(--radius-full);
   position: relative;
   overflow: hidden;
-  min-height: 100px;
+  min-height: 70px;
 }
 
 .gauge-fill {

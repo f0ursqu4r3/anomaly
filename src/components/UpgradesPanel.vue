@@ -1,5 +1,6 @@
 <template>
   <div class="upgrades-panel">
+    <PrestigeButton />
     <div class="upgrade-card" v-for="upgrade in game.upgrades" :key="upgrade.id">
       <div class="upgrade-info">
         <div class="upgrade-name">{{ upgrade.name }}</div>
@@ -24,6 +25,7 @@
 import { useGameStore } from '@/stores/gameStore'
 import type { Upgrade } from '@/stores/gameStore'
 import { fmtNumber } from '@/utils/format'
+import PrestigeButton from './PrestigeButton.vue'
 
 const game = useGameStore()
 
@@ -69,7 +71,7 @@ function canAfford(upgrade: Upgrade): boolean {
 
 .upgrade-btn {
   flex-shrink: 0;
-  padding: 6px 12px;
+  padding: 8px 16px;
   border-radius: var(--radius-sm);
   background: var(--bg-elevated);
   color: var(--text-muted);
@@ -77,7 +79,7 @@ function canAfford(upgrade: Upgrade): boolean {
   flex-direction: column;
   align-items: center;
   gap: 1px;
-  transition: background 0.2s, color 0.2s;
+  transition: background 0.15s, color 0.15s, transform 0.1s;
 }
 
 .upgrade-btn.affordable {
@@ -85,10 +87,16 @@ function canAfford(upgrade: Upgrade): boolean {
   color: #000;
 }
 
+.upgrade-btn.affordable:active {
+  background: var(--amber-dim);
+  transform: scale(0.93);
+}
+
 .upgrade-btn:disabled {
-  opacity: 0.6;
+  opacity: 0.5;
   cursor: not-allowed;
   transform: none !important;
+  filter: none !important;
 }
 
 .upgrade-cost {

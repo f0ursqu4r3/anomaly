@@ -33,7 +33,6 @@ const resources = computed(() => [
 .resource-bar {
   display: flex;
   gap: 6px;
-  padding: 0 16px;
 }
 
 .resource {

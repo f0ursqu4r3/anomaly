@@ -56,7 +56,7 @@ function doPrestige() {
 
 <style scoped>
 .prestige-section {
-  padding: 0 16px;
+  margin-bottom: 6px;
 }
 
 .prestige-card {
@@ -110,13 +110,19 @@ function doPrestige() {
 
 .prestige-btn {
   width: 100%;
-  padding: 10px;
+  padding: 12px;
   border-radius: var(--radius-md);
   background: var(--purple);
   color: #fff;
   font-size: 0.85rem;
   font-weight: 700;
   letter-spacing: 0.1em;
+  transition: background 0.15s, transform 0.1s;
+}
+
+.prestige-btn:active {
+  background: #8b6fe0;
+  transform: scale(0.96);
 }
 
 .confirm-warn {
@@ -133,21 +139,33 @@ function doPrestige() {
 
 .confirm-yes {
   flex: 1;
-  padding: 10px;
+  padding: 12px;
   border-radius: var(--radius-md);
   background: var(--red);
   color: #fff;
   font-weight: 700;
   font-size: 0.8rem;
+  transition: background 0.15s, transform 0.1s;
+}
+
+.confirm-yes:active {
+  background: #c4354e;
+  transform: scale(0.96);
 }
 
 .confirm-no {
   flex: 1;
-  padding: 10px;
+  padding: 12px;
   border-radius: var(--radius-md);
   background: var(--bg-elevated);
   color: var(--text-secondary);
   font-weight: 600;
   font-size: 0.8rem;
+  transition: background 0.15s, transform 0.1s;
+}
+
+.confirm-no:active {
+  background: var(--bg-surface);
+  transform: scale(0.96);
 }
 </style>

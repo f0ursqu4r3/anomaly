@@ -1,6 +1,7 @@
 <template>
   <div id="app">
     <AnomalyModal v-if="game.activeAnomaly" />
+    <AchievementToast />
     <GameView />
     <OfflineToast
       v-if="showOfflineToast"
@@ -10,31 +11,33 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 import { useGameLoop } from '@/composables/useGameLoop'
 import { useGameStore } from '@/stores/gameStore'
+import { useAchievementStore } from '@/stores/achievementStore'
 import { initAds } from '@/services/ads'
 import { scheduleOfflineCapNotification, cancelOfflineCapNotification } from '@/services/notifications'
 import { initStore } from '@/services/iap'
 import { fmtDepth } from '@/utils/format'
 import AnomalyModal from '@/components/AnomalyModal.vue'
+import AchievementToast from '@/components/AchievementToast.vue'
 import GameView from '@/components/GameView.vue'
 import OfflineToast from '@/components/OfflineToast.vue'
 
 const game = useGameStore()
+const achievements = useAchievementStore()
 
 const showOfflineToast = ref(false)
 const offlineDepthGained = ref('')
 
+// Check achievements every 2 seconds
+let achievementInterval: ReturnType<typeof setInterval> | null = null
+
 onMounted(async () => {
-  // Check offline time before game loop starts
   const elapsed = Date.now() - game.lastTickAt
   const depthBefore = game.depth
 
-  // Game loop handles load + processOfflineTime
-  // We just need to detect if there was significant offline time
   if (elapsed > 5000) {
-    // Wait a tick for processOfflineTime to run
     setTimeout(() => {
       const gained = game.depth - depthBefore
       if (gained > 0) {
@@ -44,15 +47,19 @@ onMounted(async () => {
     }, 100)
   }
 
-  // Initialize services
   initAds()
   initStore()
-
-  // Cancel any pending offline notification since we're back
   cancelOfflineCapNotification()
-
-  // Schedule new notification for when offline cap will be reached
   scheduleOfflineCapNotification(game.offlineEarningCapMs)
+
+  // Start achievement checker
+  achievementInterval = setInterval(() => {
+    achievements.checkAll()
+  }, 2000)
+})
+
+onUnmounted(() => {
+  if (achievementInterval) clearInterval(achievementInterval)
 })
 
 useGameLoop()

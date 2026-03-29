@@ -80,7 +80,7 @@ const hireOptions = computed(() => [
 
 .hire-btn {
   flex-shrink: 0;
-  padding: 6px 12px;
+  padding: 8px 16px;
   border-radius: var(--radius-sm);
   background: var(--bg-elevated);
   color: var(--text-muted);
@@ -88,7 +88,7 @@ const hireOptions = computed(() => [
   flex-direction: column;
   align-items: center;
   gap: 1px;
-  transition: background 0.2s, color 0.2s;
+  transition: background 0.15s, color 0.15s, transform 0.1s;
 }
 
 .hire-btn.affordable {
@@ -96,10 +96,16 @@ const hireOptions = computed(() => [
   color: #000;
 }
 
+.hire-btn.affordable:active {
+  background: var(--amber-dim);
+  transform: scale(0.93);
+}
+
 .hire-btn:disabled {
-  opacity: 0.6;
+  opacity: 0.5;
   cursor: not-allowed;
   transform: none !important;
+  filter: none !important;
 }
 
 .hire-cost {

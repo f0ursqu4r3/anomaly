@@ -91,13 +91,16 @@ p {
   color: #fff;
   border: none;
   border-radius: 8px;
-  padding: 0.75rem 2rem;
+  padding: 14px 2rem;
   font-size: 1rem;
   cursor: pointer;
   width: 100%;
+  touch-action: manipulation;
+  transition: background 0.15s, transform 0.1s;
 }
 
 .resolve-btn:active {
-  opacity: 0.85;
+  background: #c4354e;
+  transform: scale(0.96);
 }
 </style>

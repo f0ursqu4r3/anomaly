@@ -144,16 +144,22 @@ async function restore() {
 
 .store-btn {
   flex-shrink: 0;
-  padding: 8px 14px;
+  padding: 10px 16px;
   border-radius: var(--radius-sm);
   font-size: 0.75rem;
   font-weight: 700;
   letter-spacing: 0.05em;
+  transition: background 0.15s, transform 0.1s;
 }
 
 .ad-btn {
   background: var(--amber);
   color: #000;
+}
+
+.ad-btn:active {
+  background: var(--amber-dim);
+  transform: scale(0.93);
 }
 
 .ad-btn:disabled {
@@ -162,6 +168,7 @@ async function restore() {
   opacity: 0.8;
   cursor: default;
   transform: none !important;
+  filter: none !important;
 }
 
 .iap-btn {
@@ -170,9 +177,14 @@ async function restore() {
   border: 1px solid rgba(126, 207, 255, 0.2);
 }
 
+.iap-btn:active {
+  background: var(--bg-surface);
+  transform: scale(0.93);
+}
+
 .restore-btn {
   margin-top: 8px;
-  padding: 10px;
+  padding: 12px;
   background: transparent;
   color: var(--text-muted);
   font-size: 0.75rem;
