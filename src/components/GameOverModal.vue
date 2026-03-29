@@ -1,137 +1,120 @@
 <template>
-  <div v-if="game.gameOver" class="gameover-overlay">
-    <div class="gameover-card">
-      <div class="gameover-icon">&#x1F4A5;</div>
-      <h2>HULL DESTROYED</h2>
-      <p>Your station couldn't withstand the pressure. The hull collapsed at {{ fmtDepth(game.depth) }}.</p>
-
-      <div class="gameover-stats">
-        <div class="stat">
-          <span class="stat-label">Depth reached</span>
-          <span class="stat-value mono">{{ fmtDepth(game.depth) }}</span>
+  <Transition name="modal">
+    <div v-if="game.gameOver" class="modal-overlay">
+      <div class="modal-card">
+        <div class="modal-icon">
+          <SvgIcon name="skull" size="xl" />
         </div>
-        <div class="stat">
-          <span class="stat-label">Crew survived</span>
-          <span class="stat-value mono">{{ game.crew.length }}</span>
+        <h2 class="modal-title">Colony Lost</h2>
+        <p class="modal-reason">{{ game.gameOverReason }}</p>
+        <div class="modal-stats">
+          <div class="stat">
+            <span class="stat-label">MAX DEPTH</span>
+            <span class="stat-value mono">{{ fmtDepth(game.maxDepth) }}</span>
+          </div>
+          <div class="stat">
+            <span class="stat-label">SURVIVED</span>
+            <span class="stat-value mono">{{ fmtDuration(game.totalPlaytimeMs) }}</span>
+          </div>
+          <div class="stat">
+            <span class="stat-label">CREDITS</span>
+            <span class="stat-value mono">${{ Math.floor(game.totalCreditsEarned) }}</span>
+          </div>
         </div>
-        <div class="stat">
-          <span class="stat-label">Resources lost</span>
-          <span class="stat-value mono lost">50%</span>
-        </div>
+        <button class="restart-btn" @click="game.resetGame()">
+          Try Again
+        </button>
       </div>
-
-      <button class="restart-btn" @click="game.gameOverRestart()">
-        RESTART RUN
-      </button>
-      <p class="restart-hint">Your crew and artifacts are preserved. Half your starting ore is lost.</p>
     </div>
-  </div>
+  </Transition>
 </template>
 
 <script setup lang="ts">
 import { useGameStore } from '@/stores/gameStore'
-import { fmtDepth } from '@/utils/format'
+import { fmtDepth, fmtDuration } from '@/utils/format'
+import SvgIcon from './SvgIcon.vue'
 
 const game = useGameStore()
 </script>
 
 <style scoped>
-.gameover-overlay {
+.modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(10, 0, 0, 0.92);
+  z-index: 200;
+  background: rgba(0, 0, 0, 0.85);
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 1100;
-  padding: 16px;
+  padding: 24px;
 }
 
-.gameover-card {
-  background: linear-gradient(135deg, #1a0808, #1a1a2e);
-  border: 2px solid var(--red);
-  border-radius: 20px;
-  padding: 28px 24px;
-  max-width: 340px;
-  width: 100%;
+.modal-card {
+  background: var(--bg-card);
+  border-radius: var(--radius-lg);
+  padding: 32px 24px;
   text-align: center;
-  color: #fff;
-  box-shadow: 0 0 60px rgba(233, 69, 96, 0.3);
+  max-width: 320px;
+  width: 100%;
+  animation: slide-up 0.3s ease;
+  border: 1px solid rgba(233, 69, 96, 0.2);
 }
 
-.gameover-icon {
-  font-size: 3rem;
-  margin-bottom: 8px;
-}
-
-h2 {
-  font-size: 1.2rem;
-  letter-spacing: 0.15em;
+.modal-icon {
   color: var(--red);
   margin-bottom: 8px;
-  font-family: var(--font-mono);
 }
 
-p {
-  font-size: 0.8rem;
+.modal-title {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--red);
+  margin-bottom: 8px;
+}
+
+.modal-reason {
+  font-size: 14px;
   color: var(--text-secondary);
-  line-height: 1.5;
-  margin-bottom: 16px;
+  margin-bottom: 20px;
 }
 
-.gameover-stats {
+.modal-stats {
   display: flex;
-  flex-direction: column;
-  gap: 6px;
-  margin-bottom: 20px;
+  gap: 16px;
+  justify-content: center;
+  margin-bottom: 24px;
 }
 
 .stat {
   display: flex;
-  justify-content: space-between;
-  padding: 6px 12px;
-  background: rgba(255, 255, 255, 0.03);
-  border-radius: var(--radius-sm);
+  flex-direction: column;
+  gap: 2px;
 }
 
 .stat-label {
-  font-size: 0.75rem;
+  font-size: 9px;
+  font-family: var(--font-mono);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
   color: var(--text-muted);
 }
 
 .stat-value {
-  font-size: 0.75rem;
+  font-size: 16px;
   font-weight: 600;
   color: var(--text-primary);
-}
-
-.stat-value.lost {
-  color: var(--red);
 }
 
 .restart-btn {
   width: 100%;
   padding: 14px;
-  border-radius: var(--radius-md);
-  background: var(--red);
-  color: #fff;
-  font-size: 0.9rem;
+  font-size: 16px;
   font-weight: 700;
-  letter-spacing: 0.12em;
-  font-family: var(--font-mono);
-  touch-action: manipulation;
-  transition: background 0.15s, transform 0.1s;
+  background: var(--cyan);
+  color: var(--bg-deep);
+  border-radius: var(--radius-md);
 }
 
-.restart-btn:active {
-  background: #c4354e;
-  transform: scale(0.96);
-}
-
-.restart-hint {
-  font-size: 0.65rem;
-  color: var(--text-muted);
-  margin-top: 10px;
-  margin-bottom: 0;
-}
+.modal-enter-active { animation: slide-up 0.3s ease; }
+.modal-leave-active { animation: slide-up 0.3s ease reverse forwards; }
 </style>
