@@ -21,7 +21,7 @@
     </div>
 
     <!-- Label -->
-    <div class="drop-label">{{ drop.label }}</div>
+    <div class="drop-label">{{ drop.contents.length }} items · {{ drop.totalWeight }}kg</div>
   </div>
 </template>
 

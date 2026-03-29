@@ -45,6 +45,7 @@ export interface ShipmentOption {
   label: string
   description: string
   cost: number
+  weight: number // cargo weight units
   buildingType?: BuildingType
 }
 
@@ -57,17 +58,15 @@ export interface ConsoleMessage {
 
 export interface InTransitShipment {
   id: string
-  type: ShipmentType
-  label: string
-  buildingType?: BuildingType
+  contents: ShipmentOption[]
+  totalWeight: number
   arrivalAt: number // totalPlaytimeMs when it arrives
 }
 
 export interface SupplyDrop {
   id: string
-  type: ShipmentType
-  label: string
-  buildingType?: BuildingType
+  contents: ShipmentOption[] // all items in this care package
+  totalWeight: number
   x: number
   y: number
   state: 'landed' | 'unpacking' | 'done'
@@ -76,7 +75,7 @@ export interface SupplyDrop {
   landedAt: number
 }
 
-const UNPACK_DURATION_MS = 5000
+const UNPACK_MS_PER_KG = 150 // 150ms per kg with 1 colonist (e.g. 45kg = 6.75s)
 const LANDING_ZONE = { x: 45, y: 50 }
 const DONE_LINGER_MS = 1500
 
@@ -102,6 +101,8 @@ export interface ColonyState {
   messages: ConsoleMessage[]
   inTransitShipments: InTransitShipment[]
   supplyDrops: SupplyDrop[]
+  manifest: ShipmentOption[] // items queued for next shipment
+  shipmentCooldownUntil: number // totalPlaytimeMs when next shipment can launch
   ticksSinceLastReport: number
 
   gameOver: boolean
@@ -146,6 +147,9 @@ const CREDITS_PER_ICE_FOUND = 2.0
 const SHIPMENT_TRANSIT_MS = 10_000
 const EMERGENCY_TRANSIT_MS = 3_000
 const MAX_MESSAGES = 50
+const SHIPMENT_COOLDOWN_MS = 60_000
+const MANIFEST_MAX_SLOTS = 4
+const CARGO_CAPACITY = 100
 
 // Directive config
 const DIRECTIVE_RATIOS: Record<Directive, { driller: number; engineer: number }> = {
@@ -163,16 +167,18 @@ const DIRECTIVE_MODIFIERS: Record<Directive, { drillMult: number; hazardResist: 
 }
 
 export const SHIPMENT_OPTIONS: ShipmentOption[] = [
-  { type: 'supplyCrate', label: 'Supply Crate', description: '+15 metals, +5 ice', cost: 20 },
-  { type: 'equipment', label: 'Solar Panel', description: 'Prefab solar panel', cost: 35, buildingType: 'solar' },
-  { type: 'equipment', label: 'O2 Generator', description: 'Prefab O2 generator', cost: 40, buildingType: 'o2generator' },
-  { type: 'equipment', label: 'Drill Rig', description: 'Prefab drill rig', cost: 50, buildingType: 'drillrig' },
-  { type: 'equipment', label: 'Med Bay', description: 'Prefab medical bay', cost: 60, buildingType: 'medbay' },
-  { type: 'newColonist', label: 'New Colonist', description: 'Recruit crew member', cost: 75 },
-  { type: 'repairKit', label: 'Repair Kit', description: 'Fix one damaged building', cost: 15 },
-  { type: 'emergencyO2', label: 'Emergency O2', description: '+30 air (fast delivery)', cost: 25 },
-  { type: 'emergencyPower', label: 'Emergency Power', description: '+30 power (fast delivery)', cost: 25 },
+  { type: 'supplyCrate', label: 'Supply Crate', description: '+15 metals, +5 ice', cost: 20, weight: 15 },
+  { type: 'equipment', label: 'Solar Panel', description: 'Prefab solar panel', cost: 35, weight: 30, buildingType: 'solar' },
+  { type: 'equipment', label: 'O2 Generator', description: 'Prefab O2 generator', cost: 40, weight: 35, buildingType: 'o2generator' },
+  { type: 'equipment', label: 'Drill Rig', description: 'Prefab drill rig', cost: 50, weight: 40, buildingType: 'drillrig' },
+  { type: 'equipment', label: 'Med Bay', description: 'Prefab medical bay', cost: 60, weight: 45, buildingType: 'medbay' },
+  { type: 'newColonist', label: 'New Colonist', description: 'Recruit crew member', cost: 75, weight: 20 },
+  { type: 'repairKit', label: 'Repair Kit', description: 'Fix one damaged building', cost: 15, weight: 10 },
+  { type: 'emergencyO2', label: 'Emergency O2', description: '+30 air (fast delivery)', cost: 25, weight: 10 },
+  { type: 'emergencyPower', label: 'Emergency Power', description: '+30 power (fast delivery)', cost: 25, weight: 10 },
 ]
+
+export { MANIFEST_MAX_SLOTS, CARGO_CAPACITY, SHIPMENT_COOLDOWN_MS }
 
 export const BLUEPRINTS: BuildingBlueprint[] = [
   { type: 'o2generator', label: 'O2 Generator', description: 'Produces air (uses power)', costMetals: 20, costIce: 5 },
@@ -266,6 +272,8 @@ function freshState(): ColonyState {
     ],
     inTransitShipments: [],
     supplyDrops: [],
+    manifest: [],
+    shipmentCooldownUntil: 0,
     ticksSinceLastReport: 0,
     gameOver: false,
     gameOverReason: '',
@@ -330,6 +338,26 @@ export const useGameStore = defineStore('game', {
       const engBonus = 1 + engCount * ENGINEER_EFFICIENCY_BONUS
       const rate = (drillerCount * DRILL_SPEED_PER_DRILLER + rigCount * DRILL_SPEED_PER_RIG) * engBonus * mod
       return BASE_CREDITS_PER_TICK + rate * METALS_PER_DEPTH * CREDITS_PER_METAL_MINED
+    },
+
+    manifestWeight(s): number {
+      return s.manifest.reduce((sum, item) => sum + item.weight, 0)
+    },
+
+    manifestCost(s): number {
+      return s.manifest.reduce((sum, item) => sum + item.cost, 0)
+    },
+
+    manifestFull(s): boolean {
+      return s.manifest.length >= MANIFEST_MAX_SLOTS
+    },
+
+    shipmentOnCooldown(s): boolean {
+      return s.totalPlaytimeMs < s.shipmentCooldownUntil
+    },
+
+    shipmentCooldownRemaining(s): number {
+      return Math.max(0, s.shipmentCooldownUntil - s.totalPlaytimeMs)
     },
   },
 
@@ -536,19 +564,44 @@ export const useGameStore = defineStore('game', {
     },
 
     // ── Shipments ──
-    orderShipment(option: ShipmentOption) {
-      if (this.credits < option.cost) return
-      this.credits -= option.cost
-      const isEmergency = option.type === 'emergencyO2' || option.type === 'emergencyPower'
-      const transit = isEmergency ? EMERGENCY_TRANSIT_MS : SHIPMENT_TRANSIT_MS
+    addToManifest(option: ShipmentOption) {
+      if (this.manifest.length >= MANIFEST_MAX_SLOTS) return
+      if (this.manifestWeight + option.weight > CARGO_CAPACITY) return
+      if (this.credits < this.manifestCost + option.cost) return
+      this.manifest.push(option)
+    },
+
+    removeFromManifest(index: number) {
+      if (index >= 0 && index < this.manifest.length) {
+        this.manifest.splice(index, 1)
+      }
+    },
+
+    clearManifest() {
+      this.manifest = []
+    },
+
+    launchShipment() {
+      if (this.manifest.length === 0) return
+      if (this.shipmentOnCooldown) return
+      if (this.credits < this.manifestCost) return
+
+      this.credits -= this.manifestCost
+      const hasEmergency = this.manifest.some(o => o.type === 'emergencyO2' || o.type === 'emergencyPower')
+      const transit = hasEmergency ? EMERGENCY_TRANSIT_MS : SHIPMENT_TRANSIT_MS
+
       this.inTransitShipments.push({
         id: uid(),
-        type: option.type,
-        label: option.label,
-        buildingType: option.buildingType,
+        contents: [...this.manifest],
+        totalWeight: this.manifestWeight,
         arrivalAt: this.totalPlaytimeMs + transit,
       })
-      this.pushMessage(`Shipment ordered: ${option.label}. ETA ${transit / 1000}s.`, 'event')
+
+      const itemCount = this.manifest.length
+      const totalWeight = this.manifestWeight
+      this.pushMessage(`Care package launched: ${itemCount} item(s), ${totalWeight}kg. ETA ${transit / 1000}s.`, 'event')
+      this.manifest = []
+      this.shipmentCooldownUntil = this.totalPlaytimeMs + SHIPMENT_COOLDOWN_MS
     },
 
     processShipments() {
@@ -557,35 +610,39 @@ export const useGameStore = defineStore('game', {
 
       this.inTransitShipments = this.inTransitShipments.filter(s => this.totalPlaytimeMs < s.arrivalAt)
 
-      for (const s of arrived) {
-        // Emergency shipments apply instantly (airdrops)
-        if (s.type === 'emergencyO2') {
-          this.air = Math.min(this.airMax, this.air + 30)
-          this.pushMessage('Emergency O2 airdrop: +30 air.', 'event')
-          continue
-        }
-        if (s.type === 'emergencyPower') {
-          this.power = Math.min(this.powerMax, this.power + 30)
-          this.pushMessage('Emergency power airdrop: +30 power.', 'event')
-          continue
+      for (const pkg of arrived) {
+        // Separate emergency items (apply instantly) from crate items
+        const emergencyItems = pkg.contents.filter(o => o.type === 'emergencyO2' || o.type === 'emergencyPower')
+        const crateItems = pkg.contents.filter(o => o.type !== 'emergencyO2' && o.type !== 'emergencyPower')
+
+        for (const em of emergencyItems) {
+          if (em.type === 'emergencyO2') {
+            this.air = Math.min(this.airMax, this.air + 30)
+            this.pushMessage('Emergency O2 airdrop: +30 air.', 'event')
+          } else {
+            this.power = Math.min(this.powerMax, this.power + 30)
+            this.pushMessage('Emergency power airdrop: +30 power.', 'event')
+          }
         }
 
-        // All other shipments land as crates that need unpacking
-        const jitterX = (Math.random() - 0.5) * 8
-        const jitterY = (Math.random() - 0.5) * 6
-        this.supplyDrops.push({
-          id: uid(),
-          type: s.type,
-          label: s.label,
-          buildingType: s.buildingType,
-          x: LANDING_ZONE.x + jitterX,
-          y: LANDING_ZONE.y + jitterY,
-          state: 'landed',
-          unpackProgress: 0,
-          unpackDuration: UNPACK_DURATION_MS,
-          landedAt: this.totalPlaytimeMs,
-        })
-        this.pushMessage(`${s.label} has landed. Crew needed to unpack.`, 'event')
+        if (crateItems.length > 0) {
+          const crateWeight = crateItems.reduce((sum, o) => sum + o.weight, 0)
+          const jitterX = (Math.random() - 0.5) * 8
+          const jitterY = (Math.random() - 0.5) * 6
+          this.supplyDrops.push({
+            id: uid(),
+            contents: crateItems,
+            totalWeight: crateWeight,
+            x: LANDING_ZONE.x + jitterX,
+            y: LANDING_ZONE.y + jitterY,
+            state: 'landed',
+            unpackProgress: 0,
+            unpackDuration: crateWeight * UNPACK_MS_PER_KG,
+            landedAt: this.totalPlaytimeMs,
+          })
+          const itemNames = crateItems.map(o => o.label).join(', ')
+          this.pushMessage(`Care package landed (${crateWeight}kg): ${itemNames}. Crew needed.`, 'event')
+        }
       }
     },
 
@@ -601,40 +658,43 @@ export const useGameStore = defineStore('game', {
     },
 
     applySupplyDrop(drop: SupplyDrop) {
-      switch (drop.type) {
-        case 'supplyCrate':
-          this.metals += 15
-          this.ice += 5
-          this.pushMessage('Supply crate unpacked: +15 metals, +5 ice.', 'event')
-          break
-        case 'equipment':
-          if (drop.buildingType) {
-            const pos = getBuildingPosition(drop.buildingType, this.buildings)
-            this.buildings.push({ id: uid(), type: drop.buildingType, damaged: false, x: pos.x, y: pos.y })
-            const label = BLUEPRINTS.find(b => b.type === drop.buildingType)?.label || drop.buildingType
-            this.pushMessage(`${label} assembled and operational.`, 'event')
+      for (const item of drop.contents) {
+        switch (item.type) {
+          case 'supplyCrate':
+            this.metals += 15
+            this.ice += 5
+            this.pushMessage('Supply crate unpacked: +15 metals, +5 ice.', 'event')
+            break
+          case 'equipment':
+            if (item.buildingType) {
+              const pos = getBuildingPosition(item.buildingType, this.buildings)
+              this.buildings.push({ id: uid(), type: item.buildingType, damaged: false, x: pos.x, y: pos.y })
+              const label = BLUEPRINTS.find(b => b.type === item.buildingType)?.label || item.buildingType
+              this.pushMessage(`${label} assembled and operational.`, 'event')
+            }
+            break
+          case 'newColonist': {
+            const usedNames = new Set(this.colonists.map(c => c.name))
+            const available = COLONIST_NAMES.filter(n => !usedNames.has(n))
+            const name = available.length > 0 ? available[Math.floor(Math.random() * available.length)] : `Crew-${this.colonists.length + 1}`
+            this.colonists.push({ id: uid(), name, role: 'idle', health: 100 })
+            this.pushMessage(`${name} has joined the colony.`, 'event')
+            break
           }
-          break
-        case 'newColonist': {
-          const usedNames = new Set(this.colonists.map(c => c.name))
-          const available = COLONIST_NAMES.filter(n => !usedNames.has(n))
-          const name = available.length > 0 ? available[Math.floor(Math.random() * available.length)] : `Crew-${this.colonists.length + 1}`
-          this.colonists.push({ id: uid(), name, role: 'idle', health: 100 })
-          this.pushMessage(`${name} has joined the colony.`, 'event')
-          break
-        }
-        case 'repairKit': {
-          const damaged = this.buildings.find(b => b.damaged)
-          if (damaged) {
-            damaged.damaged = false
-            const label = BLUEPRINTS.find(b => b.type === damaged.type)?.label || damaged.type
-            this.pushMessage(`${label} repaired with kit.`, 'event')
-          } else {
-            this.pushMessage('Repair kit unpacked but nothing to fix.', 'info')
+          case 'repairKit': {
+            const damaged = this.buildings.find(b => b.damaged)
+            if (damaged) {
+              damaged.damaged = false
+              const label = BLUEPRINTS.find(b => b.type === damaged.type)?.label || damaged.type
+              this.pushMessage(`${label} repaired with kit.`, 'event')
+            } else {
+              this.pushMessage('Repair kit unpacked but nothing to fix.', 'info')
+            }
+            break
           }
-          break
         }
       }
+      this.pushMessage(`Care package fully unpacked (${drop.contents.length} items).`, 'event')
     },
 
     // ── Messages ──
@@ -738,6 +798,8 @@ export const useGameStore = defineStore('game', {
       if (!this.messages) this.messages = []
       if (!this.inTransitShipments) this.inTransitShipments = []
       if (!this.supplyDrops) this.supplyDrops = []
+      if (!this.manifest) this.manifest = []
+      if (this.shipmentCooldownUntil === undefined) this.shipmentCooldownUntil = 0
       if (this.ticksSinceLastReport === undefined) this.ticksSinceLastReport = 0
     },
   },
