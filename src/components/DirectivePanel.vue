@@ -1,0 +1,105 @@
+<template>
+  <div class="directive-panel">
+    <div class="section-label">ACTIVE DIRECTIVE</div>
+    <div class="directive-list">
+      <button
+        v-for="d in directives"
+        :key="d.value"
+        class="directive-btn"
+        :class="{ active: game.activeDirective === d.value }"
+        @click="game.setDirective(d.value)"
+      >
+        <div class="dir-header">
+          <SvgIcon :name="d.icon" size="md" />
+          <span class="dir-name">{{ d.label }}</span>
+        </div>
+        <span class="dir-desc">{{ d.description }}</span>
+        <span class="dir-ratio mono">{{ d.ratioText }}</span>
+      </button>
+    </div>
+  </div>
+</template>
+
+<script setup lang="ts">
+import { useGameStore } from '@/stores/gameStore'
+import type { Directive } from '@/stores/gameStore'
+import SvgIcon from './SvgIcon.vue'
+
+const game = useGameStore()
+
+const directives: { value: Directive; label: string; icon: string; description: string; ratioText: string }[] = [
+  { value: 'mining', label: 'Prioritize Mining', icon: 'mining', description: '1.3x drill speed, no hazard resistance', ratioText: '70% drill / 20% eng' },
+  { value: 'safety', label: 'Prioritize Safety', icon: 'safety', description: '40% hazard resist, 1.2x production', ratioText: '20% drill / 60% eng' },
+  { value: 'balanced', label: 'Balanced Ops', icon: 'balanced', description: 'Standard rates, 15% hazard resist', ratioText: '40% drill / 40% eng' },
+  { value: 'emergency', label: 'Emergency Protocol', icon: 'emergency', description: '1.5x production, minimal drilling', ratioText: '10% drill / 80% eng' },
+]
+</script>
+
+<style scoped>
+.directive-panel {
+  flex: 1;
+  overflow-y: auto;
+  padding: 8px 10px;
+}
+
+.section-label {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  color: var(--text-muted);
+  margin-bottom: 8px;
+}
+
+.directive-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.directive-btn {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 12px;
+  background: var(--bg-surface);
+  border-radius: var(--radius-md);
+  text-align: left;
+  width: 100%;
+  border: 1px solid transparent;
+  transition: all 0.15s;
+}
+
+.directive-btn.active {
+  border-color: var(--cyan);
+  background: rgba(126, 207, 255, 0.08);
+  box-shadow: 0 0 12px rgba(126, 207, 255, 0.15);
+}
+
+.dir-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text-secondary);
+}
+
+.directive-btn.active .dir-header {
+  color: var(--cyan);
+}
+
+.dir-name {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.dir-desc {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.dir-ratio {
+  font-size: 10px;
+  color: var(--text-secondary);
+}
+</style>
