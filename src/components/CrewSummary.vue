@@ -1,13 +1,13 @@
 <template>
   <div class="crew-summary" @click="$emit('open')">
-    <div class="crew-roles">
-      <span class="role-chip" v-for="r in roleCounts" :key="r.role">
-        <span class="role-icon">{{ r.icon }}</span>
-        <span class="role-count mono">{{ r.count }}</span>
+    <div class="crew-stations">
+      <span class="station-chip" v-for="s in stationDisplay" :key="s.station" :title="s.station">
+        <span class="station-icon">{{ s.icon }}</span>
+        <span class="station-count mono">{{ s.count }}</span>
       </span>
     </div>
     <div class="crew-meta mono">
-      Avg Lv.{{ avgLevel }}
+      {{ game.crew.length }} crew
     </div>
   </div>
 </template>
@@ -20,17 +20,13 @@ defineEmits<{ open: [] }>()
 
 const game = useGameStore()
 
-const roleCounts = computed(() => [
-  { role: 'driller', icon: '\u26CF', count: game.crew.filter(c => c.role === 'driller').length },
-  { role: 'refiner', icon: '\u2697', count: game.crew.filter(c => c.role === 'refiner').length },
-  { role: 'researcher', icon: '\uD83D\uDD2C', count: game.crew.filter(c => c.role === 'researcher').length },
-])
-
-const avgLevel = computed(() => {
-  if (game.crew.length === 0) return 0
-  const sum = game.crew.reduce((acc, c) => acc + c.level, 0)
-  return Math.round(sum / game.crew.length)
-})
+const stationDisplay = computed(() => [
+  { station: 'drill', icon: '\u26CF', count: game.stationCounts.drill },
+  { station: 'refinery', icon: '\u2697', count: game.stationCounts.refinery },
+  { station: 'lab', icon: '\uD83D\uDD2C', count: game.stationCounts.lab },
+  { station: 'scout', icon: '\uD83E\uDDED', count: game.stationCounts.scout },
+  { station: 'idle', icon: '\uD83D\uDCA4', count: game.stationCounts.idle },
+].filter(s => s.count > 0))
 </script>
 
 <style scoped>
@@ -38,8 +34,8 @@ const avgLevel = computed(() => {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 10px 16px;
-  min-height: 44px;
+  padding: 8px 16px;
+  min-height: 40px;
   margin: 0 16px;
   background: var(--bg-surface);
   border-radius: var(--radius-md);
@@ -53,30 +49,27 @@ const avgLevel = computed(() => {
   background: var(--bg-elevated);
 }
 
-.crew-roles {
+.crew-stations {
   display: flex;
-  gap: 12px;
+  gap: 10px;
 }
 
-.role-chip {
+.station-chip {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 3px;
 }
 
-.role-icon {
-  font-size: 1rem;
-}
+.station-icon { font-size: 0.85rem; }
 
-.role-count {
-  font-size: 0.8rem;
+.station-count {
+  font-size: 0.75rem;
   font-weight: 600;
   color: var(--text-primary);
 }
 
 .crew-meta {
-  font-size: 0.7rem;
-  color: var(--amber);
-  font-weight: 600;
+  font-size: 0.65rem;
+  color: var(--text-secondary);
 }
 </style>

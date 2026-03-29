@@ -29,7 +29,7 @@ const game = useGameStore()
 
 function crewCost(role: CrewRole): number {
   const count = game.crew.filter(c => c.role === role).length
-  return Math.floor(50 * Math.pow(2.5, count))
+  return Math.floor(50 * Math.pow(1.8, count))
 }
 
 const hireOptions = computed(() => [

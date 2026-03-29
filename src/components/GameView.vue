@@ -1,12 +1,18 @@
 <template>
   <div class="game-view">
-    <!-- Depth zone background -->
     <DepthBackground />
 
-    <!-- Top: depth + resources -->
+    <!-- Top: depth + resources + hull -->
     <div class="top-section">
       <DepthGauge />
+      <HullBar />
       <ResourceBar />
+    </div>
+
+    <!-- Active path banner -->
+    <div v-if="game.activePath" class="path-banner">
+      <span class="path-banner-icon">&#x1F6E4;</span>
+      <span class="path-banner-name">{{ game.activePath.name }}</span>
     </div>
 
     <!-- Center: tap button + effects -->
@@ -15,7 +21,6 @@
       <TapButton @tap="onTap" />
     </div>
 
-    <!-- Milestone flash -->
     <MilestoneFlash />
 
     <!-- Bottom: crew summary + tab bar -->
@@ -35,23 +40,24 @@
       </div>
     </div>
 
-    <!-- Bottom sheet overlay -->
-    <BottomSheet
-      v-model="sheetOpen"
-      :title="activeTabTitle"
-    >
+    <BottomSheet v-model="sheetOpen" :title="activeTabTitle">
       <CrewList v-if="activeTab === 'crew'" />
       <UpgradesPanel v-if="activeTab === 'upgrades'" />
       <HirePanel v-if="activeTab === 'hire'" />
       <StorePanel v-if="activeTab === 'store'" />
       <AchievementsPanel v-if="activeTab === 'achievements'" />
+      <ArtifactsPanel v-if="activeTab === 'artifacts'" />
     </BottomSheet>
+
+    <PathChoiceModal />
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, computed } from 'vue'
+import { useGameStore } from '@/stores/gameStore'
 import DepthGauge from './DepthGauge.vue'
+import HullBar from './HullBar.vue'
 import ResourceBar from './ResourceBar.vue'
 import TapButton from './TapButton.vue'
 import TapEffects from './TapEffects.vue'
@@ -64,8 +70,12 @@ import UpgradesPanel from './UpgradesPanel.vue'
 import HirePanel from './HirePanel.vue'
 import StorePanel from './StorePanel.vue'
 import AchievementsPanel from './AchievementsPanel.vue'
+import ArtifactsPanel from './ArtifactsPanel.vue'
+import PathChoiceModal from './PathChoiceModal.vue'
 
-type TabId = 'upgrades' | 'crew' | 'hire' | 'store' | 'achievements'
+const game = useGameStore()
+
+type TabId = 'upgrades' | 'crew' | 'hire' | 'store' | 'achievements' | 'artifacts'
 
 const activeTab = ref<TabId>('upgrades')
 const sheetOpen = ref(false)
@@ -75,6 +85,7 @@ const tabs = [
   { id: 'upgrades' as const, icon: '\u2B06', label: 'Upgrades' },
   { id: 'crew' as const, icon: '\uD83D\uDC64', label: 'Crew' },
   { id: 'hire' as const, icon: '\u2795', label: 'Hire' },
+  { id: 'artifacts' as const, icon: '\uD83D\uDD2E', label: 'Relics' },
   { id: 'store' as const, icon: '\uD83D\uDED2', label: 'Store' },
   { id: 'achievements' as const, icon: '\uD83C\uDFC5', label: 'Awards' },
 ]
@@ -112,11 +123,30 @@ function onTap(depthGain: number) {
   flex-shrink: 0;
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  padding: 12px 16px 8px;
+  gap: 6px;
+  padding: 8px 16px 6px;
   position: relative;
   z-index: 1;
   background: linear-gradient(to bottom, var(--bg-deep) 0%, var(--bg-deep) 85%, transparent 100%);
+}
+
+.path-banner {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 4px 16px;
+  position: relative;
+  z-index: 1;
+}
+
+.path-banner-icon { font-size: 0.8rem; }
+.path-banner-name {
+  font-size: 0.65rem;
+  color: var(--cyan);
+  font-weight: 600;
+  letter-spacing: 0.08em;
 }
 
 .center-section {
@@ -133,8 +163,8 @@ function onTap(depthGain: number) {
   flex-shrink: 0;
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  padding-bottom: 10px;
+  gap: 6px;
+  padding-bottom: 8px;
   position: relative;
   z-index: 1;
 }
@@ -151,8 +181,8 @@ function onTap(depthGain: number) {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 2px;
-  padding: 8px 2px;
+  gap: 1px;
+  padding: 6px 2px;
   background: var(--bg-surface);
   border-radius: var(--radius-md);
   color: var(--text-muted);
@@ -171,12 +201,10 @@ function onTap(depthGain: number) {
   border-color: rgba(245, 158, 11, 0.2);
 }
 
-.tab-icon {
-  font-size: 1rem;
-}
+.tab-icon { font-size: 0.9rem; }
 
 .tab-label {
-  font-size: 0.5rem;
+  font-size: 0.45rem;
   font-weight: 600;
   letter-spacing: 0.04em;
   text-transform: uppercase;

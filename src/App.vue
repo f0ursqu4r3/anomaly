@@ -1,7 +1,9 @@
 <template>
   <div id="app">
-    <AnomalyModal v-if="game.activeAnomaly" />
+    <GameOverModal />
+    <AnomalyModal v-if="game.activeAnomaly && !game.gameOver" />
     <AchievementToast />
+    <HazardToast />
     <GameView />
     <OfflineToast
       v-if="showOfflineToast"
@@ -19,8 +21,10 @@ import { initAds } from '@/services/ads'
 import { scheduleOfflineCapNotification, cancelOfflineCapNotification } from '@/services/notifications'
 import { initStore } from '@/services/iap'
 import { fmtDepth } from '@/utils/format'
+import GameOverModal from '@/components/GameOverModal.vue'
 import AnomalyModal from '@/components/AnomalyModal.vue'
 import AchievementToast from '@/components/AchievementToast.vue'
+import HazardToast from '@/components/HazardToast.vue'
 import GameView from '@/components/GameView.vue'
 import OfflineToast from '@/components/OfflineToast.vue'
 

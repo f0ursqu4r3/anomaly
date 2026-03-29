@@ -21,7 +21,7 @@
       </template>
       <!-- Undiscovered secrets teaser -->
       <div v-if="hiddenSecretsCount > 0" class="secrets-teaser">
-        <span class="secrets-icon">\uD83D\uDD12</span>
+        <span class="secrets-icon">&#x1F512;</span>
         <span class="secrets-text">{{ hiddenSecretsCount }} more secret{{ hiddenSecretsCount > 1 ? 's' : '' }} to discover...</span>
       </div>
     </div>
