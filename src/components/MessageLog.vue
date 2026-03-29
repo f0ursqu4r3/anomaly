@@ -1,5 +1,5 @@
 <template>
-  <div class="message-log" ref="logEl">
+  <div class="message-log" ref="logEl" @scroll="onScroll">
     <div
       v-for="msg in game.messages"
       :key="msg.id"
@@ -16,11 +16,12 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, nextTick } from 'vue'
+import { ref, watch, nextTick, onMounted } from 'vue'
 import { useGameStore } from '@/stores/gameStore'
 
 const game = useGameStore()
 const logEl = ref<HTMLElement | null>(null)
+const userScrolledUp = ref(false)
 
 function fmtMissionTime(ms: number): string {
   const totalSec = Math.floor(ms / 1000)
@@ -29,13 +30,31 @@ function fmtMissionTime(ms: number): string {
   return `T+${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`
 }
 
-// Auto-scroll on new messages
+function isAtBottom(): boolean {
+  if (!logEl.value) return true
+  const el = logEl.value
+  return el.scrollHeight - el.scrollTop - el.clientHeight < 30
+}
+
+function onScroll() {
+  userScrolledUp.value = !isAtBottom()
+}
+
+function scrollToBottom() {
+  if (logEl.value) {
+    logEl.value.scrollTop = logEl.value.scrollHeight
+  }
+}
+
+// Auto-scroll on new messages only if user hasn't scrolled up
 watch(() => game.messages.length, () => {
-  nextTick(() => {
-    if (logEl.value) {
-      logEl.value.scrollTop = logEl.value.scrollHeight
-    }
-  })
+  if (userScrolledUp.value) return
+  nextTick(scrollToBottom)
+})
+
+// Scroll to bottom on mount
+onMounted(() => {
+  nextTick(scrollToBottom)
 })
 </script>
 

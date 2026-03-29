@@ -136,8 +136,7 @@ const ICONS: Record<string, IconDef> = {
   },
   repair: {
     viewBox: '0 0 16 16',
-    path: `<path d="M5.5 9.5l-3 3c-.5.5-.5 1.5 0 2s1.5.5 2 0l3-3" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
-           <path d="M9 7l4-4c1-1 .5-2.5-.5-3-.8-.4-2 0-2.5.5L7 3.5 5.5 5 9 7z" stroke="currentColor" stroke-width="1.1" stroke-linejoin="round"/>`,
+    path: `<path d="M10.5 2.5c-1.5-.5-3 0-3.8 1.2-.6 1-.5 2.2.1 3.1L3 10.5c-.7.7-.7 1.8 0 2.5s1.8.7 2.5 0l3.7-3.8c.9.6 2.1.7 3.1.1 1.2-.8 1.7-2.3 1.2-3.8l-2 2-1.5-.5-.5-1.5z" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/>`,
   },
   'o2-emergency': {
     viewBox: '0 0 16 16',

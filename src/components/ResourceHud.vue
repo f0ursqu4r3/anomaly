@@ -2,11 +2,17 @@
   <div class="resource-hud">
     <div class="hud-item" :class="{ danger: game.air / game.airMax < 0.2 }">
       <SvgIcon name="air" size="xs" />
-      <span class="hud-val mono">{{ fmt(game.air) }}</span>
+      <div class="hud-stack">
+        <span class="hud-val mono">{{ fmt(game.air) }}</span>
+        <span class="hud-rate mono" :class="rateClass(game.airRate)">{{ fmtRate(game.airRate) }}</span>
+      </div>
     </div>
     <div class="hud-item" :class="{ danger: game.power / game.powerMax < 0.2 }">
       <SvgIcon name="power" size="xs" />
-      <span class="hud-val mono">{{ fmt(game.power) }}</span>
+      <div class="hud-stack">
+        <span class="hud-val mono">{{ fmt(game.power) }}</span>
+        <span class="hud-rate mono" :class="rateClass(game.powerRate)">{{ fmtRate(game.powerRate) }}</span>
+      </div>
     </div>
     <div class="hud-item">
       <SvgIcon name="metals" size="xs" />
@@ -35,6 +41,17 @@ function fmt(n: number): string {
   if (n < 1000) return Math.floor(n).toString()
   return (n / 1000).toFixed(1) + 'K'
 }
+
+function fmtRate(n: number): string {
+  const sign = n >= 0 ? '+' : ''
+  return `${sign}${n.toFixed(1)}`
+}
+
+function rateClass(n: number): string {
+  if (n > 0.05) return 'rate-pos'
+  if (n < -0.05) return 'rate-neg'
+  return 'rate-zero'
+}
 </script>
 
 <style scoped>
@@ -47,7 +64,7 @@ function fmt(n: number): string {
   display: flex;
   justify-content: space-around;
   align-items: center;
-  padding: calc(var(--safe-top) + 3px) 8px 4px;
+  padding: calc(var(--safe-top) + 3px) 6px 4px;
   background: rgba(5, 8, 16, 0.92);
   border-bottom: 1px solid rgba(100, 160, 220, 0.1);
 }
@@ -59,10 +76,24 @@ function fmt(n: number): string {
   color: var(--text-secondary);
 }
 
+.hud-stack {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.1;
+}
+
 .hud-val {
   font-size: 11px;
   color: var(--text-primary);
 }
+
+.hud-rate {
+  font-size: 8px;
+}
+
+.rate-pos { color: var(--green); }
+.rate-neg { color: var(--red); }
+.rate-zero { color: var(--text-muted); }
 
 .hud-item.danger {
   color: var(--red);
