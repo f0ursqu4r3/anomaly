@@ -23,9 +23,9 @@ const game = useGameStore()
   bottom: 8px;
   right: 8px;
   z-index: 15;
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
+  width: 44px;
+  aspect-ratio: 1;
+  border-radius: var(--radius-full);
   border: 1px solid var(--accent-muted);
   background: var(--overlay-bg);
   color: var(--text-secondary);
