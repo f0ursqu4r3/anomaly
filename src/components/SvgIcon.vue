@@ -79,6 +79,11 @@ const ICONS: Record<string, IconDef> = {
     viewBox: '0 0 16 16',
     path: `<path d="M6.5 3h3v3.5H13v3H9.5V13h-3V9.5H3v-3h3.5z" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/>`,
   },
+  partsfactory: {
+    viewBox: '0 0 16 16',
+    path: `<circle cx="8" cy="8" r="2" stroke="currentColor" stroke-width="1.2"/>
+           <path d="M8 1.5v2M8 12.5v2M1.5 8h2M12.5 8h2M3.3 3.3l1.4 1.4M11.3 11.3l1.4 1.4M3.3 12.7l1.4-1.4M11.3 4.7l1.4-1.4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>`,
+  },
 
   // ── Directives ──
   mining: {
