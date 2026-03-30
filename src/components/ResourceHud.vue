@@ -117,7 +117,6 @@ function rateClass(n: number): string {
 
 .hud-item.danger .hud-val {
   color: var(--red);
-  animation: combo-pulse 1s ease-in-out infinite;
 }
 
 .hud-breakdown {

@@ -3,7 +3,7 @@
     <div v-if="visible" class="settings-overlay" @click.self="$emit('close')">
       <div class="settings-modal">
         <div class="settings-header">
-          <span class="settings-title">SYSTEM CONFIG</span>
+          <span class="settings-title" @click="titleTaps++">SYSTEM CONFIG</span>
           <button class="close-btn" @click="$emit('close')">&times;</button>
         </div>
 
@@ -83,8 +83,8 @@
             </div>
           </div>
 
-          <!-- DEBUG -->
-          <div class="section">
+          <!-- DEBUG (hidden until title tapped 5x) -->
+          <div v-if="debugVisible" class="section">
             <div class="section-header" @click="toggleSection('debug')">
               <span>DEBUG</span>
               <span class="chevron">{{ openSections.debug ? '▾' : '▸' }}</span>
@@ -115,7 +115,7 @@
 </template>
 
 <script setup lang="ts">
-import { reactive, ref } from 'vue'
+import { reactive, ref, computed } from 'vue'
 import { useSettingsStore } from '@/stores/settingsStore'
 import { useGameStore } from '@/stores/gameStore'
 
@@ -133,6 +133,8 @@ const openSections = reactive({
 })
 
 const confirmReset = ref(false)
+const titleTaps = ref(0)
+const debugVisible = computed(() => titleTaps.value >= 5)
 
 function toggleSection(key: keyof typeof openSections) {
   openSections[key] = !openSections[key]

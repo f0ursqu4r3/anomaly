@@ -84,14 +84,6 @@
             <SvgIcon name="credits" size="xs" />{{ Math.floor(game.manifestCost) }}
           </span>
           <div class="manifest-actions">
-            <button
-              v-if="game.lastManifest.length > 0"
-              class="repeat-btn"
-              :class="{ active: game.autoRelaunch }"
-              @click="game.toggleAutoRelaunch()"
-            >
-              {{ game.autoRelaunch ? '⟳ REPEAT ON' : '⟳ REPEAT' }}
-            </button>
             <button class="clear-btn" @click="game.clearManifest()">CLEAR</button>
             <button
               class="launch-btn"
