@@ -8,16 +8,18 @@ export type VisualState = 'walking' | 'working' | 'resting' | 'socializing' | 'i
 
 export interface ColonistMapState {
   colonistId: string
-  x: number
+  x: number            // current visual position (what CSS reads)
   y: number
-  targetX: number
+  targetX: number      // where we're heading
   targetY: number
   visualState: VisualState
-  transitionMs: number
+  transitionMs: number // CSS transition duration for current move
   assignedDropId: string | null
+  _settledAction: string | null // tracks what action we've committed to visually
+  _arrivalTime: number          // timestamp when current walk completes
 }
 
-const WALK_SPEED = 8
+const WALK_SPEED = 3 // % of map per second — realistic walking pace
 const UNPACK_WORK_TIME = 1500
 
 function jitter(base: number, range: number): number {
@@ -43,6 +45,13 @@ function actionToVisualState(action: ActionType | null, colonist: Colonist): Vis
   }
 }
 
+/** Build a key that identifies the current action+target combo */
+function actionKey(colonist: Colonist): string | null {
+  const a = colonist.currentAction
+  if (!a) return null
+  return `${a.type}:${a.targetZone}:${a.targetId ?? ''}`
+}
+
 export function useColonistMovement() {
   const game = useGameStore()
   const positions = ref<Map<string, ColonistMapState>>(new Map())
@@ -62,6 +71,8 @@ export function useColonistMovement() {
         visualState: 'idle',
         transitionMs: 0,
         assignedDropId: null,
+        _settledAction: null,
+        _arrivalTime: 0,
       }
       positions.value.set(colonistId, state)
     }
@@ -76,6 +87,36 @@ export function useColonistMovement() {
     return count
   }
 
+  /** Start a walk from current position to target. CSS handles the animation. */
+  function startWalk(ms: ColonistMapState, toX: number, toY: number) {
+    const tx = clamp(toX, 5, 95)
+    const ty = clamp(toY, 12, 92)
+    const d = dist(ms.x, ms.y, tx, ty)
+    if (d < 0.5) {
+      // Already there
+      ms.transitionMs = 0
+      return
+    }
+    ms.targetX = tx
+    ms.targetY = ty
+    ms.transitionMs = (d / WALK_SPEED) * 1000
+    ms._arrivalTime = Date.now() + ms.transitionMs
+    // DON'T set ms.x/ms.y yet — CSS animates from current to target
+    // We'll snap ms.x/ms.y to target when the walk completes
+  }
+
+  /** Check if current walk animation is done, snap position if so */
+  function checkArrival(ms: ColonistMapState): boolean {
+    if (ms._arrivalTime > 0 && Date.now() >= ms._arrivalTime) {
+      ms.x = ms.targetX
+      ms.y = ms.targetY
+      ms._arrivalTime = 0
+      ms.transitionMs = 0
+      return true
+    }
+    return ms._arrivalTime === 0
+  }
+
   function update(_dtMs: number) {
     for (const colonist of game.colonists) {
       const ms = getOrCreate(colonist.id)
@@ -84,6 +125,7 @@ export function useColonistMovement() {
         ms.visualState = 'idle'
         ms.transitionMs = 0
         ms.assignedDropId = null
+        ms._settledAction = null
         continue
       }
 
@@ -91,95 +133,102 @@ export function useColonistMovement() {
 
       // No action — idle at current position
       if (!action) {
+        checkArrival(ms)
         ms.visualState = 'idle'
-        ms.transitionMs = 0
         ms.assignedDropId = null
+        ms._settledAction = null
         continue
       }
 
       // Walking between zones (action has walkPath with >1 entries)
       if (action.walkPath && action.walkPath.length > 1) {
         const nextZoneId = action.walkPath[1]
-        const nextZone = ZONE_MAP[nextZoneId]
-        if (nextZone) {
-          const tx = clamp(jitter(nextZone.x, 3), 5, 95)
-          const ty = clamp(jitter(nextZone.y, 3), 12, 92)
-          const d = dist(ms.x, ms.y, tx, ty) || 10
-          ms.targetX = tx
-          ms.targetY = ty
-          ms.x = tx
-          ms.y = ty
-          ms.transitionMs = (d / WALK_SPEED) * 1000
+        const walkKey = `walk:${nextZoneId}`
+
+        if (ms._settledAction !== walkKey) {
+          // Snap to current position first (in case previous walk was in progress)
+          checkArrival(ms)
+          const nextZone = ZONE_MAP[nextZoneId]
+          if (nextZone) {
+            startWalk(ms, jitter(nextZone.x, 3), jitter(nextZone.y, 3))
+          }
+          ms._settledAction = walkKey
+        } else {
+          // Check if this walk segment finished
+          if (checkArrival(ms)) {
+            ms.transitionMs = 0
+          }
         }
+
         ms.visualState = colonist.health < 40 ? 'injured' : 'walking'
         ms.assignedDropId = null
         continue
       }
 
-      // At target zone, doing the action
-      const zone = ZONE_MAP[action.targetZone] || ZONE_MAP.habitat
+      // At target zone — check if we need to walk to our work spot
+      const currentKey = actionKey(colonist)
+      const alreadySettled = ms._settledAction === currentKey
 
-      // Find specific target (building or drop)
-      let targetX = zone.x
-      let targetY = zone.y
+      if (!alreadySettled) {
+        // New action — figure out where to go and walk there
+        checkArrival(ms) // snap if mid-walk
 
-      if (action.targetId) {
-        if (action.type === 'unpack') {
-          const drop = game.supplyDrops.find(d => d.id === action.targetId)
-          if (drop) {
-            targetX = drop.x
-            targetY = drop.y
-            ms.assignedDropId = drop.id
+        const zone = ZONE_MAP[action.targetZone] || ZONE_MAP.habitat
+        let targetX = zone.x
+        let targetY = zone.y
 
-            // Advance unpack progress
-            if (drop.state === 'landed') drop.state = 'unpacking'
-            if (drop.state === 'unpacking') {
-              const workers = colonistsAtDrop(drop.id)
-              const rate = workers * Math.pow(0.8, workers - 1)
-              drop.unpackProgress = Math.min(
-                1,
-                drop.unpackProgress + (UNPACK_WORK_TIME / drop.unpackDuration) * rate,
-              )
-              if (drop.unpackProgress >= 1) {
-                game.applySupplyDrop(drop)
-                drop.state = 'done'
-                drop.landedAt = game.totalPlaytimeMs
-                ms.assignedDropId = null
-              }
-            }
+        if (action.targetId) {
+          if (action.type === 'unpack') {
+            const drop = game.supplyDrops.find(d => d.id === action.targetId)
+            if (drop) { targetX = drop.x; targetY = drop.y }
+          } else {
+            const building = game.buildings.find(b => b.id === action.targetId)
+            if (building) { targetX = building.x; targetY = building.y }
           }
+        }
+
+        // Walk to the work spot (jittered)
+        startWalk(ms, jitter(targetX, 4), jitter(targetY, 4))
+        ms.visualState = 'walking'
+        ms._settledAction = currentKey
+
+        if (action.type === 'unpack' && action.targetId) {
+          ms.assignedDropId = action.targetId
         } else {
-          const building = game.buildings.find(b => b.id === action.targetId)
-          if (building) {
-            targetX = building.x
-            targetY = building.y
-          }
+          ms.assignedDropId = null
+        }
+      } else {
+        // Already settled — check if we've arrived at our work spot
+        const arrived = checkArrival(ms)
+        if (arrived) {
+          ms.visualState = actionToVisualState(action.type, colonist)
+        } else {
+          ms.visualState = 'walking'
         }
       }
 
-      // Add jitter around target
-      const jx = clamp(jitter(targetX, 4), 5, 95)
-      const jy = clamp(jitter(targetY, 4), 12, 92)
-
-      // Move to target position if far enough away
-      const d = dist(ms.x, ms.y, jx, jy)
-      if (d > 2) {
-        ms.targetX = jx
-        ms.targetY = jy
-        ms.x = jx
-        ms.y = jy
-        ms.transitionMs = (d / WALK_SPEED) * 1000
-        ms.visualState = 'walking'
-        continue
+      // Handle unpack progress (runs every tick while at drop)
+      if (action.type === 'unpack' && action.targetId && checkArrival(ms)) {
+        const drop = game.supplyDrops.find(d => d.id === action.targetId)
+        if (drop && (drop.state === 'landed' || drop.state === 'unpacking')) {
+          ms.assignedDropId = drop.id
+          if (drop.state === 'landed') drop.state = 'unpacking'
+          if (drop.state === 'unpacking') {
+            const workers = colonistsAtDrop(drop.id)
+            const rate = workers * Math.pow(0.8, workers - 1)
+            drop.unpackProgress = Math.min(
+              1,
+              drop.unpackProgress + (UNPACK_WORK_TIME / drop.unpackDuration) * rate,
+            )
+            if (drop.unpackProgress >= 1) {
+              game.applySupplyDrop(drop)
+              drop.state = 'done'
+              drop.landedAt = game.totalPlaytimeMs
+              ms.assignedDropId = null
+            }
+          }
+        }
       }
-
-      ms.x = jx
-      ms.y = jy
-      ms.targetX = jx
-      ms.targetY = jy
-      ms.transitionMs = 0
-      ms.visualState = actionToVisualState(action.type, colonist)
-      if (action.type !== 'unpack') ms.assignedDropId = null
     }
 
     // Trigger reactivity

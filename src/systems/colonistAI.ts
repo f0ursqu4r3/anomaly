@@ -21,14 +21,14 @@ const HEALTH_SEEK_MEDICAL = 70
 const HEALTH_SEEK_MEDICAL_URGENT = 40
 
 const DURATION: Record<ActionType, [number, number]> = {
-  drill:        [8, 15],
-  engineer:     [8, 15],
-  repair:       [10, 20],
+  drill:        [12, 25],
+  engineer:     [12, 25],
+  repair:       [15, 30],
   unpack:       [5, 10],
-  rest:         [10, 25],
-  socialize:    [8, 15],
-  seek_medical: [15, 30],
-  wander:       [5, 10],
+  rest:         [15, 35],
+  socialize:    [10, 20],
+  seek_medical: [20, 40],
+  wander:       [8, 18],
 }
 
 interface TraitMod {
@@ -117,16 +117,39 @@ export function checkInterrupt(colonist: ColonistLike): boolean {
 
 // ── Action Advancement ──
 
+const WALK_SPEED_PCT = 3 // % of map per second — must match useColonistMovement
+
+/** Calculate how many ticks to walk between two zones */
+function walkTicksBetween(fromId: string, toId: string): number {
+  const from = ZONE_MAP[fromId]
+  const to = ZONE_MAP[toId]
+  if (!from || !to) return 3
+  const dx = to.x - from.x
+  const dy = to.y - from.y
+  const d = Math.sqrt(dx * dx + dy * dy)
+  // Each tick = 1 second. At WALK_SPEED_PCT per second, how many ticks to cover distance?
+  return Math.max(2, Math.ceil(d / WALK_SPEED_PCT))
+}
+
 export function advanceAction(colonist: ColonistLike): boolean {
   const action = colonist.currentAction
   if (!action) return true
 
+  // Walking between zones — count down ticks for current segment
   if (action.walkPath && action.walkPath.length > 1) {
-    action.walkPath.shift()
-    colonist.currentZone = action.walkPath[0]
-    if (action.walkPath.length <= 1) {
-      action.walkPath = undefined
-      action.remainingTicks = getActionDuration(action.type, colonist.trait)
+    action.remainingTicks--
+    if (action.remainingTicks <= 0) {
+      // Arrived at next zone in path
+      action.walkPath.shift()
+      colonist.currentZone = action.walkPath[0]
+      if (action.walkPath.length <= 1) {
+        // Reached final zone — start the actual work action
+        action.walkPath = undefined
+        action.remainingTicks = getActionDuration(action.type, colonist.trait)
+      } else {
+        // More segments — set ticks for next hop
+        action.remainingTicks = walkTicksBetween(action.walkPath[0], action.walkPath[1])
+      }
     }
     return false
   }
@@ -152,6 +175,16 @@ interface ScoredAction {
   targetZone: string
   targetId?: string
   score: number
+}
+
+/** Count colonists already doing a specific action, optionally on a specific target */
+function countWorkers(state: ColonyState, actionType: ActionType, targetId?: string): number {
+  return state.colonists.filter(c => {
+    if (c.health <= 0 || !c.currentAction) return false
+    if (c.currentAction.type !== actionType) return false
+    if (targetId && c.currentAction.targetId !== targetId) return false
+    return true
+  }).length
 }
 
 export function selectAction(
@@ -206,37 +239,49 @@ export function selectAction(
       if (powerPct < 0.2) emergencyMult = zone === 'power' ? 3.0 : emergencyMult
       if (airPct < 0.2) emergencyMult = zone === 'lifeSup' ? 3.0 : emergencyMult
 
+      // Soft diminishing returns — don't pile everyone into one zone
+      const engineersInZone = countWorkers(state, 'engineer')
+      const buildingsInZone = state.buildings.filter(b => !b.damaged && ZONE_FOR_BUILDING[b.type] === zone).length
+      const saturation = buildingsInZone > 0 ? Math.min(1, engineersInZone / (buildingsInZone * 2)) : 0
+      const saturationDiscount = 1 - saturation * 0.6 // at most 60% reduction
+
       candidates.push({
         type: 'engineer',
         targetZone: zone,
         targetId: targetBuilding?.id,
-        score: 45 * dirMod.engineer * mod.workUtilityMult * emergencyMult,
+        score: 45 * dirMod.engineer * mod.workUtilityMult * emergencyMult * saturationDiscount,
       })
     }
   }
 
-  // REPAIR
+  // REPAIR — heavily discounted if someone is already on it
   const damaged = state.buildings.filter(b => b.damaged)
   if (damaged.length > 0) {
     const target = damaged[0]
     const targetZone = ZONE_FOR_BUILDING[target.type]
+    const repairersOnTarget = countWorkers(state, 'repair', target.id)
+    // First repairer gets full score, second gets 20%, third+ basically zero
+    const workerDiscount = repairersOnTarget === 0 ? 1.0 : repairersOnTarget === 1 ? 0.2 : 0.05
     candidates.push({
       type: 'repair',
       targetZone,
       targetId: target.id,
-      score: 80 * dirMod.repair * mod.repairUtilityMult,
+      score: 80 * dirMod.repair * mod.repairUtilityMult * workerDiscount,
     })
   }
 
-  // UNPACK
+  // UNPACK — diminishes as more colonists are already unpacking
   const activeDrops = state.supplyDrops.filter(d => d.state === 'landed' || d.state === 'unpacking')
   if (activeDrops.length > 0) {
     const drop = activeDrops[0]
+    const unpackers = countWorkers(state, 'unpack', drop.id)
+    // First unpacker high priority, 2nd moderate, 3+ low
+    const unpackDiscount = unpackers === 0 ? 1.0 : unpackers === 1 ? 0.5 : unpackers === 2 ? 0.15 : 0.05
     candidates.push({
       type: 'unpack',
       targetZone: 'landing',
       targetId: drop.id,
-      score: 70,
+      score: 70 * unpackDiscount,
     })
   }
 
@@ -275,8 +320,8 @@ export function selectAction(
     candidates.push({ type: 'seek_medical', targetZone: 'medical', score: medScore })
   }
 
-  // WANDER
-  candidates.push({ type: 'wander', targetZone: 'habitat', score: 3 })
+  // WANDER — gives colonists natural downtime between tasks
+  candidates.push({ type: 'wander', targetZone: colonist.currentZone, score: 8 })
 
   if (candidates.length === 0) return null
 
@@ -294,11 +339,16 @@ export function selectAction(
 
   const needsWalk = walkPath && walkPath.length > 1
 
+  // Walk ticks = time to traverse first segment (distance-based)
+  const firstSegmentTicks = needsWalk
+    ? walkTicksBetween(walkPath![0], walkPath![1])
+    : 0
+
   return {
     type: best.type,
     targetZone: best.targetZone,
     targetId: best.targetId,
-    remainingTicks: needsWalk ? walkPath!.length - 1 : getActionDuration(best.type, colonist.trait),
+    remainingTicks: needsWalk ? firstSegmentTicks : getActionDuration(best.type, colonist.trait),
     walkPath: needsWalk ? walkPath : undefined,
   }
 }

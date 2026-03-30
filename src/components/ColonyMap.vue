@@ -49,8 +49,8 @@
         v-for="c in game.colonists"
         :key="c.id"
         :colonist="c"
-        :x="getColonistState(c.id).x"
-        :y="getColonistState(c.id).y"
+        :x="getColonistState(c.id).targetX"
+        :y="getColonistState(c.id).targetY"
         :visual-state="getColonistState(c.id).visualState"
         :transition-ms="getColonistState(c.id).transitionMs"
       />
