@@ -8,7 +8,9 @@
     <div class="building-sprite">
       <SvgIcon :name="iconName" size="sm" />
     </div>
-    <div v-if="building.damaged" class="dmg-indicator" />
+    <div v-if="building.damaged" class="dmg-badge">
+      <SvgIcon name="repair" size="xs" />
+    </div>
   </div>
 </template>
 
@@ -96,16 +98,25 @@ const typeClass = computed(() => `type-${props.building.type}`)
   animation: dmg-pulse 1.5s ease-in-out infinite;
 }
 
-.dmg-indicator {
+.dmg-badge {
   position: absolute;
-  top: -2px;
-  right: -2px;
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
+  top: -4px;
+  right: -4px;
+  width: 14px;
+  height: 14px;
+  border-radius: 3px;
   background: var(--red);
+  color: var(--bg-deep, #1a1a2e);
+  display: flex;
+  align-items: center;
+  justify-content: center;
   box-shadow: 0 0 6px var(--red);
   animation: feed-blink 1s ease-in-out infinite;
+}
+
+.dmg-badge .svg-icon {
+  width: 10px;
+  height: 10px;
 }
 
 @keyframes dmg-pulse {
