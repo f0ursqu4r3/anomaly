@@ -25,6 +25,8 @@ import {
   COLONIST_NAMES,
   BLUEPRINTS,
   uid,
+  PARTS_FACTORY_INTERVAL_MS,
+  PARTS_FACTORY_METAL_COST,
 } from './gameStore'
 import { getBuildingPosition } from '@/systems/mapLayout'
 
@@ -299,6 +301,17 @@ export function simulateOffline(inputState: ColonyState, elapsedMs: number): Off
       if (damaged) {
         damaged.damaged = false
         state.repairKits--
+      }
+    }
+
+    // Parts Factory production (offline)
+    const factoryCount = state.buildings.filter(b => b.type === 'partsfactory' && !b.damaged).length
+    if (factoryCount > 0 && state.power > 0 && state.metals >= PARTS_FACTORY_METAL_COST) {
+      const interval = PARTS_FACTORY_INTERVAL_MS / factoryCount
+      if (state.totalPlaytimeMs - state.lastPartsProducedAt >= interval) {
+        state.metals -= PARTS_FACTORY_METAL_COST
+        state.repairKits++
+        state.lastPartsProducedAt = state.totalPlaytimeMs
       }
     }
 
