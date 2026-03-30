@@ -1,5 +1,5 @@
 <template>
-  <div class="building-info" :style="{ left: x + '%', top: (y - 8) + '%' }">
+  <div class="building-info" :class="{ below: y < 30 }" :style="{ left: Math.max(15, Math.min(85, x)) + '%', top: (y < 30 ? y + 6 : y - 6) + '%' }">
     <div class="info-header">{{ label }}</div>
     <div class="info-row">
       <span class="info-label">Status</span>
@@ -88,6 +88,10 @@ const workerCount = computed(() => {
   color: var(--text-secondary);
   pointer-events: none;
   min-width: 100px;
+}
+
+.building-info.below {
+  transform: translate(-50%, 0);
 }
 
 .info-header {
