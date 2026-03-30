@@ -152,7 +152,7 @@ function getColonistState(id: string) {
 .habitat-ring {
   position: absolute;
   left: 50%;
-  top: 45%;
+  top: 40%;
   width: 50px;
   height: 50px;
   transform: translate(-50%, -50%);

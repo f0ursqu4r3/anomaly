@@ -84,7 +84,7 @@ export interface SupplyDrop {
 }
 
 const UNPACK_MS_PER_KG = 150 // 150ms per kg with 1 colonist (e.g. 45kg = 6.75s)
-const LANDING_ZONE = { x: 45, y: 50 }
+const LANDING_ZONE = { x: 45, y: 45 }
 const DONE_LINGER_MS = 1500
 
 export interface ColonyState {
@@ -286,11 +286,11 @@ export const COLONIST_NAMES = ['Kael', 'Mira', 'Tarn', 'Vex', 'Lira', 'Cade', 'N
 // ── Map Zones ──────────────────────────────────────────────────────
 
 export const MAP_ZONES: Record<string, { x: number; y: number }> = {
-  habitat: { x: 50, y: 45 },
-  drillSite: { x: 50, y: 78 },
-  powerField: { x: 28, y: 28 },
-  lifeSup: { x: 72, y: 28 },
-  medical: { x: 72, y: 58 },
+  habitat: { x: 50, y: 40 },
+  drillSite: { x: 50, y: 72 },
+  powerField: { x: 30, y: 30 },
+  lifeSup: { x: 70, y: 30 },
+  medical: { x: 70, y: 52 },
 }
 
 const ZONE_FOR_TYPE: Record<BuildingType, string> = {
@@ -302,11 +302,11 @@ const ZONE_FOR_TYPE: Record<BuildingType, string> = {
 
 const SLOT_OFFSETS = [
   { dx: 0, dy: 0 },
-  { dx: 14, dy: 0 },
-  { dx: -14, dy: 0 },
-  { dx: 0, dy: 14 },
-  { dx: 14, dy: 14 },
-  { dx: -14, dy: 14 },
+  { dx: 10, dy: 0 },
+  { dx: -10, dy: 0 },
+  { dx: 0, dy: 10 },
+  { dx: 10, dy: 10 },
+  { dx: -10, dy: 10 },
 ]
 
 export function getBuildingPosition(
