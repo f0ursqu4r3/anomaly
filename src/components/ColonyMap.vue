@@ -40,6 +40,9 @@
       :transition-ms="getColonistState(c.id).transitionMs"
     />
 
+    <!-- Hazard alert (scoped to map) -->
+    <HazardAlert />
+
     <!-- HUD -->
     <ResourceHud />
 
@@ -54,6 +57,7 @@
 <script setup lang="ts">
 import { useGameStore } from '@/stores/gameStore'
 import { useColonistMovement } from '@/composables/useColonistMovement'
+import HazardAlert from './HazardAlert.vue'
 import ResourceHud from './ResourceHud.vue'
 import MapBuilding from './MapBuilding.vue'
 import MapColonist from './MapColonist.vue'

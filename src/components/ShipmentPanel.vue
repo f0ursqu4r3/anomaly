@@ -11,7 +11,7 @@
       <div class="section-label">EN ROUTE</div>
       <div v-for="s in game.inTransitShipments" :key="s.id" class="transit-item">
         <span class="transit-label">{{ s.contents.length }} items · {{ s.totalWeight }}kg</span>
-        <span class="transit-eta mono">{{ formatEta(s.arrivalAt) }}</span>
+        <span class="transit-eta mono">ETA {{ formatEta(s.arrivalAt) }}</span>
       </div>
     </div>
 
@@ -154,7 +154,11 @@ function handleLaunch() {
   isLaunching.value = true
   setTimeout(() => {
     game.launchShipment()
-    isLaunching.value = false
+    // Keep isLaunching true briefly so the leave transition is suppressed
+    // (the launch-flash animation already provides the visual exit)
+    setTimeout(() => {
+      isLaunching.value = false
+    }, 50)
   }, 500)
 }
 
@@ -342,7 +346,7 @@ function formatEta(arrivalAt: number): string {
 }
 
 .manifest-section.launching {
-  animation: launch-flash 0.5s cubic-bezier(0.25, 1, 0.5, 1);
+  animation: launch-flash 0.5s cubic-bezier(0.25, 1, 0.5, 1) forwards;
 }
 
 @keyframes launch-flash {
@@ -404,7 +408,11 @@ function formatEta(arrivalAt: number): string {
   animation: manifest-in 0.3s cubic-bezier(0.25, 1, 0.5, 1);
 }
 .manifest-reveal-leave-active {
-  animation: manifest-in 0.2s cubic-bezier(0.25, 1, 0.5, 1) reverse;
+  animation: manifest-in 0.15s cubic-bezier(0.25, 1, 0.5, 1) reverse;
+}
+/* Skip leave animation after launch — launch-flash already handles the exit */
+.manifest-section.launching.manifest-reveal-leave-active {
+  animation: none;
 }
 @keyframes manifest-in {
   from {

@@ -36,7 +36,7 @@
         </span>
       </span>
       <span class="status-item">
-        <span class="status-label">DIR</span>
+        <span class="status-label">MODE</span>
         <span class="status-val mono directive-badge">{{ directiveShort }}</span>
       </span>
     </div>

@@ -130,7 +130,7 @@ button:active {
 /* Toast animation */
 @keyframes toast-in {
   from {
-    transform: translateY(100%);
+    transform: translateY(-100%);
     opacity: 0;
   }
   to {
@@ -145,7 +145,7 @@ button:active {
     opacity: 1;
   }
   to {
-    transform: translateY(100%);
+    transform: translateY(-100%);
     opacity: 0;
   }
 }

@@ -34,11 +34,11 @@ watch(
 
 <style scoped>
 .hazard-alert {
-  position: fixed;
-  top: calc(var(--safe-top) + 16px);
-  left: 16px;
-  right: 16px;
-  z-index: 100;
+  position: absolute;
+  top: 32px;
+  left: 12px;
+  right: 12px;
+  z-index: 10;
   background: var(--red);
   backdrop-filter: blur(8px);
   border-radius: var(--radius-md);
