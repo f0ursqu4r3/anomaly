@@ -4,21 +4,19 @@
     :class="[drop.state]"
     :style="{ left: drop.x + '%', top: drop.y + '%' }"
   >
-    <!-- Progress ring -->
-    <svg v-if="drop.state === 'unpacking'" class="progress-ring" viewBox="0 0 36 36">
-      <circle class="ring-bg" cx="18" cy="18" r="15" />
-      <circle
-        class="ring-fill"
-        cx="18"
-        cy="18"
-        r="15"
-        :stroke-dasharray="circumference"
-        :stroke-dashoffset="circumference * (1 - drop.unpackProgress)"
-      />
-    </svg>
-
-    <!-- Crate icon -->
+    <!-- Crate icon + progress ring wrapper -->
     <div class="drop-sprite">
+      <svg v-if="drop.state === 'unpacking'" class="progress-ring" viewBox="0 0 36 36">
+        <circle class="ring-bg" cx="18" cy="18" r="15" />
+        <circle
+          class="ring-fill"
+          cx="18"
+          cy="18"
+          r="15"
+          :stroke-dasharray="circumference"
+          :stroke-dashoffset="circumference * (1 - drop.unpackProgress)"
+        />
+      </svg>
       <SvgIcon name="shipment" size="sm" />
     </div>
 
@@ -99,7 +97,9 @@ const circumference = 2 * Math.PI * 15 // ~94.25
   position: absolute;
   width: 36px;
   height: 36px;
-  transform: rotate(-90deg);
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) rotate(-90deg);
 }
 
 .ring-bg {
