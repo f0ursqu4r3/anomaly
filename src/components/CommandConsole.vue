@@ -39,6 +39,7 @@
         <span class="status-label">MODE</span>
         <span class="status-val mono directive-badge">{{ directiveShort }}</span>
       </span>
+      <button class="settings-btn" @click="$emit('openSettings')">⚙</button>
     </div>
   </div>
 </template>
@@ -46,6 +47,8 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 import { useGameStore } from '@/stores/gameStore'
+
+defineEmits<{ openSettings: [] }>()
 import SvgIcon from './SvgIcon.vue'
 import MessageLog from './MessageLog.vue'
 import ShipmentPanel from './ShipmentPanel.vue'
@@ -160,5 +163,21 @@ function fmtCredits(n: number): string {
 
 .directive-badge {
   color: var(--cyan);
+}
+
+.settings-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.settings-btn:hover {
+  color: var(--text-primary);
 }
 </style>

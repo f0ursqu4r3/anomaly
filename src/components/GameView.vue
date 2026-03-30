@@ -4,7 +4,7 @@
       <ColonyMap />
     </div>
     <div class="console-panel">
-      <CommandConsole />
+      <CommandConsole @open-settings="$emit('open-settings')" />
     </div>
   </div>
 </template>
@@ -12,6 +12,8 @@
 <script setup lang="ts">
 import ColonyMap from './ColonyMap.vue'
 import CommandConsole from './CommandConsole.vue'
+
+defineEmits<{ 'open-settings': [] }>()
 </script>
 
 <style scoped>
