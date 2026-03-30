@@ -109,6 +109,7 @@ export interface ColonyState {
   maxDepth: number
 
   lastHazard: HazardEvent | null
+  lastHazardAt: number
   hazardCooldownUntil: number
 
   credits: number
@@ -148,9 +149,10 @@ export const ENGINEER_EFFICIENCY_BONUS = 0.15
 export const MEDBAY_HEAL_PER_SEC = 0.5
 export const HEALTH_DRAIN_PER_SEC = 2.0
 
-export const HAZARD_CHECK_INTERVAL_MS = 15_000
-export const HAZARD_BASE_CHANCE = 0.03
-export const HAZARD_DEPTH_SCALE = 0.00002
+export const HAZARD_CHECK_INTERVAL_MS = 20_000
+export const HAZARD_BASE_CHANCE = 0.02
+export const HAZARD_DEPTH_SCALE = 0.00001
+export const HAZARD_MIN_GAP_MS = 45_000
 
 const STARTING_AIR = 60
 export const STARTING_AIR_MAX = 125
@@ -330,6 +332,7 @@ function freshState(): ColonyState {
     depth: 0,
     maxDepth: 0,
     lastHazard: null,
+    lastHazardAt: 0,
     hazardCooldownUntil: 0,
     credits: 50,
     totalCreditsEarned: 50,
@@ -621,11 +624,14 @@ export const useGameStore = defineStore('game', {
     // ── Hazards ──
     checkHazards() {
       if (Date.now() < this.hazardCooldownUntil) return
+      const now = Date.now()
+      if (now - this.lastHazardAt < HAZARD_MIN_GAP_MS) return
       const mod = DIRECTIVE_MODIFIERS[this.activeDirective]
       const chance = (HAZARD_BASE_CHANCE + this.depth * HAZARD_DEPTH_SCALE) * (1 - mod.hazardResist)
       if (Math.random() > chance) return
 
       this.hazardCooldownUntil = Date.now() + HAZARD_CHECK_INTERVAL_MS
+      this.lastHazardAt = Date.now()
 
       const roll = Math.random()
       if (roll < 0.4) {
