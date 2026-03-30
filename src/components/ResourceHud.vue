@@ -7,6 +7,7 @@
         <span class="hud-rate mono" :class="rateClass(game.airRate)">{{
           fmtRate(game.airRate)
         }}</span>
+        <span class="hud-breakdown mono">+{{ game.airProduction.toFixed(1) }} / -{{ game.airConsumption.toFixed(1) }}</span>
       </div>
     </div>
     <div class="hud-item" :class="{ danger: game.power / game.powerMax < 0.2 }">
@@ -16,6 +17,7 @@
         <span class="hud-rate mono" :class="rateClass(game.powerRate)">{{
           fmtRate(game.powerRate)
         }}</span>
+        <span class="hud-breakdown mono">+{{ game.powerProduction.toFixed(1) }} / -{{ game.powerConsumption.toFixed(1) }}</span>
       </div>
     </div>
     <div class="hud-item">
@@ -25,6 +27,10 @@
     <div class="hud-item">
       <SvgIcon name="ice" size="xs" />
       <span class="hud-val mono">{{ fmt(game.ice) }}</span>
+    </div>
+    <div v-if="game.repairKits > 0 || game.buildings.some(b => b.damaged)" class="hud-item repair-kits">
+      <SvgIcon name="repair" size="xs" />
+      <span class="hud-val mono">{{ game.repairKits }}</span>
     </div>
     <div class="hud-item depth">
       <SvgIcon name="depth" size="xs" />
@@ -112,6 +118,16 @@ function rateClass(n: number): string {
 .hud-item.danger .hud-val {
   color: var(--red);
   animation: combo-pulse 1s ease-in-out infinite;
+}
+
+.hud-breakdown {
+  font-size: 7px;
+  color: var(--text-muted);
+  opacity: 0.7;
+}
+
+.hud-item.repair-kits {
+  color: var(--amber);
 }
 
 .hud-item.depth {
