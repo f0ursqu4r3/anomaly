@@ -58,7 +58,7 @@ export function findPath(from: string, to: string): string[] {
 
 // ── Organic Building Placement ──
 
-const MIN_BUILDING_DISTANCE = 6
+const MIN_BUILDING_DISTANCE = 3.5 // minimum % between buildings (tight enough to fit many)
 
 export function getBuildingPosition(
   type: BuildingType,
@@ -76,9 +76,10 @@ export function getBuildingPosition(
     return { x: zone.x, y: zone.y, rotation: (Math.random() - 0.5) * 6 }
   }
 
-  for (let attempt = 0; attempt < 20; attempt++) {
+  // Try random positions within zone radius
+  for (let attempt = 0; attempt < 40; attempt++) {
     const angle = Math.random() * Math.PI * 2
-    const dist = Math.random() * zone.radius * 0.8
+    const dist = Math.random() * zone.radius * 0.85
     const x = zone.x + Math.cos(angle) * dist
     const y = zone.y + Math.sin(angle) * dist
 
@@ -93,11 +94,13 @@ export function getBuildingPosition(
     }
   }
 
-  const offset = sameZone.length * 4
-  const angle = (sameZone.length * 2.4) % (Math.PI * 2)
+  // Fallback: evenly space around zone center, CLAMPED to zone radius
+  const count = sameZone.length
+  const angle = (count * 2.4) % (Math.PI * 2) // golden angle spread
+  const ring = Math.min(zone.radius * 0.7, 3 + count * 1.5) // grows slowly, capped at zone radius
   return {
-    x: zone.x + Math.cos(angle) * offset,
-    y: zone.y + Math.sin(angle) * offset,
+    x: zone.x + Math.cos(angle) * ring,
+    y: zone.y + Math.sin(angle) * ring,
     rotation: (Math.random() - 0.5) * 10,
   }
 }
