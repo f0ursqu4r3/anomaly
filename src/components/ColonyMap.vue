@@ -102,6 +102,7 @@ const lastPointer = ref({ x: 0, y: 0 })
 const transformStyle = computed(() => ({
   transform: `scale(${zoom.value}) translate(${panX.value}px, ${panY.value}px)`,
   transformOrigin: 'center center',
+  transition: isPanning.value ? 'none' : 'transform 0.15s ease-out',
 }))
 
 function onWheel(e: WheelEvent) {
@@ -266,7 +267,6 @@ function resetView() {
 .map-content {
   position: absolute;
   inset: 0;
-  transition: transform 0.15s ease-out;
 }
 
 .zone-overlay {
