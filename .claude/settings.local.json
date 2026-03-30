@@ -9,7 +9,18 @@
       "Bash(git commit:*)",
       "Bash(git push:*)",
       "Bash(bun add:*)",
-      "Bash(bun run:*)"
+      "Bash(bun run:*)",
+      "Bash(/Users/kyle/.claude/plugins/cache/claude-plugins-official/superpowers/5.0.4/skills/brainstorming/scripts/start-server.sh --project-dir /Users/kyle/git/anomaly)",
+      "Bash(cat /Users/kyle/git/anomaly/.superpowers/brainstorm/*/.server-info)",
+      "Bash(SCRIPTS_DIR=\"/Users/kyle/.claude/plugins/cache/claude-plugins-official/superpowers/5.0.4/skills/brainstorming/scripts\")",
+      "Read(//Users/kyle/git/anomaly/$SCRIPTS_DIR/**)",
+      "mcp__plugin_chrome-devtools-mcp_chrome-devtools__navigate_page",
+      "mcp__plugin_chrome-devtools-mcp_chrome-devtools__emulate",
+      "mcp__plugin_chrome-devtools-mcp_chrome-devtools__take_screenshot",
+      "mcp__plugin_chrome-devtools-mcp_chrome-devtools__resize_page",
+      "Bash(git checkout:*)",
+      "Bash(git merge:*)",
+      "Bash(git stash:*)"
     ]
   }
 }
