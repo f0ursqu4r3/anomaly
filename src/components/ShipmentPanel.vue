@@ -481,7 +481,7 @@ function formatEta(arrivalAt: number): string {
 .capacity-bar-bg {
   height: 4px;
   background: var(--bg-deep);
-  border-radius: 2px;
+  border-radius: var(--radius-xs);
   margin-bottom: 8px;
   overflow: hidden;
 }
@@ -489,7 +489,7 @@ function formatEta(arrivalAt: number): string {
 .capacity-bar-fill {
   height: 100%;
   background: var(--cyan);
-  border-radius: 2px;
+  border-radius: var(--radius-xs);
   transition: width 0.2s ease;
 }
 

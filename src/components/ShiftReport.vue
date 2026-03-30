@@ -145,7 +145,7 @@ function fmtOffsetTime(ms: number): string {
   align-items: baseline;
   padding: 4px 8px;
   border-radius: var(--radius-sm);
-  background: rgba(255, 255, 255, 0.03);
+  background: var(--accent-faint);
 }
 
 .event-time {
@@ -223,17 +223,17 @@ function fmtOffsetTime(ms: number): string {
 
 .status-nominal {
   color: var(--green);
-  background: rgba(39, 174, 96, 0.1);
+  background: color-mix(in srgb, var(--green) 10%, transparent);
 }
 
 .status-warning {
   color: var(--amber);
-  background: rgba(243, 156, 18, 0.1);
+  background: color-mix(in srgb, var(--amber) 10%, transparent);
 }
 
 .status-critical {
   color: var(--red);
-  background: rgba(233, 69, 96, 0.1);
+  background: color-mix(in srgb, var(--red) 10%, transparent);
   animation: pulse 1.5s ease infinite;
 }
 

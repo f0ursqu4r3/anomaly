@@ -204,15 +204,15 @@ const stateClass = computed(() => {
   transform: translateX(-50%);
   width: 12px;
   height: 2px;
-  background: rgba(255, 255, 255, 0.15);
-  border-radius: 1px;
+  background: var(--accent-muted);
+  border-radius: var(--radius-xs);
   overflow: hidden;
 }
 
 .health-fill {
   height: 100%;
-  background: #ff9f43;
-  border-radius: 1px;
+  background: var(--orange);
+  border-radius: var(--radius-xs);
   transition: width 0.3s;
 }
 </style>

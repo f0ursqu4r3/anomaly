@@ -335,7 +335,7 @@ onUnmounted(() => cancelAnimationFrame(fpsRaf))
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(0, 0, 0, 0.3);
+  background: color-mix(in srgb, var(--bg-deep) 50%, transparent);
   pointer-events: none;
 }
 

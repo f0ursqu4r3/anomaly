@@ -22,6 +22,8 @@
   --green-glow: rgba(52, 211, 153, 0.25);
   --purple: #a78bfa;
   --purple-glow: rgba(167, 139, 250, 0.25);
+  --orange: #ff9f43;
+  --orange-glow: rgba(255, 159, 67, 0.25);
 
   /* Subtle accent used for borders, scanlines, zone markers */
   --accent-muted: rgba(100, 160, 220, 0.12);

@@ -81,7 +81,7 @@ const workerCount = computed(() => {
   z-index: 20;
   background: var(--overlay-bg);
   border: 1px solid var(--accent-muted);
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   padding: 6px 8px;
   font-family: var(--font-mono);
   font-size: 9px;

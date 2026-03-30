@@ -104,9 +104,9 @@ const typeClass = computed(() => `type-${props.building.type}`)
   right: -4px;
   width: 14px;
   height: 14px;
-  border-radius: 3px;
+  border-radius: var(--radius-xs);
   background: var(--red);
-  color: var(--bg-deep, #1a1a2e);
+  color: var(--bg-deep);
   display: flex;
   align-items: center;
   justify-content: center;
