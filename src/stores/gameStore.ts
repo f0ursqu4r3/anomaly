@@ -2,16 +2,22 @@ import { defineStore } from 'pinia'
 import { Preferences } from '@capacitor/preferences'
 import { simulateOffline } from './offlineEngine'
 import type { OfflineEvent, OfflineResult } from './offlineEngine'
+import type { Trait, Action } from '@/types/colonist'
+import { randomTrait } from '@/types/colonist'
+import { getBuildingPosition, getLandingPosition } from '@/systems/mapLayout'
+import { updateNeeds, checkInterrupt, advanceAction, selectAction } from '@/systems/colonistAI'
 
 // ── Types ──────────────────────────────────────────────────────────
-
-export type ColonistRole = 'driller' | 'engineer' | 'idle'
 
 export interface Colonist {
   id: string
   name: string
-  role: ColonistRole
-  health: number // 0–100
+  health: number
+  energy: number
+  morale: number
+  trait: Trait
+  currentAction: Action | null
+  currentZone: string
 }
 
 export type BuildingType = 'o2generator' | 'solar' | 'drillrig' | 'medbay'
@@ -22,6 +28,7 @@ export interface Building {
   damaged: boolean
   x: number
   y: number
+  rotation?: number
 }
 
 export interface BuildingBlueprint {
@@ -84,7 +91,6 @@ export interface SupplyDrop {
 }
 
 const UNPACK_MS_PER_KG = 150 // 150ms per kg with 1 colonist (e.g. 45kg = 6.75s)
-const LANDING_ZONE = { x: 45, y: 45 }
 const DONE_LINGER_MS = 1500
 
 export interface ColonyState {
@@ -123,7 +129,8 @@ export interface ColonyState {
 
 // ── Constants ──────────────────────────────────────────────────────
 
-const SAVE_KEY = 'colony-save-v2'
+const SAVE_KEY = 'colony-save-v3'
+const LEGACY_SAVE_KEY = 'colony-save-v2'
 
 export const AIR_CONSUMPTION_PER_COLONIST = 0.5
 export const O2_PRODUCTION_PER_GENERATOR = 2.0
@@ -283,44 +290,6 @@ export const BLUEPRINTS: BuildingBlueprint[] = [
 
 export const COLONIST_NAMES = ['Kael', 'Mira', 'Tarn', 'Vex', 'Lira', 'Cade', 'Nyx', 'Orin', 'Zara', 'Pax']
 
-// ── Map Zones ──────────────────────────────────────────────────────
-
-export const MAP_ZONES: Record<string, { x: number; y: number }> = {
-  habitat: { x: 50, y: 40 },
-  drillSite: { x: 50, y: 72 },
-  powerField: { x: 30, y: 30 },
-  lifeSup: { x: 70, y: 30 },
-  medical: { x: 70, y: 52 },
-}
-
-const ZONE_FOR_TYPE: Record<BuildingType, string> = {
-  solar: 'powerField',
-  o2generator: 'lifeSup',
-  drillrig: 'drillSite',
-  medbay: 'medical',
-}
-
-const SLOT_OFFSETS = [
-  { dx: 0, dy: 0 },
-  { dx: 10, dy: 0 },
-  { dx: -10, dy: 0 },
-  { dx: 0, dy: 10 },
-  { dx: 10, dy: 10 },
-  { dx: -10, dy: 10 },
-]
-
-export function getBuildingPosition(
-  type: BuildingType,
-  existingBuildings: Building[],
-): { x: number; y: number } {
-  const zoneName = ZONE_FOR_TYPE[type]
-  const zone = MAP_ZONES[zoneName]
-  const sameZone = existingBuildings.filter((b) => ZONE_FOR_TYPE[b.type] === zoneName)
-  const slotIndex = Math.min(sameZone.length, SLOT_OFFSETS.length - 1)
-  const offset = SLOT_OFFSETS[slotIndex]
-  return { x: zone.x + offset.dx, y: zone.y + offset.dy }
-}
-
 // ── Helpers ─────────────────────────────────────────────────────────
 
 let nextId = 1
@@ -330,9 +299,8 @@ export function uid(): string {
 
 function makeStartingColonists(): Colonist[] {
   return [
-    { id: uid(), name: 'Riko', role: 'driller', health: 100 },
-    { id: uid(), name: 'Sable', role: 'engineer', health: 100 },
-    { id: uid(), name: 'Juno', role: 'idle', health: 100 },
+    { id: uid(), name: 'Riko', health: 100, energy: 80, morale: 70, trait: randomTrait(), currentAction: null, currentZone: 'habitat' },
+    { id: uid(), name: 'Sable', health: 100, energy: 80, morale: 70, trait: randomTrait(), currentAction: null, currentZone: 'habitat' },
   ]
 }
 
@@ -341,7 +309,7 @@ function makeStartingBuildings(): Building[] {
   const types: BuildingType[] = ['solar', 'o2generator', 'drillrig']
   for (const t of types) {
     const pos = getBuildingPosition(t, b)
-    b.push({ id: uid(), type: t, damaged: false, x: pos.x, y: pos.y })
+    b.push({ id: uid(), type: t, damaged: false, x: pos.x, y: pos.y, rotation: pos.rotation })
   }
   return b
 }
@@ -398,11 +366,23 @@ export const useGameStore = defineStore('game', {
 
   getters: {
     aliveColonists: (s) => s.colonists.filter((c) => c.health > 0),
-    drillers: (s) => s.colonists.filter((c) => c.health > 0 && c.role === 'driller'),
-    engineers: (s) => s.colonists.filter((c) => c.health > 0 && c.role === 'engineer'),
+
+    activeEngineers: (s) => s.colonists.filter(
+      c => c.health > 0 && c.currentAction?.type === 'engineer' && !c.currentAction?.walkPath?.length
+    ),
+
+    activeDrillers: (s) => s.colonists.filter(
+      c => c.health > 0 && c.currentAction?.type === 'drill' && !c.currentAction?.walkPath?.length
+    ),
 
     engineerBonus(s): number {
-      const count = s.colonists.filter((c) => c.health > 0 && c.role === 'engineer').length
+      const atPower = s.colonists.filter(
+        c => c.health > 0 && c.currentAction?.type === 'engineer' && c.currentAction?.targetZone === 'power' && !c.currentAction?.walkPath?.length
+      ).length
+      const atLifeSup = s.colonists.filter(
+        c => c.health > 0 && c.currentAction?.type === 'engineer' && c.currentAction?.targetZone === 'lifeSup' && !c.currentAction?.walkPath?.length
+      ).length
+      const count = atPower + atLifeSup
       const mod = DIRECTIVE_MODIFIERS[s.activeDirective].prodMult
       return (1 + count * ENGINEER_EFFICIENCY_BONUS) * mod
     },
@@ -411,18 +391,22 @@ export const useGameStore = defineStore('game', {
       const alive = s.colonists.filter((c) => c.health > 0).length
       const consumption = alive * AIR_CONSUMPTION_PER_COLONIST
       const generators = s.buildings.filter((b) => b.type === 'o2generator' && !b.damaged).length
-      const engCount = s.colonists.filter((c) => c.health > 0 && c.role === 'engineer').length
+      const workersAtLifeSup = s.colonists.filter(
+        c => c.health > 0 && c.currentAction?.type === 'engineer' && c.currentAction?.targetZone === 'lifeSup' && !c.currentAction?.walkPath?.length
+      ).length
       const mod = DIRECTIVE_MODIFIERS[s.activeDirective].prodMult
-      const engBonus = (1 + engCount * ENGINEER_EFFICIENCY_BONUS) * mod
+      const engBonus = (1 + workersAtLifeSup * ENGINEER_EFFICIENCY_BONUS) * mod
       const production = s.power > 0 ? generators * O2_PRODUCTION_PER_GENERATOR * engBonus : 0
       return production - consumption
     },
 
     powerRate(s): number {
       const solars = s.buildings.filter((b) => b.type === 'solar' && !b.damaged).length
-      const engCount = s.colonists.filter((c) => c.health > 0 && c.role === 'engineer').length
+      const workersAtPower = s.colonists.filter(
+        c => c.health > 0 && c.currentAction?.type === 'engineer' && c.currentAction?.targetZone === 'power' && !c.currentAction?.walkPath?.length
+      ).length
       const mod = DIRECTIVE_MODIFIERS[s.activeDirective].prodMult
-      const engBonus = (1 + engCount * ENGINEER_EFFICIENCY_BONUS) * mod
+      const engBonus = (1 + workersAtPower * ENGINEER_EFFICIENCY_BONUS) * mod
       const production = solars * POWER_PRODUCTION_PER_SOLAR * engBonus
       const activeBuildings = s.buildings.filter((b) => !b.damaged).length
       const consumption = activeBuildings * POWER_CONSUMPTION_PER_BUILDING
@@ -430,24 +414,29 @@ export const useGameStore = defineStore('game', {
     },
 
     drillRate(s): number {
-      const drillerCount = s.colonists.filter((c) => c.health > 0 && c.role === 'driller').length
+      const drillerCount = s.colonists.filter(
+        c => c.health > 0 && c.currentAction?.type === 'drill' && !c.currentAction?.walkPath?.length
+      ).length
       const rigCount = s.buildings.filter((b) => b.type === 'drillrig' && !b.damaged).length
-      const engCount = s.colonists.filter((c) => c.health > 0 && c.role === 'engineer').length
+      const totalEngineers = s.colonists.filter(
+        c => c.health > 0 && c.currentAction?.type === 'engineer' && !c.currentAction?.walkPath?.length
+      ).length
       const mod = DIRECTIVE_MODIFIERS[s.activeDirective].drillMult
-      const engBonus = 1 + engCount * ENGINEER_EFFICIENCY_BONUS
-      return (
-        (drillerCount * DRILL_SPEED_PER_DRILLER + rigCount * DRILL_SPEED_PER_RIG) * engBonus * mod
-      )
+      const engBonus = 1 + totalEngineers * ENGINEER_EFFICIENCY_BONUS
+      return (drillerCount * DRILL_SPEED_PER_DRILLER + rigCount * DRILL_SPEED_PER_RIG) * engBonus * mod
     },
 
     creditRate(s): number {
-      const drillerCount = s.colonists.filter((c) => c.health > 0 && c.role === 'driller').length
+      const drillerCount = s.colonists.filter(
+        c => c.health > 0 && c.currentAction?.type === 'drill' && !c.currentAction?.walkPath?.length
+      ).length
       const rigCount = s.buildings.filter((b) => b.type === 'drillrig' && !b.damaged).length
-      const engCount = s.colonists.filter((c) => c.health > 0 && c.role === 'engineer').length
+      const totalEngineers = s.colonists.filter(
+        c => c.health > 0 && c.currentAction?.type === 'engineer' && !c.currentAction?.walkPath?.length
+      ).length
       const mod = DIRECTIVE_MODIFIERS[s.activeDirective].drillMult
-      const engBonus = 1 + engCount * ENGINEER_EFFICIENCY_BONUS
-      const rate =
-        (drillerCount * DRILL_SPEED_PER_DRILLER + rigCount * DRILL_SPEED_PER_RIG) * engBonus * mod
+      const engBonus = 1 + totalEngineers * ENGINEER_EFFICIENCY_BONUS
+      const rate = (drillerCount * DRILL_SPEED_PER_DRILLER + rigCount * DRILL_SPEED_PER_RIG) * engBonus * mod
       return BASE_CREDITS_PER_TICK + rate * METALS_PER_DEPTH * CREDITS_PER_METAL_MINED
     },
 
@@ -489,25 +478,54 @@ export const useGameStore = defineStore('game', {
       }
 
       // Colonist AI
-      this.reassignRoles()
+      for (const c of alive) {
+        updateNeeds(c)
+        const interrupted = checkInterrupt(c)
+        if (!interrupted) {
+          const needsDecision = advanceAction(c)
+          if (needsDecision) {
+            c.currentAction = selectAction(c, this.$state)
+          }
+        } else {
+          c.currentAction = selectAction(c, this.$state)
+        }
+      }
+
+      // Count active workers by zone
+      const workersAtPower = alive.filter(
+        c => c.currentAction?.type === 'engineer' && c.currentAction?.targetZone === 'power' && !c.currentAction?.walkPath?.length
+      ).length
+      const workersAtLifeSup = alive.filter(
+        c => c.currentAction?.type === 'engineer' && c.currentAction?.targetZone === 'lifeSup' && !c.currentAction?.walkPath?.length
+      ).length
+      const activeDrillers = alive.filter(
+        c => c.currentAction?.type === 'drill' && !c.currentAction?.walkPath?.length
+      ).length
+
+      const mod = DIRECTIVE_MODIFIERS[this.activeDirective]
 
       // Power
       const solars = this.buildings.filter((b) => b.type === 'solar' && !b.damaged).length
       const activeBuildings = this.buildings.filter((b) => !b.damaged).length
-      const powerProd = solars * POWER_PRODUCTION_PER_SOLAR * this.engineerBonus
+      const powerEngBonus = (1 + workersAtPower * ENGINEER_EFFICIENCY_BONUS) * mod.prodMult
+      const powerProd = solars * POWER_PRODUCTION_PER_SOLAR * powerEngBonus
       const powerCons = activeBuildings * POWER_CONSUMPTION_PER_BUILDING
       this.power = Math.min(this.powerMax, Math.max(0, this.power + (powerProd - powerCons) * dt))
 
       // Air
       const generators = this.buildings.filter((b) => b.type === 'o2generator' && !b.damaged).length
-      const airProd =
-        this.power > 0 ? generators * O2_PRODUCTION_PER_GENERATOR * this.engineerBonus : 0
+      const airEngBonus = (1 + workersAtLifeSup * ENGINEER_EFFICIENCY_BONUS) * mod.prodMult
+      const airProd = this.power > 0 ? generators * O2_PRODUCTION_PER_GENERATOR * airEngBonus : 0
       const airCons = alive.length * AIR_CONSUMPTION_PER_COLONIST
       this.air = Math.min(this.airMax, Math.max(0, this.air + (airProd - airCons) * dt))
 
       // Drilling + credit income
+      const rigCount = this.buildings.filter((b) => b.type === 'drillrig' && !b.damaged).length
+      const totalActiveEngineers = workersAtPower + workersAtLifeSup
+      const drillEngBonus = 1 + totalActiveEngineers * ENGINEER_EFFICIENCY_BONUS
+      const drillSpeed = (activeDrillers * DRILL_SPEED_PER_DRILLER + rigCount * DRILL_SPEED_PER_RIG) * drillEngBonus * mod.drillMult
+
       const metalsBefore = this.metals
-      const drillSpeed = this.drillRate
       let iceFound = false
       if (drillSpeed > 0) {
         const depthGain = drillSpeed * dt
@@ -574,73 +592,6 @@ export const useGameStore = defineStore('game', {
       }
     },
 
-    // ── Colonist AI ──
-    reassignRoles() {
-      const alive = this.colonists.filter((c) => c.health > 0)
-      if (alive.length === 0) return
-
-      const ratio = DIRECTIVE_RATIOS[this.activeDirective]
-      let targetDrillers = Math.round(alive.length * ratio.driller)
-      let targetEngineers = Math.round(alive.length * ratio.engineer)
-
-      // Emergency overrides
-      if (
-        this.air < this.airMax * 0.2 &&
-        this.buildings.some((b) => b.type === 'o2generator' && !b.damaged)
-      ) {
-        targetEngineers = Math.min(alive.length, targetEngineers + 1)
-        targetDrillers = Math.max(0, targetDrillers - 1)
-      }
-      if (this.power < this.powerMax * 0.2) {
-        targetEngineers = Math.min(alive.length, targetEngineers + 1)
-        targetDrillers = Math.max(0, targetDrillers - 1)
-      }
-      if (
-        this.buildings.some((b) => b.damaged) &&
-        alive.filter((c) => c.role === 'engineer').length === 0
-      ) {
-        targetEngineers = Math.max(1, targetEngineers)
-      }
-
-      // Clamp totals
-      if (targetDrillers + targetEngineers > alive.length) {
-        targetEngineers = Math.min(targetEngineers, alive.length)
-        targetDrillers = Math.min(targetDrillers, alive.length - targetEngineers)
-      }
-
-      const currentDrillers = alive.filter((c) => c.role === 'driller').length
-      const currentEngineers = alive.filter((c) => c.role === 'engineer').length
-
-      if (currentDrillers === targetDrillers && currentEngineers === targetEngineers) return
-
-      // Reassign: collect who needs to change
-      const pool = [...alive]
-      // Shuffle for personality variation
-      for (let i = pool.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1))
-        ;[pool[i], pool[j]] = [pool[j], pool[i]]
-      }
-
-      let drillerSlots = targetDrillers
-      let engineerSlots = targetEngineers
-
-      for (const c of pool) {
-        const oldRole = c.role
-        if (drillerSlots > 0) {
-          c.role = 'driller'
-          drillerSlots--
-        } else if (engineerSlots > 0) {
-          c.role = 'engineer'
-          engineerSlots--
-        } else {
-          c.role = 'idle'
-        }
-        if (c.role !== oldRole) {
-          this.pushMessage(`${c.name} reassigned to ${c.role}.`, 'info')
-        }
-      }
-    },
-
     // ── Hazards ──
     checkHazards() {
       if (Date.now() < this.hazardCooldownUntil) return
@@ -670,6 +621,13 @@ export const useGameStore = defineStore('game', {
         const msg = 'Hit a gas pocket! Air venting!'
         this.lastHazard = { type: 'gaspocket', message: msg, timestamp: Date.now() }
         this.pushMessage(msg, 'critical')
+      }
+
+      // Urgent re-evaluation after hazard
+      for (const c of this.colonists) {
+        if (c.health > 0 && (!c.currentAction || c.currentAction.type === 'wander' || c.currentAction.type === 'drill')) {
+          c.currentAction = selectAction(c, this.$state)
+        }
       }
     },
 
@@ -761,14 +719,13 @@ export const useGameStore = defineStore('game', {
 
         if (crateItems.length > 0) {
           const crateWeight = crateItems.reduce((sum, o) => sum + o.weight, 0)
-          const jitterX = (Math.random() - 0.5) * 8
-          const jitterY = (Math.random() - 0.5) * 6
+          const landingPos = getLandingPosition()
           this.supplyDrops.push({
             id: uid(),
             contents: crateItems,
             totalWeight: crateWeight,
-            x: LANDING_ZONE.x + jitterX,
-            y: LANDING_ZONE.y + jitterY,
+            x: landingPos.x,
+            y: landingPos.y,
             state: 'landed',
             unpackProgress: 0,
             unpackDuration: crateWeight * UNPACK_MS_PER_KG,
@@ -779,6 +736,13 @@ export const useGameStore = defineStore('game', {
             `Shipment landed (${crateWeight}kg): ${itemNames}. Send crew to unpack.`,
             'event',
           )
+
+          // Urgent re-evaluation after supply drop
+          for (const c of this.colonists) {
+            if (c.health > 0 && (!c.currentAction || c.currentAction.type === 'wander')) {
+              c.currentAction = selectAction(c, this.$state)
+            }
+          }
         }
       }
     },
@@ -811,6 +775,7 @@ export const useGameStore = defineStore('game', {
                 damaged: false,
                 x: pos.x,
                 y: pos.y,
+                rotation: pos.rotation,
               })
               const label =
                 BLUEPRINTS.find((b) => b.type === item.buildingType)?.label || item.buildingType
@@ -824,7 +789,11 @@ export const useGameStore = defineStore('game', {
               available.length > 0
                 ? available[Math.floor(Math.random() * available.length)]
                 : `Crew-${this.colonists.length + 1}`
-            this.colonists.push({ id: uid(), name, role: 'idle', health: 100 })
+            this.colonists.push({
+              id: uid(), name, health: 100,
+              energy: 80, morale: 70, trait: randomTrait(),
+              currentAction: null, currentZone: 'habitat',
+            })
             this.pushMessage(`${name} has joined the colony.`, 'event')
             break
           }
@@ -954,38 +923,49 @@ export const useGameStore = defineStore('game', {
     },
 
     async load() {
-      try {
-        const { value } = await Preferences.get({ key: SAVE_KEY })
-        if (value) {
-          const parsed = JSON.parse(value) as Partial<ColonyState>
+      for (const key of [SAVE_KEY, LEGACY_SAVE_KEY]) {
+        try {
+          const { value } = await Preferences.get({ key })
+          if (value) {
+            const parsed = JSON.parse(value) as Partial<ColonyState>
+            this.$patch(parsed)
+            this.migrateState()
+            return
+          }
+        } catch { /* fall through */ }
+        const raw = localStorage.getItem(key)
+        if (raw) {
+          const parsed = JSON.parse(raw) as Partial<ColonyState>
           this.$patch(parsed)
           this.migrateState()
           return
         }
-      } catch {
-        /* fall through */
-      }
-      const raw = localStorage.getItem(SAVE_KEY)
-      if (raw) {
-        const parsed = JSON.parse(raw) as Partial<ColonyState>
-        this.$patch(parsed)
-        this.migrateState()
       }
     },
 
     migrateState() {
-      // Backfill building positions
-      for (const b of this.buildings) {
-        if (b.x === undefined || b.y === undefined) {
-          const pos = getBuildingPosition(
-            b.type,
-            this.buildings.filter((ob) => ob.id !== b.id && ob.x !== undefined),
-          )
-          b.x = pos.x
-          b.y = pos.y
-        }
+      // v2→v3: Add new colonist fields
+      for (const c of this.colonists) {
+        if ((c as any).energy === undefined) c.energy = 80
+        if ((c as any).morale === undefined) c.morale = 70
+        if ((c as any).trait === undefined) c.trait = randomTrait()
+        if ((c as any).currentAction === undefined) c.currentAction = null
+        if ((c as any).currentZone === undefined) c.currentZone = 'habitat'
+        delete (c as any).role
       }
-      // Backfill new fields
+
+      // Recalculate building positions with organic scatter
+      for (const b of this.buildings) {
+        const pos = getBuildingPosition(
+          b.type,
+          this.buildings.filter(ob => ob.id !== b.id),
+        )
+        b.x = pos.x
+        b.y = pos.y
+        ;(b as any).rotation = pos.rotation
+      }
+
+      // Backfill other fields
       if (this.credits === undefined) this.credits = 50
       if (this.totalCreditsEarned === undefined) this.totalCreditsEarned = 50
       if (this.activeDirective === undefined) this.activeDirective = 'balanced'
