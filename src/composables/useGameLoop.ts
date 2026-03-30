@@ -58,7 +58,7 @@ export function useGameLoop() {
   }
 
   function handleOfflineResult(result: OfflineResult | null) {
-    if (result && result.events.length > 0 && result.durationMs > 60_000) {
+    if (result && result.durationMs > 60_000) {
       applyReportData(result)
       showShiftReport.value = true
     } else {

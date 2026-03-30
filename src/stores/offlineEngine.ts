@@ -227,6 +227,7 @@ export function simulateOffline(inputState: ColonyState, elapsedMs: number): Off
   let remaining = elapsedMs / 1000
   let elapsedSoFar = 0
   let timeSinceHazardCheck = 0
+  let lastMilestoneDepth = Math.floor(state.depth / 50)
   const HAZARD_INTERVAL_S = HAZARD_CHECK_INTERVAL_MS / 1000
   const MAX_ITERATIONS = 100_000
   let iterations = 0
@@ -318,6 +319,7 @@ export function simulateOffline(inputState: ColonyState, elapsedMs: number): Off
     if (phaseReason === 'hazard') {
       timeSinceHazardCheck = 0
       applyHazard(state, rand, events, elapsedSoFar)
+      reassignRoles(state)
     }
 
     if (phaseReason === 'shipment') {
@@ -333,10 +335,10 @@ export function simulateOffline(inputState: ColonyState, elapsedMs: number): Off
       }
     }
 
-    const beforeMilestone = Math.floor(before.depth / 50)
-    const afterMilestone = Math.floor(state.depth / 50)
-    if (afterMilestone > beforeMilestone) {
-      events.push({ type: 'milestone', severity: 'info', offsetMs: elapsedSoFar, message: `Reached ${afterMilestone * 50}m depth.` })
+    const currentMilestone = Math.floor(state.depth / 50)
+    if (currentMilestone > lastMilestoneDepth) {
+      events.push({ type: 'milestone', severity: 'info', offsetMs: elapsedSoFar, message: `Reached ${currentMilestone * 50}m depth.` })
+      lastMilestoneDepth = currentMilestone
     }
   }
 
