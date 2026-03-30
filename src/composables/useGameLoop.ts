@@ -1,11 +1,26 @@
-import { onMounted, onUnmounted } from 'vue'
+import { ref, reactive, onMounted, onUnmounted } from 'vue'
 import { useGameStore } from '@/stores/gameStore'
+import {
+  scheduleOfflineNotifications,
+  cancelAllOfflineNotifications,
+} from '@/services/notifications'
+import { simulateOffline } from '@/stores/offlineEngine'
+import type { OfflineResult } from '@/stores/offlineEngine'
 
 const TICK_MS = 1000
-const SAVE_EVERY_N_TICKS = 30 // save every 30 ticks (30s)
+const SAVE_EVERY_N_TICKS = 30
+const EAGER_SIM_WINDOW_MS = 4 * 60 * 60 * 1000 // 4h max for notification scheduling
 
 export function useGameLoop() {
   const game = useGameStore()
+  const showShiftReport = ref(false)
+  const reportData = reactive({
+    durationMs: 0,
+    deltaCredits: 0,
+    deltaMetals: 0,
+    deltaIce: 0,
+    deltaDepth: 0,
+  })
 
   let tickInterval: ReturnType<typeof setInterval> | null = null
   let tickCount = 0
@@ -28,20 +43,45 @@ export function useGameLoop() {
     }
   }
 
-  // Handle app going to background / coming back
-  function onVisibilityChange() {
+  function applyReportData(result: OfflineResult) {
+    reportData.durationMs = result.durationMs
+    reportData.deltaCredits = result.deltaCredits
+    reportData.deltaMetals = result.deltaMetals
+    reportData.deltaIce = result.deltaIce
+    reportData.deltaDepth = result.deltaDepth
+  }
+
+  function dismissReport() {
+    showShiftReport.value = false
+    game.dismissShiftReport()
+    startLoop()
+  }
+
+  function handleOfflineResult(result: OfflineResult | null) {
+    if (result && result.events.length > 0 && result.durationMs > 60_000) {
+      applyReportData(result)
+      showShiftReport.value = true
+    } else {
+      startLoop()
+    }
+  }
+
+  async function onVisibilityChange() {
     if (document.hidden) {
       stopLoop()
-      game.save()
+      await game.save()
+
+      const eagerResult = simulateOffline(game.$state, EAGER_SIM_WINDOW_MS)
+      await scheduleOfflineNotifications(eagerResult.events, Date.now())
     } else {
-      game.processOfflineTime()
-      startLoop()
+      await cancelAllOfflineNotifications()
+      handleOfflineResult(game.processOfflineTime())
     }
   }
 
   onMounted(async () => {
     await game.load()
-    startLoop()
+    handleOfflineResult(game.processOfflineTime())
     document.addEventListener('visibilitychange', onVisibilityChange)
   })
 
@@ -51,5 +91,5 @@ export function useGameLoop() {
     document.removeEventListener('visibilitychange', onVisibilityChange)
   })
 
-  return { startLoop, stopLoop }
+  return { startLoop, stopLoop, showShiftReport, dismissReport, reportData }
 }
