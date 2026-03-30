@@ -4,38 +4,30 @@
     <div class="scanlines" />
 
     <!-- Zone markers -->
-    <div class="zone-marker" style="left: 50%; top: 38%;">SEC-A: HAB</div>
-    <div class="zone-marker" style="left: 28%; top: 18%;">SEC-B: POWER</div>
-    <div class="zone-marker" style="left: 72%; top: 18%;">SEC-C: LIFE SUP</div>
-    <div class="zone-marker" style="left: 50%; top: 70%;">SEC-D: DRILL</div>
-    <div class="zone-marker" style="left: 72%; top: 50%;">SEC-E: MED</div>
+    <div class="zone-marker" style="left: 50%; top: 38%">SEC-A: HAB</div>
+    <div class="zone-marker" style="left: 28%; top: 18%">SEC-B: POWER</div>
+    <div class="zone-marker" style="left: 72%; top: 18%">SEC-C: LIFE SUP</div>
+    <div class="zone-marker" style="left: 50%; top: 70%">SEC-D: DRILL</div>
+    <div class="zone-marker" style="left: 72%; top: 50%">SEC-E: MED</div>
 
     <!-- Terrain craters -->
-    <div class="crater" style="left: 15%; top: 55%; width: 40px; height: 40px;" />
-    <div class="crater" style="left: 85%; top: 75%; width: 25px; height: 25px;" />
-    <div class="crater" style="left: 40%; top: 15%; width: 30px; height: 30px;" />
-    <div class="crater" style="left: 60%; top: 65%; width: 20px; height: 20px;" />
-    <div class="crater" style="left: 10%; top: 30%; width: 18px; height: 18px;" />
-    <div class="crater" style="left: 90%; top: 40%; width: 22px; height: 22px;" />
-    <div class="crater sm" style="left: 35%; top: 85%; width: 14px; height: 14px;" />
-    <div class="crater sm" style="left: 75%; top: 88%; width: 12px; height: 12px;" />
+    <div class="crater" style="left: 15%; top: 55%; width: 40px; height: 40px" />
+    <div class="crater" style="left: 85%; top: 75%; width: 25px; height: 25px" />
+    <div class="crater" style="left: 40%; top: 15%; width: 30px; height: 30px" />
+    <div class="crater" style="left: 60%; top: 65%; width: 20px; height: 20px" />
+    <div class="crater" style="left: 10%; top: 30%; width: 18px; height: 18px" />
+    <div class="crater" style="left: 90%; top: 40%; width: 22px; height: 22px" />
+    <div class="crater sm" style="left: 35%; top: 85%; width: 14px; height: 14px" />
+    <div class="crater sm" style="left: 75%; top: 88%; width: 12px; height: 12px" />
 
     <!-- Habitat ring -->
     <div class="habitat-ring" />
 
     <!-- Buildings -->
-    <MapBuilding
-      v-for="b in game.buildings"
-      :key="b.id"
-      :building="b"
-    />
+    <MapBuilding v-for="b in game.buildings" :key="b.id" :building="b" />
 
     <!-- Supply drops -->
-    <MapSupplyDrop
-      v-for="d in game.supplyDrops"
-      :key="d.id"
-      :drop="d"
-    />
+    <MapSupplyDrop v-for="d in game.supplyDrops" :key="d.id" :drop="d" />
 
     <!-- Colonists -->
     <MapColonist
@@ -103,7 +95,12 @@ function getColonistState(id: string) {
     radial-gradient(circle at 15% 80%, rgba(80, 120, 160, 0.03) 0%, transparent 1px),
     radial-gradient(circle at 85% 35%, rgba(80, 120, 160, 0.04) 0%, transparent 2px),
     radial-gradient(circle at 55% 10%, rgba(80, 120, 160, 0.02) 0%, transparent 1px);
-  background-size: 120px 120px, 80px 80px, 150px 150px, 100px 100px, 60px 60px;
+  background-size:
+    120px 120px,
+    80px 80px,
+    150px 150px,
+    100px 100px,
+    60px 60px;
 }
 
 .scanlines {
@@ -138,7 +135,9 @@ function getColonistState(id: string) {
   border-radius: 50%;
   border: 1px solid rgba(80, 120, 180, 0.06);
   background: radial-gradient(circle, rgba(0, 0, 0, 0.2) 30%, transparent 70%);
-  box-shadow: inset 1px 1px 3px rgba(0, 0, 0, 0.3), 0 0 6px rgba(80, 120, 180, 0.02);
+  box-shadow:
+    inset 1px 1px 3px rgba(0, 0, 0, 0.3),
+    0 0 6px rgba(80, 120, 180, 0.02);
   pointer-events: none;
 }
 
@@ -188,7 +187,12 @@ function getColonistState(id: string) {
 }
 
 @keyframes feed-blink {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.2; }
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.2;
+  }
 }
 </style>

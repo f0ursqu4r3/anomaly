@@ -17,7 +17,6 @@ const WALK_SPEED = 8
 const WORK_DURATION_MIN = 3000
 const WORK_DURATION_MAX = 8000
 const IDLE_WANDER_RANGE = 6
-const DROP_ARRIVAL_DIST = 4 // % distance to consider "at" the drop
 const UNPACK_WORK_TIME = 1500 // how long colonist works at drop before re-checking
 
 function randRange(min: number, max: number): number {
@@ -68,8 +67,10 @@ export function useColonistMovement() {
     return state
   }
 
-  function findAvailableDrop(colonistId: string): { x: number; y: number; dropId: string } | null {
-    const activeDrops = game.supplyDrops.filter(d => d.state === 'landed' || d.state === 'unpacking')
+  function findAvailableDrop(_colonistId: string): { x: number; y: number; dropId: string } | null {
+    const activeDrops = game.supplyDrops.filter(
+      (d) => d.state === 'landed' || d.state === 'unpacking',
+    )
     if (activeDrops.length === 0) return null
 
     // Prefer drops with fewer colonists assigned
@@ -80,7 +81,7 @@ export function useColonistMovement() {
   }
 
   function pickTarget(colonistId: string, ms: ColonistMapState): { x: number; y: number } {
-    const colonist = game.colonists.find(c => c.id === colonistId)
+    const colonist = game.colonists.find((c) => c.id === colonistId)
     if (!colonist || colonist.health <= 0) {
       ms.assignedDropId = null
       return { x: MAP_ZONES.habitat.x, y: MAP_ZONES.habitat.y }
@@ -99,7 +100,7 @@ export function useColonistMovement() {
     const role = colonist.role
 
     if (role === 'driller') {
-      const rigs = game.buildings.filter(b => b.type === 'drillrig' && !b.damaged)
+      const rigs = game.buildings.filter((b) => b.type === 'drillrig' && !b.damaged)
       if (rigs.length > 0) {
         const rig = rigs[Math.floor(Math.random() * rigs.length)]
         return { x: jitter(rig.x, 6), y: jitter(rig.y, 6) }
@@ -108,7 +109,7 @@ export function useColonistMovement() {
     }
 
     if (role === 'engineer') {
-      const buildings = game.buildings.filter(b => !b.damaged)
+      const buildings = game.buildings.filter((b) => !b.damaged)
       if (buildings.length > 0) {
         const b = buildings[Math.floor(Math.random() * buildings.length)]
         return { x: jitter(b.x, 5), y: jitter(b.y, 5) }
@@ -143,7 +144,7 @@ export function useColonistMovement() {
 
         // Check if we arrived at a supply drop
         if (ms.assignedDropId) {
-          const drop = game.supplyDrops.find(d => d.id === ms.assignedDropId)
+          const drop = game.supplyDrops.find((d) => d.id === ms.assignedDropId)
           if (drop && (drop.state === 'landed' || drop.state === 'unpacking')) {
             // Start unpacking
             if (drop.state === 'landed') {
@@ -152,7 +153,10 @@ export function useColonistMovement() {
             // Advance unpack progress based on number of colonists here
             const workers = colonistsAtDrop(drop.id)
             const rate = workers * Math.pow(0.8, workers - 1)
-            drop.unpackProgress = Math.min(1, drop.unpackProgress + (UNPACK_WORK_TIME / drop.unpackDuration) * rate)
+            drop.unpackProgress = Math.min(
+              1,
+              drop.unpackProgress + (UNPACK_WORK_TIME / drop.unpackDuration) * rate,
+            )
 
             ms.state = 'working'
             ms.stateTimer = UNPACK_WORK_TIME
@@ -199,9 +203,12 @@ export function useColonistMovement() {
     return Math.max(min, Math.min(max, v))
   }
 
-  watch(() => game.lastTickAt, () => {
-    update(1000)
-  })
+  watch(
+    () => game.lastTickAt,
+    () => {
+      update(1000)
+    },
+  )
 
   return { positions, getOrCreate }
 }

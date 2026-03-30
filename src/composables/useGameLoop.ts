@@ -2,7 +2,7 @@ import { onMounted, onUnmounted } from 'vue'
 import { useGameStore } from '@/stores/gameStore'
 
 const TICK_MS = 1000
-const SAVE_EVERY_N_TICKS = 30  // save every 30 ticks (30s)
+const SAVE_EVERY_N_TICKS = 30 // save every 30 ticks (30s)
 
 export function useGameLoop() {
   const game = useGameStore()

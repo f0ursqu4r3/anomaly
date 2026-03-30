@@ -21,9 +21,7 @@
             <span class="stat-value mono">${{ Math.floor(game.totalCreditsEarned) }}</span>
           </div>
         </div>
-        <button class="restart-btn" @click="game.resetGame()">
-          Try Again
-        </button>
+        <button class="restart-btn" @click="game.resetGame()">Try Again</button>
       </div>
     </div>
   </Transition>
@@ -115,6 +113,10 @@ const game = useGameStore()
   border-radius: var(--radius-md);
 }
 
-.modal-enter-active { animation: slide-up 0.3s ease; }
-.modal-leave-active { animation: slide-up 0.3s ease reverse forwards; }
+.modal-enter-active {
+  animation: slide-up 0.3s ease;
+}
+.modal-leave-active {
+  animation: slide-up 0.3s ease reverse forwards;
+}
 </style>

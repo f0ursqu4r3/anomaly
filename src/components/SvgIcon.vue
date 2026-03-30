@@ -11,10 +11,13 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 
-const props = withDefaults(defineProps<{
-  name: string
-  size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl'
-}>(), { size: 'sm' })
+const props = withDefaults(
+  defineProps<{
+    name: string
+    size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl'
+  }>(),
+  { size: 'sm' },
+)
 
 interface IconDef {
   viewBox: string
@@ -167,9 +170,24 @@ const icon = computed(() => ICONS[props.name])
   color: inherit;
   flex-shrink: 0;
 }
-.icon-xs { width: 12px; height: 12px; }
-.icon-sm { width: 16px; height: 16px; }
-.icon-md { width: 20px; height: 20px; }
-.icon-lg { width: 28px; height: 28px; }
-.icon-xl { width: 40px; height: 40px; }
+.icon-xs {
+  width: 12px;
+  height: 12px;
+}
+.icon-sm {
+  width: 16px;
+  height: 16px;
+}
+.icon-md {
+  width: 20px;
+  height: 20px;
+}
+.icon-lg {
+  width: 28px;
+  height: 28px;
+}
+.icon-xl {
+  width: 40px;
+  height: 40px;
+}
 </style>

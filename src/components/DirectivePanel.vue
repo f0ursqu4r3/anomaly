@@ -27,11 +27,41 @@ import SvgIcon from './SvgIcon.vue'
 
 const game = useGameStore()
 
-const directives: { value: Directive; label: string; icon: string; description: string; ratioText: string }[] = [
-  { value: 'mining', label: 'Prioritize Mining', icon: 'mining', description: '1.3x drill speed, no hazard resistance', ratioText: '70% drill / 20% eng' },
-  { value: 'safety', label: 'Prioritize Safety', icon: 'safety', description: '40% hazard resist, 1.2x production', ratioText: '20% drill / 60% eng' },
-  { value: 'balanced', label: 'Balanced Ops', icon: 'balanced', description: 'Standard rates, 15% hazard resist', ratioText: '40% drill / 40% eng' },
-  { value: 'emergency', label: 'Emergency Protocol', icon: 'emergency', description: '1.5x production, minimal drilling', ratioText: '10% drill / 80% eng' },
+const directives: {
+  value: Directive
+  label: string
+  icon: string
+  description: string
+  ratioText: string
+}[] = [
+  {
+    value: 'mining',
+    label: 'Prioritize Mining',
+    icon: 'mining',
+    description: '1.3x drill speed, no hazard resistance',
+    ratioText: '70% drill / 20% eng',
+  },
+  {
+    value: 'safety',
+    label: 'Prioritize Safety',
+    icon: 'safety',
+    description: '40% hazard resist, 1.2x production',
+    ratioText: '20% drill / 60% eng',
+  },
+  {
+    value: 'balanced',
+    label: 'Balanced Ops',
+    icon: 'balanced',
+    description: 'Standard rates, 15% hazard resist',
+    ratioText: '40% drill / 40% eng',
+  },
+  {
+    value: 'emergency',
+    label: 'Emergency Protocol',
+    icon: 'emergency',
+    description: '1.5x production, minimal drilling',
+    ratioText: '10% drill / 80% eng',
+  },
 ]
 </script>
 

@@ -1,17 +1,10 @@
 <template>
-  <div class="message-log" ref="logEl" @scroll="onScroll">
-    <div
-      v-for="msg in game.messages"
-      :key="msg.id"
-      class="log-entry"
-      :class="msg.severity"
-    >
+  <div ref="logEl" class="message-log" @scroll="onScroll">
+    <div v-for="msg in game.messages" :key="msg.id" class="log-entry" :class="msg.severity">
       <span class="log-time mono">{{ fmtMissionTime(msg.timestamp) }}</span>
       <span class="log-text">{{ msg.text }}</span>
     </div>
-    <div v-if="game.messages.length === 0" class="log-empty">
-      Awaiting colony transmissions...
-    </div>
+    <div v-if="game.messages.length === 0" class="log-empty">Awaiting colony transmissions...</div>
   </div>
 </template>
 
@@ -47,10 +40,13 @@ function scrollToBottom() {
 }
 
 // Auto-scroll on new messages only if user hasn't scrolled up
-watch(() => game.messages.length, () => {
-  if (userScrolledUp.value) return
-  nextTick(scrollToBottom)
-})
+watch(
+  () => game.messages.length,
+  () => {
+    if (userScrolledUp.value) return
+    nextTick(scrollToBottom)
+  },
+)
 
 // Scroll to bottom on mount
 onMounted(() => {

@@ -53,12 +53,16 @@ const roleClass = computed(() => `role-${props.colonist.role}`)
 
 .role-driller .colonist-dot {
   background: var(--green);
-  box-shadow: 0 0 6px var(--green-glow), 0 0 12px rgba(52, 211, 153, 0.1);
+  box-shadow:
+    0 0 6px var(--green-glow),
+    0 0 12px rgba(52, 211, 153, 0.1);
 }
 
 .role-engineer .colonist-dot {
   background: var(--amber);
-  box-shadow: 0 0 6px var(--amber-glow), 0 0 12px rgba(245, 158, 11, 0.1);
+  box-shadow:
+    0 0 6px var(--amber-glow),
+    0 0 12px rgba(245, 158, 11, 0.1);
 }
 
 .role-idle .colonist-dot {
@@ -101,12 +105,25 @@ const roleClass = computed(() => `role-${props.colonist.role}`)
 }
 
 @keyframes dot-pulse {
-  0%, 100% { transform: scale(1); opacity: 1; }
-  50% { transform: scale(1.4); opacity: 0.7; }
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.4);
+    opacity: 0.7;
+  }
 }
 
 @keyframes trail-fade {
-  0% { transform: scale(1); opacity: 0.2; }
-  100% { transform: scale(2.5); opacity: 0; }
+  0% {
+    transform: scale(1);
+    opacity: 0.2;
+  }
+  100% {
+    transform: scale(2.5);
+    opacity: 0;
+  }
 }
 </style>

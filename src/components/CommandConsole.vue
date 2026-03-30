@@ -30,7 +30,9 @@
       <span class="status-item">
         <span class="status-label">CREW</span>
         <span class="status-val mono">
-          <SvgIcon name="crew" size="xs" />{{ game.aliveColonists.length }}/{{ game.colonists.length }}
+          <SvgIcon name="crew" size="xs" />{{ game.aliveColonists.length }}/{{
+            game.colonists.length
+          }}
         </span>
       </span>
       <span class="status-item">
@@ -59,7 +61,12 @@ const tabs = [
 ]
 
 const directiveShort = computed(() => {
-  const map: Record<string, string> = { mining: 'MINE', safety: 'SAFE', balanced: 'BAL', emergency: 'EMRG' }
+  const map: Record<string, string> = {
+    mining: 'MINE',
+    safety: 'SAFE',
+    balanced: 'BAL',
+    emergency: 'EMRG',
+  }
   return map[game.activeDirective] || 'BAL'
 })
 

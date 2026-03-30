@@ -24,9 +24,12 @@ function iconFor(type: HazardEvent['type']): string {
   return map[type] || 'emergency'
 }
 
-watch(() => game.lastHazard, (h) => {
-  if (h) setTimeout(() => game.dismissHazard(), 3000)
-})
+watch(
+  () => game.lastHazard,
+  (h) => {
+    if (h) setTimeout(() => game.dismissHazard(), 3000)
+  },
+)
 </script>
 
 <style scoped>
@@ -54,6 +57,10 @@ watch(() => game.lastHazard, (h) => {
   color: var(--text-primary);
 }
 
-.hazard-enter-active { animation: toast-in 0.3s ease; }
-.hazard-leave-active { animation: toast-out 0.3s ease forwards; }
+.hazard-enter-active {
+  animation: toast-in 0.3s ease;
+}
+.hazard-leave-active {
+  animation: toast-out 0.3s ease forwards;
+}
 </style>

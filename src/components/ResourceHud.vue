@@ -4,14 +4,18 @@
       <SvgIcon name="air" size="xs" />
       <div class="hud-stack">
         <span class="hud-val mono">{{ fmt(game.air) }}</span>
-        <span class="hud-rate mono" :class="rateClass(game.airRate)">{{ fmtRate(game.airRate) }}</span>
+        <span class="hud-rate mono" :class="rateClass(game.airRate)">{{
+          fmtRate(game.airRate)
+        }}</span>
       </div>
     </div>
     <div class="hud-item" :class="{ danger: game.power / game.powerMax < 0.2 }">
       <SvgIcon name="power" size="xs" />
       <div class="hud-stack">
         <span class="hud-val mono">{{ fmt(game.power) }}</span>
-        <span class="hud-rate mono" :class="rateClass(game.powerRate)">{{ fmtRate(game.powerRate) }}</span>
+        <span class="hud-rate mono" :class="rateClass(game.powerRate)">{{
+          fmtRate(game.powerRate)
+        }}</span>
       </div>
     </div>
     <div class="hud-item">
@@ -91,9 +95,15 @@ function rateClass(n: number): string {
   font-size: 8px;
 }
 
-.rate-pos { color: var(--green); }
-.rate-neg { color: var(--red); }
-.rate-zero { color: var(--text-muted); }
+.rate-pos {
+  color: var(--green);
+}
+.rate-neg {
+  color: var(--red);
+}
+.rate-zero {
+  color: var(--text-muted);
+}
 
 .hud-item.danger {
   color: var(--red);

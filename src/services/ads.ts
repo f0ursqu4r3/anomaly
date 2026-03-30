@@ -1,4 +1,4 @@
-import { AdMob, RewardAdPluginEvents, AdLoadInfo, RewardAdOptions } from '@capacitor-community/admob'
+import { AdMob, RewardAdPluginEvents, RewardAdOptions } from '@capacitor-community/admob'
 
 const REWARDED_AD_ID = 'ca-app-pub-xxxxxxxxxxxxx/yyyyyyyyyy' // Replace with real ad unit ID
 

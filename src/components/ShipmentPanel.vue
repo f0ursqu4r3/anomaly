@@ -9,11 +9,7 @@
     <!-- In-transit -->
     <div v-if="game.inTransitShipments.length > 0" class="transit-section">
       <div class="section-label">EN ROUTE</div>
-      <div
-        v-for="s in game.inTransitShipments"
-        :key="s.id"
-        class="transit-item"
-      >
+      <div v-for="s in game.inTransitShipments" :key="s.id" class="transit-item">
         <span class="transit-label">{{ s.contents.length }} items · {{ s.totalWeight }}kg</span>
         <span class="transit-eta mono">{{ formatEta(s.arrivalAt) }}</span>
       </div>
@@ -21,19 +17,25 @@
 
     <!-- Manifest (only when items selected) -->
     <Transition name="manifest-reveal">
-      <div v-if="game.manifest.length > 0" class="manifest-section" :class="{ launching: isLaunching }">
+      <div
+        v-if="game.manifest.length > 0"
+        class="manifest-section"
+        :class="{ launching: isLaunching }"
+      >
         <div v-if="isLaunching" class="launch-scanline" />
         <div class="section-label">
           MANIFEST
           <span class="manifest-meta mono">
-            <span :class="{ 'slots-full': game.manifest.length >= maxSlots }">{{ game.manifest.length }}/{{ maxSlots }} slots</span>
+            <span :class="{ 'slots-full': game.manifest.length >= maxSlots }"
+              >{{ game.manifest.length }}/{{ maxSlots }} slots</span
+            >
             · {{ game.manifestWeight }}/{{ maxWeight }}kg
           </span>
         </div>
 
         <TransitionGroup name="manifest-row" tag="div" class="manifest-list">
           <div
-            v-for="(group, i) in manifestGroups"
+            v-for="group in manifestGroups"
             :key="group.option.label"
             class="manifest-item"
             :class="{ pulse: pulsingItem === group.option.label }"
@@ -41,16 +43,15 @@
             <SvgIcon :name="shipmentIcon(group.option)" size="sm" class="manifest-icon" />
             <span class="manifest-name">{{ group.option.label }}</span>
             <div class="qty-controls">
-              <button
-                class="qty-btn minus"
-                @click="removeOne(group.option)"
-              >−</button>
+              <button class="qty-btn minus" @click="removeOne(group.option)">−</button>
               <span class="qty-count mono">{{ group.count }}</span>
               <button
                 class="qty-btn plus"
                 :disabled="!canAdd(group.option)"
                 @click="game.addToManifest(group.option)"
-              >+</button>
+              >
+                +
+              </button>
             </div>
             <span class="manifest-wt mono">{{ group.option.weight * group.count }}kg</span>
           </div>
@@ -58,7 +59,11 @@
 
         <!-- Capacity bar -->
         <div class="capacity-bar-bg">
-          <div class="capacity-bar-fill" :style="{ width: weightPct + '%' }" :class="{ full: weightPct > 90 }" />
+          <div
+            class="capacity-bar-fill"
+            :style="{ width: weightPct + '%' }"
+            :class="{ full: weightPct > 90 }"
+          />
         </div>
 
         <!-- Launch row -->
@@ -82,7 +87,9 @@
     </Transition>
 
     <!-- Item catalog — tap to add -->
-    <div class="section-label" :style="game.manifest.length > 0 ? 'margin-top: 6px;' : ''">ITEMS</div>
+    <div class="section-label" :style="game.manifest.length > 0 ? 'margin-top: 6px;' : ''">
+      ITEMS
+    </div>
     <div class="catalog-grid">
       <button
         v-for="opt in options"
@@ -105,7 +112,13 @@
 
 <script setup lang="ts">
 import { computed, ref } from 'vue'
-import { useGameStore, SHIPMENT_OPTIONS, MANIFEST_MAX_SLOTS, CARGO_CAPACITY, SHIPMENT_COOLDOWN_MS } from '@/stores/gameStore'
+import {
+  useGameStore,
+  SHIPMENT_OPTIONS,
+  MANIFEST_MAX_SLOTS,
+  CARGO_CAPACITY,
+  SHIPMENT_COOLDOWN_MS,
+} from '@/stores/gameStore'
 import type { ShipmentOption } from '@/stores/gameStore'
 import SvgIcon from './SvgIcon.vue'
 
@@ -126,11 +139,15 @@ function addFromCatalog(opt: ShipmentOption) {
   // Trigger pulse on the manifest row
   if (pulseTimeout) clearTimeout(pulseTimeout)
   pulsingItem.value = opt.label
-  pulseTimeout = setTimeout(() => { pulsingItem.value = null }, 400)
+  pulseTimeout = setTimeout(() => {
+    pulsingItem.value = null
+  }, 400)
   // Trigger icon glow on catalog button
   if (tapTimeout) clearTimeout(tapTimeout)
   tappedItem.value = opt.label
-  tapTimeout = setTimeout(() => { tappedItem.value = null }, 300)
+  tapTimeout = setTimeout(() => {
+    tappedItem.value = null
+  }, 300)
 }
 
 function handleLaunch() {
@@ -157,7 +174,7 @@ const cooldownText = computed(() => {
 const manifestGroups = computed(() => {
   const groups: { option: ShipmentOption; count: number }[] = []
   for (const item of game.manifest) {
-    const existing = groups.find(g => g.option.label === item.label)
+    const existing = groups.find((g) => g.option.label === item.label)
     if (existing) {
       existing.count++
     } else {
@@ -257,7 +274,9 @@ function formatEta(arrivalAt: number): string {
 }
 
 /* Transit */
-.transit-section { margin-bottom: 8px; }
+.transit-section {
+  margin-bottom: 8px;
+}
 
 .transit-item {
   display: flex;
@@ -270,8 +289,14 @@ function formatEta(arrivalAt: number): string {
   margin-bottom: 3px;
 }
 
-.transit-label { font-size: 11px; color: var(--cyan); }
-.transit-eta { font-size: 10px; color: var(--cyan); }
+.transit-label {
+  font-size: 11px;
+  color: var(--cyan);
+}
+.transit-eta {
+  font-size: 10px;
+  color: var(--cyan);
+}
 
 /* Manifest */
 .manifest-section {
@@ -300,18 +325,38 @@ function formatEta(arrivalAt: number): string {
   border-radius: var(--radius-sm);
 }
 
-.manifest-icon { color: var(--text-secondary); flex-shrink: 0; }
-.manifest-name { font-size: 11px; color: var(--text-primary); flex: 1; min-width: 0; }
-.manifest-wt { font-size: 9px; color: var(--text-muted); flex-shrink: 0; }
+.manifest-icon {
+  color: var(--text-secondary);
+  flex-shrink: 0;
+}
+.manifest-name {
+  font-size: 11px;
+  color: var(--text-primary);
+  flex: 1;
+  min-width: 0;
+}
+.manifest-wt {
+  font-size: 9px;
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
 
 .manifest-section.launching {
   animation: launch-flash 0.5s cubic-bezier(0.25, 1, 0.5, 1);
 }
 
 @keyframes launch-flash {
-  0% { border-color: var(--accent-muted); }
-  30% { border-color: var(--cyan); }
-  100% { border-color: var(--accent-muted); opacity: 0; transform: translateY(-4px); }
+  0% {
+    border-color: var(--accent-muted);
+  }
+  30% {
+    border-color: var(--cyan);
+  }
+  100% {
+    border-color: var(--accent-muted);
+    opacity: 0;
+    transform: translateY(-4px);
+  }
 }
 
 .launch-scanline {
@@ -334,8 +379,14 @@ function formatEta(arrivalAt: number): string {
 }
 
 @keyframes scanline-move {
-  from { top: 0; opacity: 1; }
-  to { top: 100%; opacity: 0.3; }
+  from {
+    top: 0;
+    opacity: 1;
+  }
+  to {
+    top: 100%;
+    opacity: 0.3;
+  }
 }
 
 /* Slots full indicator */
@@ -356,8 +407,14 @@ function formatEta(arrivalAt: number): string {
   animation: manifest-in 0.2s cubic-bezier(0.25, 1, 0.5, 1) reverse;
 }
 @keyframes manifest-in {
-  from { opacity: 0; transform: translateY(-6px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* Manifest row enter/leave */
@@ -371,8 +428,14 @@ function formatEta(arrivalAt: number): string {
   transition: transform 0.2s cubic-bezier(0.25, 1, 0.5, 1);
 }
 @keyframes row-in {
-  from { opacity: 0; transform: translateX(-8px); }
-  to { opacity: 1; transform: translateX(0); }
+  from {
+    opacity: 0;
+    transform: translateX(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
 }
 
 /* Manifest item pulse on add */
@@ -381,9 +444,18 @@ function formatEta(arrivalAt: number): string {
 }
 
 @keyframes manifest-pulse {
-  0% { background: var(--bg-elevated); box-shadow: inset 0 0 0 1px transparent; }
-  25% { background: var(--accent-dim); box-shadow: inset 0 0 0 1px var(--cyan); }
-  100% { background: var(--bg-elevated); box-shadow: inset 0 0 0 1px transparent; }
+  0% {
+    background: var(--bg-elevated);
+    box-shadow: inset 0 0 0 1px transparent;
+  }
+  25% {
+    background: var(--accent-dim);
+    box-shadow: inset 0 0 0 1px var(--cyan);
+  }
+  100% {
+    background: var(--bg-elevated);
+    box-shadow: inset 0 0 0 1px transparent;
+  }
 }
 
 .capacity-bar-bg {
@@ -401,7 +473,9 @@ function formatEta(arrivalAt: number): string {
   transition: width 0.2s ease;
 }
 
-.capacity-bar-fill.full { background: var(--amber); }
+.capacity-bar-fill.full {
+  background: var(--amber);
+}
 
 .manifest-footer {
   display: flex;
@@ -442,7 +516,9 @@ function formatEta(arrivalAt: number): string {
   background: var(--cyan);
   color: var(--bg-deep);
   border-radius: var(--radius-sm);
-  transition: box-shadow 0.3s ease, opacity 0.2s ease;
+  transition:
+    box-shadow 0.3s ease,
+    opacity 0.2s ease;
 }
 
 .launch-btn.ready {
@@ -450,11 +526,17 @@ function formatEta(arrivalAt: number): string {
 }
 
 @keyframes launch-glow {
-  0%, 100% { box-shadow: 0 0 0 0 transparent; }
-  50% { box-shadow: 0 0 8px 1px color-mix(in srgb, var(--cyan) 40%, transparent); }
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 transparent;
+  }
+  50% {
+    box-shadow: 0 0 8px 1px color-mix(in srgb, var(--cyan) 40%, transparent);
+  }
 }
 
-.launch-btn:disabled, .clear-btn:disabled {
+.launch-btn:disabled,
+.clear-btn:disabled {
   opacity: 0.3;
   cursor: not-allowed;
   animation: none;
@@ -479,9 +561,10 @@ function formatEta(arrivalAt: number): string {
   border-radius: var(--radius-sm);
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
-  transition: transform 0.12s cubic-bezier(0.25, 1, 0.5, 1),
-              background 0.15s ease,
-              opacity 0.2s ease;
+  transition:
+    transform 0.12s cubic-bezier(0.25, 1, 0.5, 1),
+    background 0.15s ease,
+    opacity 0.2s ease;
   text-align: center;
 }
 
@@ -503,7 +586,12 @@ function formatEta(arrivalAt: number): string {
 .catalog-btn.tapped .cat-icon {
   color: var(--cyan);
 }
-.cat-label { font-size: 10px; font-weight: 600; color: var(--text-primary); line-height: 1.2; }
+.cat-label {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--text-primary);
+  line-height: 1.2;
+}
 
 .cat-meta {
   display: flex;
@@ -557,8 +645,12 @@ function formatEta(arrivalAt: number): string {
   cursor: not-allowed;
 }
 
-.qty-btn.plus { color: var(--green); }
-.qty-btn.minus { color: var(--red); }
+.qty-btn.plus {
+  color: var(--green);
+}
+.qty-btn.minus {
+  color: var(--red);
+}
 
 .qty-count {
   width: 22px;
@@ -604,7 +696,9 @@ function formatEta(arrivalAt: number): string {
 
 /* Reduced motion */
 @media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after {
+  *,
+  *::before,
+  *::after {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;

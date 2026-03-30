@@ -39,7 +39,7 @@ export async function cancelOfflineCapNotification(): Promise<void> {
     await LocalNotifications.cancel({
       notifications: [{ id: OFFLINE_CAP_NOTIFICATION_ID }],
     })
-  } catch (e) {
+  } catch {
     // Ignore — might not exist
   }
 }

@@ -7,7 +7,7 @@ export const PRODUCT_IDS = {
   SEASON_PASS: 'season_pass',
 } as const
 
-export type ProductId = typeof PRODUCT_IDS[keyof typeof PRODUCT_IDS]
+export type ProductId = (typeof PRODUCT_IDS)[keyof typeof PRODUCT_IDS]
 
 let storeInitialized = false
 

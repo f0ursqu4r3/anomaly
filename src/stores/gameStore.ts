@@ -38,7 +38,13 @@ export interface HazardEvent {
 
 export type Directive = 'mining' | 'safety' | 'balanced' | 'emergency'
 
-export type ShipmentType = 'supplyCrate' | 'equipment' | 'newColonist' | 'repairKit' | 'emergencyO2' | 'emergencyPower'
+export type ShipmentType =
+  | 'supplyCrate'
+  | 'equipment'
+  | 'newColonist'
+  | 'repairKit'
+  | 'emergencyO2'
+  | 'emergencyPower'
 
 export interface ShipmentOption {
   type: ShipmentType
@@ -153,38 +159,123 @@ const CARGO_CAPACITY = 100
 
 // Directive config
 const DIRECTIVE_RATIOS: Record<Directive, { driller: number; engineer: number }> = {
-  mining:    { driller: 0.7, engineer: 0.2 },
-  safety:    { driller: 0.2, engineer: 0.6 },
-  balanced:  { driller: 0.4, engineer: 0.4 },
+  mining: { driller: 0.7, engineer: 0.2 },
+  safety: { driller: 0.2, engineer: 0.6 },
+  balanced: { driller: 0.4, engineer: 0.4 },
   emergency: { driller: 0.1, engineer: 0.8 },
 }
 
-const DIRECTIVE_MODIFIERS: Record<Directive, { drillMult: number; hazardResist: number; prodMult: number }> = {
-  mining:    { drillMult: 1.3, hazardResist: 0.0, prodMult: 1.0 },
-  safety:    { drillMult: 0.7, hazardResist: 0.4, prodMult: 1.2 },
-  balanced:  { drillMult: 1.0, hazardResist: 0.15, prodMult: 1.0 },
+const DIRECTIVE_MODIFIERS: Record<
+  Directive,
+  { drillMult: number; hazardResist: number; prodMult: number }
+> = {
+  mining: { drillMult: 1.3, hazardResist: 0.0, prodMult: 1.0 },
+  safety: { drillMult: 0.7, hazardResist: 0.4, prodMult: 1.2 },
+  balanced: { drillMult: 1.0, hazardResist: 0.15, prodMult: 1.0 },
   emergency: { drillMult: 0.5, hazardResist: 0.1, prodMult: 1.5 },
 }
 
 export const SHIPMENT_OPTIONS: ShipmentOption[] = [
-  { type: 'supplyCrate', label: 'Supply Crate', description: '+15 metals, +5 ice', cost: 30, weight: 20 },
-  { type: 'equipment', label: 'Solar Panel', description: 'Prefab solar panel', cost: 40, weight: 18, buildingType: 'solar' },
-  { type: 'equipment', label: 'O2 Generator', description: 'Prefab O2 generator', cost: 50, weight: 32, buildingType: 'o2generator' },
-  { type: 'equipment', label: 'Drill Rig', description: 'Prefab drill rig', cost: 65, weight: 55, buildingType: 'drillrig' },
-  { type: 'equipment', label: 'Med Bay', description: 'Prefab medical bay', cost: 80, weight: 40, buildingType: 'medbay' },
-  { type: 'newColonist', label: 'New Colonist', description: 'Recruit crew member', cost: 90, weight: 35 },
-  { type: 'repairKit', label: 'Repair Kit', description: 'Fix one damaged building', cost: 15, weight: 5 },
-  { type: 'emergencyO2', label: 'Emergency O2', description: '+30 air (fast delivery)', cost: 20, weight: 25 },
-  { type: 'emergencyPower', label: 'Emergency Power', description: '+30 power (fast delivery)', cost: 20, weight: 15 },
+  {
+    type: 'supplyCrate',
+    label: 'Supply Crate',
+    description: '+15 metals, +5 ice',
+    cost: 30,
+    weight: 20,
+  },
+  {
+    type: 'equipment',
+    label: 'Solar Panel',
+    description: 'Prefab solar panel',
+    cost: 40,
+    weight: 18,
+    buildingType: 'solar',
+  },
+  {
+    type: 'equipment',
+    label: 'O2 Generator',
+    description: 'Prefab O2 generator',
+    cost: 50,
+    weight: 32,
+    buildingType: 'o2generator',
+  },
+  {
+    type: 'equipment',
+    label: 'Drill Rig',
+    description: 'Prefab drill rig',
+    cost: 65,
+    weight: 55,
+    buildingType: 'drillrig',
+  },
+  {
+    type: 'equipment',
+    label: 'Med Bay',
+    description: 'Prefab medical bay',
+    cost: 80,
+    weight: 40,
+    buildingType: 'medbay',
+  },
+  {
+    type: 'newColonist',
+    label: 'New Colonist',
+    description: 'Recruit crew member',
+    cost: 90,
+    weight: 35,
+  },
+  {
+    type: 'repairKit',
+    label: 'Repair Kit',
+    description: 'Fix one damaged building',
+    cost: 15,
+    weight: 5,
+  },
+  {
+    type: 'emergencyO2',
+    label: 'Emergency O2',
+    description: '+30 air (fast delivery)',
+    cost: 20,
+    weight: 25,
+  },
+  {
+    type: 'emergencyPower',
+    label: 'Emergency Power',
+    description: '+30 power (fast delivery)',
+    cost: 20,
+    weight: 15,
+  },
 ]
 
 export { MANIFEST_MAX_SLOTS, CARGO_CAPACITY, SHIPMENT_COOLDOWN_MS }
 
 export const BLUEPRINTS: BuildingBlueprint[] = [
-  { type: 'o2generator', label: 'O2 Generator', description: 'Produces air (uses power)', costMetals: 20, costIce: 5 },
-  { type: 'solar', label: 'Solar Panel', description: 'Generates power', costMetals: 15, costIce: 0 },
-  { type: 'drillrig', label: 'Drill Rig', description: 'Auto-drills for resources', costMetals: 25, costIce: 0 },
-  { type: 'medbay', label: 'Med Bay', description: 'Heals injured colonists', costMetals: 30, costIce: 10 },
+  {
+    type: 'o2generator',
+    label: 'O2 Generator',
+    description: 'Produces air (uses power)',
+    costMetals: 20,
+    costIce: 5,
+  },
+  {
+    type: 'solar',
+    label: 'Solar Panel',
+    description: 'Generates power',
+    costMetals: 15,
+    costIce: 0,
+  },
+  {
+    type: 'drillrig',
+    label: 'Drill Rig',
+    description: 'Auto-drills for resources',
+    costMetals: 25,
+    costIce: 0,
+  },
+  {
+    type: 'medbay',
+    label: 'Med Bay',
+    description: 'Heals injured colonists',
+    costMetals: 30,
+    costIce: 10,
+  },
 ]
 
 const COLONIST_NAMES = ['Kael', 'Mira', 'Tarn', 'Vex', 'Lira', 'Cade', 'Nyx', 'Orin', 'Zara', 'Pax']
@@ -192,11 +283,11 @@ const COLONIST_NAMES = ['Kael', 'Mira', 'Tarn', 'Vex', 'Lira', 'Cade', 'Nyx', 'O
 // ── Map Zones ──────────────────────────────────────────────────────
 
 export const MAP_ZONES: Record<string, { x: number; y: number }> = {
-  habitat:   { x: 50, y: 45 },
+  habitat: { x: 50, y: 45 },
   drillSite: { x: 50, y: 78 },
-  powerField:{ x: 28, y: 28 },
-  lifeSup:   { x: 72, y: 28 },
-  medical:   { x: 72, y: 58 },
+  powerField: { x: 28, y: 28 },
+  lifeSup: { x: 72, y: 28 },
+  medical: { x: 72, y: 58 },
 }
 
 const ZONE_FOR_TYPE: Record<BuildingType, string> = {
@@ -215,10 +306,13 @@ const SLOT_OFFSETS = [
   { dx: -14, dy: 14 },
 ]
 
-function getBuildingPosition(type: BuildingType, existingBuildings: Building[]): { x: number; y: number } {
+function getBuildingPosition(
+  type: BuildingType,
+  existingBuildings: Building[],
+): { x: number; y: number } {
   const zoneName = ZONE_FOR_TYPE[type]
   const zone = MAP_ZONES[zoneName]
-  const sameZone = existingBuildings.filter(b => ZONE_FOR_TYPE[b.type] === zoneName)
+  const sameZone = existingBuildings.filter((b) => ZONE_FOR_TYPE[b.type] === zoneName)
   const slotIndex = Math.min(sameZone.length, SLOT_OFFSETS.length - 1)
   const offset = SLOT_OFFSETS[slotIndex]
   return { x: zone.x + offset.dx, y: zone.y + offset.dy }
@@ -267,8 +361,18 @@ function freshState(): ColonyState {
     totalCreditsEarned: 50,
     activeDirective: 'balanced',
     messages: [
-      { id: uid(), text: 'Colony link established. You have command.', severity: 'event', timestamp: 0 },
-      { id: uid(), text: 'Starting structures deployed: Solar, O2 Gen, Drill Rig.', severity: 'info', timestamp: 0 },
+      {
+        id: uid(),
+        text: 'Colony link established. You have command.',
+        severity: 'event',
+        timestamp: 0,
+      },
+      {
+        id: uid(),
+        text: 'Starting structures deployed: Solar, O2 Gen, Drill Rig.',
+        severity: 'info',
+        timestamp: 0,
+      },
     ],
     inTransitShipments: [],
     supplyDrops: [],
@@ -289,21 +393,21 @@ export const useGameStore = defineStore('game', {
   state: (): ColonyState => freshState(),
 
   getters: {
-    aliveColonists: (s) => s.colonists.filter(c => c.health > 0),
-    drillers: (s) => s.colonists.filter(c => c.health > 0 && c.role === 'driller'),
-    engineers: (s) => s.colonists.filter(c => c.health > 0 && c.role === 'engineer'),
+    aliveColonists: (s) => s.colonists.filter((c) => c.health > 0),
+    drillers: (s) => s.colonists.filter((c) => c.health > 0 && c.role === 'driller'),
+    engineers: (s) => s.colonists.filter((c) => c.health > 0 && c.role === 'engineer'),
 
     engineerBonus(s): number {
-      const count = s.colonists.filter(c => c.health > 0 && c.role === 'engineer').length
+      const count = s.colonists.filter((c) => c.health > 0 && c.role === 'engineer').length
       const mod = DIRECTIVE_MODIFIERS[s.activeDirective].prodMult
       return (1 + count * ENGINEER_EFFICIENCY_BONUS) * mod
     },
 
     airRate(s): number {
-      const alive = s.colonists.filter(c => c.health > 0).length
+      const alive = s.colonists.filter((c) => c.health > 0).length
       const consumption = alive * AIR_CONSUMPTION_PER_COLONIST
-      const generators = s.buildings.filter(b => b.type === 'o2generator' && !b.damaged).length
-      const engCount = s.colonists.filter(c => c.health > 0 && c.role === 'engineer').length
+      const generators = s.buildings.filter((b) => b.type === 'o2generator' && !b.damaged).length
+      const engCount = s.colonists.filter((c) => c.health > 0 && c.role === 'engineer').length
       const mod = DIRECTIVE_MODIFIERS[s.activeDirective].prodMult
       const engBonus = (1 + engCount * ENGINEER_EFFICIENCY_BONUS) * mod
       const production = s.power > 0 ? generators * O2_PRODUCTION_PER_GENERATOR * engBonus : 0
@@ -311,32 +415,35 @@ export const useGameStore = defineStore('game', {
     },
 
     powerRate(s): number {
-      const solars = s.buildings.filter(b => b.type === 'solar' && !b.damaged).length
-      const engCount = s.colonists.filter(c => c.health > 0 && c.role === 'engineer').length
+      const solars = s.buildings.filter((b) => b.type === 'solar' && !b.damaged).length
+      const engCount = s.colonists.filter((c) => c.health > 0 && c.role === 'engineer').length
       const mod = DIRECTIVE_MODIFIERS[s.activeDirective].prodMult
       const engBonus = (1 + engCount * ENGINEER_EFFICIENCY_BONUS) * mod
       const production = solars * POWER_PRODUCTION_PER_SOLAR * engBonus
-      const activeBuildings = s.buildings.filter(b => !b.damaged).length
+      const activeBuildings = s.buildings.filter((b) => !b.damaged).length
       const consumption = activeBuildings * POWER_CONSUMPTION_PER_BUILDING
       return production - consumption
     },
 
     drillRate(s): number {
-      const drillerCount = s.colonists.filter(c => c.health > 0 && c.role === 'driller').length
-      const rigCount = s.buildings.filter(b => b.type === 'drillrig' && !b.damaged).length
-      const engCount = s.colonists.filter(c => c.health > 0 && c.role === 'engineer').length
+      const drillerCount = s.colonists.filter((c) => c.health > 0 && c.role === 'driller').length
+      const rigCount = s.buildings.filter((b) => b.type === 'drillrig' && !b.damaged).length
+      const engCount = s.colonists.filter((c) => c.health > 0 && c.role === 'engineer').length
       const mod = DIRECTIVE_MODIFIERS[s.activeDirective].drillMult
       const engBonus = 1 + engCount * ENGINEER_EFFICIENCY_BONUS
-      return (drillerCount * DRILL_SPEED_PER_DRILLER + rigCount * DRILL_SPEED_PER_RIG) * engBonus * mod
+      return (
+        (drillerCount * DRILL_SPEED_PER_DRILLER + rigCount * DRILL_SPEED_PER_RIG) * engBonus * mod
+      )
     },
 
     creditRate(s): number {
-      const drillerCount = s.colonists.filter(c => c.health > 0 && c.role === 'driller').length
-      const rigCount = s.buildings.filter(b => b.type === 'drillrig' && !b.damaged).length
-      const engCount = s.colonists.filter(c => c.health > 0 && c.role === 'engineer').length
+      const drillerCount = s.colonists.filter((c) => c.health > 0 && c.role === 'driller').length
+      const rigCount = s.buildings.filter((b) => b.type === 'drillrig' && !b.damaged).length
+      const engCount = s.colonists.filter((c) => c.health > 0 && c.role === 'engineer').length
       const mod = DIRECTIVE_MODIFIERS[s.activeDirective].drillMult
       const engBonus = 1 + engCount * ENGINEER_EFFICIENCY_BONUS
-      const rate = (drillerCount * DRILL_SPEED_PER_DRILLER + rigCount * DRILL_SPEED_PER_RIG) * engBonus * mod
+      const rate =
+        (drillerCount * DRILL_SPEED_PER_DRILLER + rigCount * DRILL_SPEED_PER_RIG) * engBonus * mod
       return BASE_CREDITS_PER_TICK + rate * METALS_PER_DEPTH * CREDITS_PER_METAL_MINED
     },
 
@@ -381,15 +488,16 @@ export const useGameStore = defineStore('game', {
       this.reassignRoles()
 
       // Power
-      const solars = this.buildings.filter(b => b.type === 'solar' && !b.damaged).length
-      const activeBuildings = this.buildings.filter(b => !b.damaged).length
+      const solars = this.buildings.filter((b) => b.type === 'solar' && !b.damaged).length
+      const activeBuildings = this.buildings.filter((b) => !b.damaged).length
       const powerProd = solars * POWER_PRODUCTION_PER_SOLAR * this.engineerBonus
       const powerCons = activeBuildings * POWER_CONSUMPTION_PER_BUILDING
       this.power = Math.min(this.powerMax, Math.max(0, this.power + (powerProd - powerCons) * dt))
 
       // Air
-      const generators = this.buildings.filter(b => b.type === 'o2generator' && !b.damaged).length
-      const airProd = this.power > 0 ? generators * O2_PRODUCTION_PER_GENERATOR * this.engineerBonus : 0
+      const generators = this.buildings.filter((b) => b.type === 'o2generator' && !b.damaged).length
+      const airProd =
+        this.power > 0 ? generators * O2_PRODUCTION_PER_GENERATOR * this.engineerBonus : 0
       const airCons = alive.length * AIR_CONSUMPTION_PER_COLONIST
       this.air = Math.min(this.airMax, Math.max(0, this.air + (airProd - airCons) * dt))
 
@@ -408,12 +516,16 @@ export const useGameStore = defineStore('game', {
         }
       }
       const metalsDelta = this.metals - metalsBefore
-      const creditGain = (BASE_CREDITS_PER_TICK + metalsDelta * CREDITS_PER_METAL_MINED + (iceFound ? CREDITS_PER_ICE_FOUND : 0)) * dt
+      const creditGain =
+        (BASE_CREDITS_PER_TICK +
+          metalsDelta * CREDITS_PER_METAL_MINED +
+          (iceFound ? CREDITS_PER_ICE_FOUND : 0)) *
+        dt
       this.credits += creditGain
       this.totalCreditsEarned += creditGain
 
       // Med bay healing
-      const medbays = this.buildings.filter(b => b.type === 'medbay' && !b.damaged).length
+      const medbays = this.buildings.filter((b) => b.type === 'medbay' && !b.damaged).length
       if (medbays > 0 && this.power > 0) {
         const healRate = medbays * MEDBAY_HEAL_PER_SEC * this.engineerBonus * dt
         for (const c of this.colonists) {
@@ -432,9 +544,10 @@ export const useGameStore = defineStore('game', {
         }
         if (this.aliveColonists.length === 0) {
           this.gameOver = true
-          this.gameOverReason = this.air <= 0
-            ? 'The colony ran out of air.'
-            : 'Total power failure. Life support offline.'
+          this.gameOverReason =
+            this.air <= 0
+              ? 'The colony ran out of air.'
+              : 'Total power failure. Life support offline.'
         }
       }
 
@@ -459,7 +572,7 @@ export const useGameStore = defineStore('game', {
 
     // ── Colonist AI ──
     reassignRoles() {
-      const alive = this.colonists.filter(c => c.health > 0)
+      const alive = this.colonists.filter((c) => c.health > 0)
       if (alive.length === 0) return
 
       const ratio = DIRECTIVE_RATIOS[this.activeDirective]
@@ -467,7 +580,10 @@ export const useGameStore = defineStore('game', {
       let targetEngineers = Math.round(alive.length * ratio.engineer)
 
       // Emergency overrides
-      if (this.air < this.airMax * 0.2 && this.buildings.some(b => b.type === 'o2generator' && !b.damaged)) {
+      if (
+        this.air < this.airMax * 0.2 &&
+        this.buildings.some((b) => b.type === 'o2generator' && !b.damaged)
+      ) {
         targetEngineers = Math.min(alive.length, targetEngineers + 1)
         targetDrillers = Math.max(0, targetDrillers - 1)
       }
@@ -475,7 +591,10 @@ export const useGameStore = defineStore('game', {
         targetEngineers = Math.min(alive.length, targetEngineers + 1)
         targetDrillers = Math.max(0, targetDrillers - 1)
       }
-      if (this.buildings.some(b => b.damaged) && alive.filter(c => c.role === 'engineer').length === 0) {
+      if (
+        this.buildings.some((b) => b.damaged) &&
+        alive.filter((c) => c.role === 'engineer').length === 0
+      ) {
         targetEngineers = Math.max(1, targetEngineers)
       }
 
@@ -485,8 +604,8 @@ export const useGameStore = defineStore('game', {
         targetDrillers = Math.min(targetDrillers, alive.length - targetEngineers)
       }
 
-      const currentDrillers = alive.filter(c => c.role === 'driller').length
-      const currentEngineers = alive.filter(c => c.role === 'engineer').length
+      const currentDrillers = alive.filter((c) => c.role === 'driller').length
+      const currentEngineers = alive.filter((c) => c.role === 'engineer').length
 
       if (currentDrillers === targetDrillers && currentEngineers === targetEngineers) return
 
@@ -494,8 +613,8 @@ export const useGameStore = defineStore('game', {
       const pool = [...alive]
       // Shuffle for personality variation
       for (let i = pool.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [pool[i], pool[j]] = [pool[j], pool[i]]
+        const j = Math.floor(Math.random() * (i + 1))
+        ;[pool[i], pool[j]] = [pool[j], pool[i]]
       }
 
       let drillerSlots = targetDrillers
@@ -529,11 +648,11 @@ export const useGameStore = defineStore('game', {
 
       const roll = Math.random()
       if (roll < 0.4) {
-        const undamaged = this.buildings.filter(b => !b.damaged)
+        const undamaged = this.buildings.filter((b) => !b.damaged)
         if (undamaged.length > 0) {
           const target = undamaged[Math.floor(Math.random() * undamaged.length)]
           target.damaged = true
-          const msg = `Micro-meteor struck a ${BLUEPRINTS.find(b => b.type === target.type)?.label}!`
+          const msg = `Micro-meteor struck a ${BLUEPRINTS.find((b) => b.type === target.type)?.label}!`
           this.lastHazard = { type: 'meteor', message: msg, timestamp: Date.now() }
           this.pushMessage(msg, 'critical')
         }
@@ -587,7 +706,9 @@ export const useGameStore = defineStore('game', {
       if (this.credits < this.manifestCost) return
 
       this.credits -= this.manifestCost
-      const hasEmergency = this.manifest.some(o => o.type === 'emergencyO2' || o.type === 'emergencyPower')
+      const hasEmergency = this.manifest.some(
+        (o) => o.type === 'emergencyO2' || o.type === 'emergencyPower',
+      )
       const transit = hasEmergency ? EMERGENCY_TRANSIT_MS : SHIPMENT_TRANSIT_MS
 
       this.inTransitShipments.push({
@@ -599,21 +720,30 @@ export const useGameStore = defineStore('game', {
 
       const itemCount = this.manifest.length
       const totalWeight = this.manifestWeight
-      this.pushMessage(`Care package launched: ${itemCount} item(s), ${totalWeight}kg. ETA ${transit / 1000}s.`, 'event')
+      this.pushMessage(
+        `Care package launched: ${itemCount} item(s), ${totalWeight}kg. ETA ${transit / 1000}s.`,
+        'event',
+      )
       this.manifest = []
       this.shipmentCooldownUntil = this.totalPlaytimeMs + SHIPMENT_COOLDOWN_MS
     },
 
     processShipments() {
-      const arrived = this.inTransitShipments.filter(s => this.totalPlaytimeMs >= s.arrivalAt)
+      const arrived = this.inTransitShipments.filter((s) => this.totalPlaytimeMs >= s.arrivalAt)
       if (arrived.length === 0) return
 
-      this.inTransitShipments = this.inTransitShipments.filter(s => this.totalPlaytimeMs < s.arrivalAt)
+      this.inTransitShipments = this.inTransitShipments.filter(
+        (s) => this.totalPlaytimeMs < s.arrivalAt,
+      )
 
       for (const pkg of arrived) {
         // Separate emergency items (apply instantly) from crate items
-        const emergencyItems = pkg.contents.filter(o => o.type === 'emergencyO2' || o.type === 'emergencyPower')
-        const crateItems = pkg.contents.filter(o => o.type !== 'emergencyO2' && o.type !== 'emergencyPower')
+        const emergencyItems = pkg.contents.filter(
+          (o) => o.type === 'emergencyO2' || o.type === 'emergencyPower',
+        )
+        const crateItems = pkg.contents.filter(
+          (o) => o.type !== 'emergencyO2' && o.type !== 'emergencyPower',
+        )
 
         for (const em of emergencyItems) {
           if (em.type === 'emergencyO2') {
@@ -640,8 +770,11 @@ export const useGameStore = defineStore('game', {
             unpackDuration: crateWeight * UNPACK_MS_PER_KG,
             landedAt: this.totalPlaytimeMs,
           })
-          const itemNames = crateItems.map(o => o.label).join(', ')
-          this.pushMessage(`Care package landed (${crateWeight}kg): ${itemNames}. Crew needed.`, 'event')
+          const itemNames = crateItems.map((o) => o.label).join(', ')
+          this.pushMessage(
+            `Care package landed (${crateWeight}kg): ${itemNames}. Crew needed.`,
+            'event',
+          )
         }
       }
     },
@@ -649,7 +782,7 @@ export const useGameStore = defineStore('game', {
     processSupplyDrops(_dtMs: number) {
       // Clean up completed drops after linger period
       // (Unpack progress is driven by the colonist movement composable)
-      this.supplyDrops = this.supplyDrops.filter(drop => {
+      this.supplyDrops = this.supplyDrops.filter((drop) => {
         if (drop.state === 'done') {
           return this.totalPlaytimeMs - drop.landedAt < DONE_LINGER_MS
         }
@@ -668,24 +801,34 @@ export const useGameStore = defineStore('game', {
           case 'equipment':
             if (item.buildingType) {
               const pos = getBuildingPosition(item.buildingType, this.buildings)
-              this.buildings.push({ id: uid(), type: item.buildingType, damaged: false, x: pos.x, y: pos.y })
-              const label = BLUEPRINTS.find(b => b.type === item.buildingType)?.label || item.buildingType
+              this.buildings.push({
+                id: uid(),
+                type: item.buildingType,
+                damaged: false,
+                x: pos.x,
+                y: pos.y,
+              })
+              const label =
+                BLUEPRINTS.find((b) => b.type === item.buildingType)?.label || item.buildingType
               this.pushMessage(`${label} assembled and operational.`, 'event')
             }
             break
           case 'newColonist': {
-            const usedNames = new Set(this.colonists.map(c => c.name))
-            const available = COLONIST_NAMES.filter(n => !usedNames.has(n))
-            const name = available.length > 0 ? available[Math.floor(Math.random() * available.length)] : `Crew-${this.colonists.length + 1}`
+            const usedNames = new Set(this.colonists.map((c) => c.name))
+            const available = COLONIST_NAMES.filter((n) => !usedNames.has(n))
+            const name =
+              available.length > 0
+                ? available[Math.floor(Math.random() * available.length)]
+                : `Crew-${this.colonists.length + 1}`
             this.colonists.push({ id: uid(), name, role: 'idle', health: 100 })
             this.pushMessage(`${name} has joined the colony.`, 'event')
             break
           }
           case 'repairKit': {
-            const damaged = this.buildings.find(b => b.damaged)
+            const damaged = this.buildings.find((b) => b.damaged)
             if (damaged) {
               damaged.damaged = false
-              const label = BLUEPRINTS.find(b => b.type === damaged.type)?.label || damaged.type
+              const label = BLUEPRINTS.find((b) => b.type === damaged.type)?.label || damaged.type
               this.pushMessage(`${label} repaired with kit.`, 'event')
             } else {
               this.pushMessage('Repair kit unpacked but nothing to fix.', 'info')
@@ -716,19 +859,25 @@ export const useGameStore = defineStore('game', {
       } else if (this.power < this.powerMax * 0.3) {
         this.pushMessage('Power reserves dropping.', 'warning')
       }
-      const damaged = this.buildings.filter(b => b.damaged)
+      const damaged = this.buildings.filter((b) => b.damaged)
       if (damaged.length > 0) {
         this.pushMessage(`${damaged.length} building(s) damaged. Send a repair kit.`, 'warning')
       }
-      const injured = this.colonists.filter(c => c.health > 0 && c.health < 50)
+      const injured = this.colonists.filter((c) => c.health > 0 && c.health < 50)
       if (injured.length > 0) {
-        this.pushMessage(`${injured.map(c => c.name).join(', ')} injured. Consider a Med Bay.`, 'warning')
+        this.pushMessage(
+          `${injured.map((c) => c.name).join(', ')} injured. Consider a Med Bay.`,
+          'warning',
+        )
       }
       // Suggestions
-      if (this.buildings.filter(b => b.type === 'solar' && !b.damaged).length === 0) {
-        this.pushMessage('Colony has no working solar panels. Power production critical.', 'critical')
+      if (this.buildings.filter((b) => b.type === 'solar' && !b.damaged).length === 0) {
+        this.pushMessage(
+          'Colony has no working solar panels. Power production critical.',
+          'critical',
+        )
       }
-      if (this.buildings.filter(b => b.type === 'o2generator' && !b.damaged).length === 0) {
+      if (this.buildings.filter((b) => b.type === 'o2generator' && !b.damaged).length === 0) {
         this.pushMessage('No working O2 generators. Air production halted.', 'critical')
       }
     },
@@ -773,7 +922,9 @@ export const useGameStore = defineStore('game', {
           this.migrateState()
           return
         }
-      } catch { /* fall through */ }
+      } catch {
+        /* fall through */
+      }
       const raw = localStorage.getItem(SAVE_KEY)
       if (raw) {
         const parsed = JSON.parse(raw) as Partial<ColonyState>
@@ -786,7 +937,10 @@ export const useGameStore = defineStore('game', {
       // Backfill building positions
       for (const b of this.buildings) {
         if (b.x === undefined || b.y === undefined) {
-          const pos = getBuildingPosition(b.type, this.buildings.filter(ob => ob.id !== b.id && ob.x !== undefined))
+          const pos = getBuildingPosition(
+            b.type,
+            this.buildings.filter((ob) => ob.id !== b.id && ob.x !== undefined),
+          )
           b.x = pos.x
           b.y = pos.y
         }
