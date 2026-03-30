@@ -655,6 +655,18 @@ export const useGameStore = defineStore('game', {
         }
       }
 
+      // Parts Factory production
+      const factoryCount = this.buildings.filter(b => b.type === 'partsfactory' && !b.damaged).length
+      if (factoryCount > 0 && this.power > 0 && this.metals >= PARTS_FACTORY_METAL_COST) {
+        const interval = PARTS_FACTORY_INTERVAL_MS / factoryCount
+        if (this.totalPlaytimeMs - this.lastPartsProducedAt >= interval) {
+          this.metals -= PARTS_FACTORY_METAL_COST
+          this.repairKits++
+          this.lastPartsProducedAt = this.totalPlaytimeMs
+          this.pushMessage(`Parts Factory produced a repair kit. (${this.repairKits} in stock, -${PARTS_FACTORY_METAL_COST} metals)`, 'info')
+        }
+      }
+
       // Update capacities
       this.airMax = STARTING_AIR_MAX + generators * 25
       this.powerMax = STARTING_POWER_MAX + solars * 25
