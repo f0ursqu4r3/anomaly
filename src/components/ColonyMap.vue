@@ -5,6 +5,7 @@
     @pointermove="onPointerMove"
     @pointerup="onPointerUp"
     @dblclick="resetView"
+    @click="selectedBuilding = null"
   >
     <div v-if="settings.scanlines" class="scanlines" />
 
@@ -46,7 +47,13 @@
 
       <div class="habitat-ring" />
 
-      <MapBuilding v-for="b in game.buildings" :key="b.id" :building="b" />
+      <MapBuilding v-for="b in game.buildings" :key="b.id" :building="b" @select="selectBuilding" />
+      <BuildingInfo
+        v-if="selectedBuilding"
+        :building="selectedBuilding"
+        :x="selectedBuilding.x"
+        :y="selectedBuilding.y"
+      />
       <MapSupplyDrop v-for="d in game.supplyDrops" :key="d.id" :drop="d" />
 
       <MapColonist
@@ -81,6 +88,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useGameStore } from '@/stores/gameStore'
+import type { Building } from '@/stores/gameStore'
 import { useSettingsStore } from '@/stores/settingsStore'
 import { useColonistMovement } from '@/composables/useColonistMovement'
 import { ZONES, PATH_EDGES, ZONE_MAP } from '@/systems/mapLayout'
@@ -90,6 +98,7 @@ import PauseButton from './PauseButton.vue'
 import MapBuilding from './MapBuilding.vue'
 import MapColonist from './MapColonist.vue'
 import MapSupplyDrop from './MapSupplyDrop.vue'
+import BuildingInfo from './BuildingInfo.vue'
 
 const game = useGameStore()
 const settings = useSettingsStore()
@@ -105,6 +114,12 @@ const pathEdges = PATH_EDGES.map(e => ({
 
 function getColonistState(id: string) {
   return positions.value.get(id) || getOrCreate(id)
+}
+
+const selectedBuilding = ref<Building | null>(null)
+
+function selectBuilding(b: Building) {
+  selectedBuilding.value = selectedBuilding.value?.id === b.id ? null : b
 }
 
 // Pan & Zoom

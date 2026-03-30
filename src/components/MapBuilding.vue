@@ -3,8 +3,8 @@
     class="map-building"
     :class="[typeClass, { damaged: building.damaged }]"
     :style="{ left: building.x + '%', top: building.y + '%', transform: `translate(-50%, -50%) scale(var(--marker-scale, 1)) rotate(${building.rotation || 0}deg)` }"
+    @click.stop="emit('select', building)"
   >
-    <!-- View-only — no click interaction -->
     <div class="building-sprite">
       <SvgIcon :name="iconName" size="sm" />
     </div>
@@ -18,6 +18,7 @@ import type { Building } from '@/stores/gameStore'
 import SvgIcon from './SvgIcon.vue'
 
 const props = defineProps<{ building: Building }>()
+const emit = defineEmits<{ select: [building: Building] }>()
 
 const iconName = computed(() => {
   const map: Record<string, string> = {
@@ -38,7 +39,8 @@ const typeClass = computed(() => `type-${props.building.type}`)
   display: flex;
   flex-direction: column;
   align-items: center;
-  pointer-events: none;
+  pointer-events: auto;
+  cursor: pointer;
   z-index: 2;
 }
 
