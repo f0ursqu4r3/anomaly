@@ -25,8 +25,8 @@ import {
   COLONIST_NAMES,
   BLUEPRINTS,
   uid,
-  getBuildingPosition,
 } from './gameStore'
+import { getBuildingPosition } from '@/systems/mapLayout'
 
 // ── Types ──────────────────────────────────────────────────────────
 
