@@ -6,7 +6,10 @@
       "Bash(npx vite:*)",
       "mcp__Claude_Preview__preview_start",
       "Bash(git add:*)",
-      "Bash(git commit:*)"
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
+      "Bash(bun add:*)",
+      "Bash(bun run:*)"
     ]
   }
 }
