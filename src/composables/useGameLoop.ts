@@ -1,5 +1,6 @@
-import { ref, reactive, onMounted, onUnmounted } from 'vue'
+import { ref, reactive, onMounted, onUnmounted, watch } from 'vue'
 import { useGameStore } from '@/stores/gameStore'
+import { useSettingsStore } from '@/stores/settingsStore'
 import {
   scheduleOfflineNotifications,
   cancelAllOfflineNotifications,
@@ -27,13 +28,14 @@ export function useGameLoop() {
 
   function startLoop() {
     if (tickInterval) return
+    const settings = useSettingsStore()
     tickInterval = setInterval(() => {
       game.tick(TICK_MS)
       tickCount++
-      if (tickCount % SAVE_EVERY_N_TICKS === 0) {
+      if (settings.autoSave && tickCount % SAVE_EVERY_N_TICKS === 0) {
         game.save()
       }
-    }, TICK_MS)
+    }, TICK_MS / settings.timeMultiplier)
   }
 
   function stopLoop() {
@@ -83,6 +85,13 @@ export function useGameLoop() {
     await game.load()
     handleOfflineResult(game.processOfflineTime())
     document.addEventListener('visibilitychange', onVisibilityChange)
+
+    watch(() => useSettingsStore().timeMultiplier, () => {
+      if (tickInterval) {
+        stopLoop()
+        startLoop()
+      }
+    })
   })
 
   onUnmounted(() => {

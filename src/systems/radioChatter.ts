@@ -156,7 +156,9 @@ export function generateChatter(
   buildingLabel: (id: string) => string,
   emit: MessageEmitter,
   now: number,
+  chatterEnabled: boolean = true,
 ) {
+  if (!chatterEnabled) return
   for (const c of colonists) {
     if (c.health <= 0) continue
 

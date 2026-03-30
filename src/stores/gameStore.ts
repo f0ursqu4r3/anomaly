@@ -7,6 +7,7 @@ import { randomTrait } from '@/types/colonist'
 import { getBuildingPosition, getLandingPosition } from '@/systems/mapLayout'
 import { updateNeeds, checkInterrupt, advanceAction, selectAction } from '@/systems/colonistAI'
 import { generateChatter } from '@/systems/radioChatter'
+import { useSettingsStore } from '@/stores/settingsStore'
 
 // ── Types ──────────────────────────────────────────────────────────
 
@@ -493,6 +494,7 @@ export const useGameStore = defineStore('game', {
       }
 
       // Radio chatter — colonists communicate organically
+      const settingsState = useSettingsStore()
       generateChatter(
         alive,
         this.colonists,
@@ -502,6 +504,7 @@ export const useGameStore = defineStore('game', {
         },
         (text, severity) => this.pushMessage(text, severity),
         this.totalPlaytimeMs,
+        settingsState.radioChatter,
       )
 
       // Count active workers by zone

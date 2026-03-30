@@ -286,3 +286,7 @@ button:active {
     transform: scale(1.15);
   }
 }
+
+[data-text-size="small"] { font-size: 13px; }
+[data-text-size="normal"] { font-size: 16px; }
+[data-text-size="large"] { font-size: 19px; }

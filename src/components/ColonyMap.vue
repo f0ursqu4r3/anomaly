@@ -1,20 +1,22 @@
 <template>
-  <div class="colony-map" ref="mapContainer"
+  <div class="colony-map" :class="{ 'reduce-animations': settings.reduceAnimations }" ref="mapContainer"
     @wheel.prevent="onWheel"
     @pointerdown="onPointerDown"
     @pointermove="onPointerMove"
     @pointerup="onPointerUp"
     @dblclick="resetView"
   >
-    <div class="scanlines" />
+    <div v-if="settings.scanlines" class="scanlines" />
 
     <div class="map-content" :style="transformStyle">
       <!-- Zone boundaries and paths (SVG) -->
-      <svg class="zone-overlay" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid meet">
+      <svg class="zone-overlay" :class="{ 'high-contrast': settings.highContrast }" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid meet">
+        <template v-if="settings.pathLines">
         <line v-for="(edge, i) in pathEdges" :key="'p'+i"
           :x1="edge.x1" :y1="edge.y1" :x2="edge.x2" :y2="edge.y2"
           stroke="var(--accent-dim)" stroke-width="0.3" opacity="0.12"
         />
+        </template>
         <circle v-for="zone in zones" :key="zone.id"
           :cx="zone.x" :cy="zone.y" :r="zone.radius"
           fill="none" :stroke="zone.color" stroke-width="0.2"
@@ -23,12 +25,14 @@
       </svg>
 
       <!-- Zone labels -->
+      <template v-if="settings.zoneLabels">
       <div v-for="zone in zones" :key="'label-'+zone.id"
         class="zone-marker"
         :style="{ left: zone.x + '%', top: (zone.y - zone.radius - 2) + '%', color: zone.color, transform: `translate(-50%, -50%) scale(var(--marker-scale, 1))` }"
       >
         {{ zone.label }}
       </div>
+      </template>
 
       <!-- Terrain craters -->
       <div class="crater" style="left: 15%; top: 55%; width: 40px; height: 40px" />
@@ -63,12 +67,15 @@
       <span class="feed-dot" />
       <span class="feed-text">LIVE</span>
     </div>
+
+    <div v-if="settings.showFps" class="fps-counter">{{ fps }} FPS</div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useGameStore } from '@/stores/gameStore'
+import { useSettingsStore } from '@/stores/settingsStore'
 import { useColonistMovement } from '@/composables/useColonistMovement'
 import { ZONES, PATH_EDGES, ZONE_MAP } from '@/systems/mapLayout'
 import HazardAlert from './HazardAlert.vue'
@@ -78,6 +85,7 @@ import MapColonist from './MapColonist.vue'
 import MapSupplyDrop from './MapSupplyDrop.vue'
 
 const game = useGameStore()
+const settings = useSettingsStore()
 const { positions, getOrCreate } = useColonistMovement()
 
 const zones = ZONES
@@ -134,6 +142,25 @@ function resetView() {
   panX.value = 0
   panY.value = 0
 }
+
+const fps = ref(0)
+let fpsFrames = 0
+let fpsLastTime = performance.now()
+let fpsRaf = 0
+
+function updateFps() {
+  fpsFrames++
+  const now = performance.now()
+  if (now - fpsLastTime >= 1000) {
+    fps.value = fpsFrames
+    fpsFrames = 0
+    fpsLastTime = now
+  }
+  fpsRaf = requestAnimationFrame(updateFps)
+}
+
+onMounted(() => { fpsRaf = requestAnimationFrame(updateFps) })
+onUnmounted(() => cancelAnimationFrame(fpsRaf))
 </script>
 
 <style scoped>
@@ -282,5 +309,25 @@ function resetView() {
   height: 100%;
   pointer-events: none;
   z-index: 1;
+}
+
+.zone-overlay.high-contrast line { opacity: 0.3; }
+.zone-overlay.high-contrast circle { opacity: 0.35; stroke-width: 0.4; }
+
+.reduce-animations .colonist-dot,
+.reduce-animations .colonist-trail,
+.reduce-animations .feed-dot {
+  animation: none !important;
+}
+
+.fps-counter {
+  position: absolute;
+  bottom: 8px;
+  left: 8px;
+  font-family: var(--font-mono);
+  font-size: 9px;
+  color: var(--text-muted);
+  z-index: 9;
+  pointer-events: none;
 }
 </style>

@@ -16,7 +16,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, watch } from 'vue'
 import { useGameLoop } from '@/composables/useGameLoop'
 import { useSettingsStore } from '@/stores/settingsStore'
 import GameOverModal from '@/components/GameOverModal.vue'
@@ -29,4 +29,8 @@ settings.load()
 
 const showSettings = ref(false)
 const { showShiftReport, dismissReport, reportData } = useGameLoop()
+
+watch(() => settings.textSize, (size) => {
+  document.documentElement.dataset.textSize = size
+}, { immediate: true })
 </script>

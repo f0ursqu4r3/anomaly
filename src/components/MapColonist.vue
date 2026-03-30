@@ -10,6 +10,9 @@
   >
     <div class="colonist-dot" />
     <div v-if="visualState === 'walking' && colonist.health > 0" class="colonist-trail" />
+    <div v-if="settings.showActionStates && colonist.health > 0" class="action-label">
+      {{ colonist.currentAction?.type || 'idle' }}
+    </div>
   </div>
 </template>
 
@@ -17,6 +20,9 @@
 import { computed } from 'vue'
 import type { Colonist } from '@/stores/gameStore'
 import type { VisualState } from '@/composables/useColonistMovement'
+import { useSettingsStore } from '@/stores/settingsStore'
+
+const settings = useSettingsStore()
 
 const props = defineProps<{
   colonist: Colonist
@@ -166,5 +172,17 @@ const stateClass = computed(() => {
     transform: scale(2.5);
     opacity: 0;
   }
+}
+
+.action-label {
+  position: absolute;
+  top: -12px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-family: var(--font-mono);
+  font-size: 6px;
+  color: var(--text-muted);
+  white-space: nowrap;
+  pointer-events: none;
 }
 </style>
