@@ -63,6 +63,12 @@
     <HazardAlert />
     <ResourceHud />
 
+    <PauseButton />
+
+    <div v-if="game.isPaused" class="pause-overlay">
+      <span class="pause-text">PAUSED</span>
+    </div>
+
     <div class="feed-indicator">
       <span class="feed-dot" />
       <span class="feed-text">LIVE</span>
@@ -80,6 +86,7 @@ import { useColonistMovement } from '@/composables/useColonistMovement'
 import { ZONES, PATH_EDGES, ZONE_MAP } from '@/systems/mapLayout'
 import HazardAlert from './HazardAlert.vue'
 import ResourceHud from './ResourceHud.vue'
+import PauseButton from './PauseButton.vue'
 import MapBuilding from './MapBuilding.vue'
 import MapColonist from './MapColonist.vue'
 import MapSupplyDrop from './MapSupplyDrop.vue'
@@ -329,5 +336,25 @@ onUnmounted(() => cancelAnimationFrame(fpsRaf))
   color: var(--text-muted);
   z-index: 9;
   pointer-events: none;
+}
+
+.pause-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 12;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.3);
+  pointer-events: none;
+}
+
+.pause-text {
+  font-family: var(--font-mono);
+  font-size: 24px;
+  color: var(--text-muted);
+  letter-spacing: 8px;
+  text-transform: uppercase;
+  opacity: 0.6;
 }
 </style>
