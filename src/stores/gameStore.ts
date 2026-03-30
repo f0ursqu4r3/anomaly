@@ -167,15 +167,15 @@ const DIRECTIVE_MODIFIERS: Record<Directive, { drillMult: number; hazardResist: 
 }
 
 export const SHIPMENT_OPTIONS: ShipmentOption[] = [
-  { type: 'supplyCrate', label: 'Supply Crate', description: '+15 metals, +5 ice', cost: 20, weight: 15 },
-  { type: 'equipment', label: 'Solar Panel', description: 'Prefab solar panel', cost: 35, weight: 30, buildingType: 'solar' },
-  { type: 'equipment', label: 'O2 Generator', description: 'Prefab O2 generator', cost: 40, weight: 35, buildingType: 'o2generator' },
-  { type: 'equipment', label: 'Drill Rig', description: 'Prefab drill rig', cost: 50, weight: 40, buildingType: 'drillrig' },
-  { type: 'equipment', label: 'Med Bay', description: 'Prefab medical bay', cost: 60, weight: 45, buildingType: 'medbay' },
-  { type: 'newColonist', label: 'New Colonist', description: 'Recruit crew member', cost: 75, weight: 20 },
-  { type: 'repairKit', label: 'Repair Kit', description: 'Fix one damaged building', cost: 15, weight: 10 },
-  { type: 'emergencyO2', label: 'Emergency O2', description: '+30 air (fast delivery)', cost: 25, weight: 10 },
-  { type: 'emergencyPower', label: 'Emergency Power', description: '+30 power (fast delivery)', cost: 25, weight: 10 },
+  { type: 'supplyCrate', label: 'Supply Crate', description: '+15 metals, +5 ice', cost: 30, weight: 20 },
+  { type: 'equipment', label: 'Solar Panel', description: 'Prefab solar panel', cost: 40, weight: 18, buildingType: 'solar' },
+  { type: 'equipment', label: 'O2 Generator', description: 'Prefab O2 generator', cost: 50, weight: 32, buildingType: 'o2generator' },
+  { type: 'equipment', label: 'Drill Rig', description: 'Prefab drill rig', cost: 65, weight: 55, buildingType: 'drillrig' },
+  { type: 'equipment', label: 'Med Bay', description: 'Prefab medical bay', cost: 80, weight: 40, buildingType: 'medbay' },
+  { type: 'newColonist', label: 'New Colonist', description: 'Recruit crew member', cost: 90, weight: 35 },
+  { type: 'repairKit', label: 'Repair Kit', description: 'Fix one damaged building', cost: 15, weight: 5 },
+  { type: 'emergencyO2', label: 'Emergency O2', description: '+30 air (fast delivery)', cost: 20, weight: 25 },
+  { type: 'emergencyPower', label: 'Emergency Power', description: '+30 power (fast delivery)', cost: 20, weight: 15 },
 ]
 
 export { MANIFEST_MAX_SLOTS, CARGO_CAPACITY, SHIPMENT_COOLDOWN_MS }
