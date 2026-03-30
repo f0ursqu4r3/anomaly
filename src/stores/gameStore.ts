@@ -122,6 +122,8 @@ export interface ColonyState {
   lastPartsProducedAt: number
   manifest: ShipmentOption[] // items queued for next shipment
   shipmentCooldownUntil: number // totalPlaytimeMs when next shipment can launch
+  autoRelaunch: boolean
+  lastManifest: ShipmentOption[]
   ticksSinceLastReport: number
 
   gameOver: boolean
@@ -378,6 +380,8 @@ function freshState(): ColonyState {
     lastPartsProducedAt: 0,
     manifest: [],
     shipmentCooldownUntil: 0,
+    autoRelaunch: false,
+    lastManifest: [],
     ticksSinceLastReport: 0,
     gameOver: false,
     gameOverReason: '',
@@ -673,6 +677,30 @@ export const useGameStore = defineStore('game', {
 
       // Process shipments and supply drops
       this.processShipments()
+
+      // Auto-relaunch
+      if (this.autoRelaunch && this.lastManifest.length > 0 && !this.shipmentOnCooldown) {
+        const cost = this.lastManifest.reduce((sum, o) => sum + o.cost, 0)
+        if (this.credits >= cost) {
+          this.credits -= cost
+          const hasEmergency = this.lastManifest.some(
+            (o) => o.type === 'emergencyO2' || o.type === 'emergencyPower',
+          )
+          const transit = hasEmergency ? EMERGENCY_TRANSIT_MS : SHIPMENT_TRANSIT_MS
+          this.inTransitShipments.push({
+            id: uid(),
+            contents: [...this.lastManifest],
+            totalWeight: this.lastManifest.reduce((sum, o) => sum + o.weight, 0),
+            arrivalAt: this.totalPlaytimeMs + transit,
+          })
+          this.shipmentCooldownUntil = this.totalPlaytimeMs + SHIPMENT_COOLDOWN_MS
+          this.pushMessage('Auto-relaunching shipment...', 'event')
+        } else {
+          this.pushMessage('Auto-relaunch skipped — insufficient credits.', 'warning')
+          this.autoRelaunch = false
+        }
+      }
+
       this.processSupplyDrops(dtMs)
 
       // Hazards
@@ -783,6 +811,7 @@ export const useGameStore = defineStore('game', {
         `Shipment launched: ${itemCount} ${itemCount === 1 ? 'item' : 'items'}, ${totalWeight}kg. ETA ${transit / 1000}s.`,
         'event',
       )
+      this.lastManifest = [...this.manifest]
       this.manifest = []
       this.shipmentCooldownUntil = this.totalPlaytimeMs + SHIPMENT_COOLDOWN_MS
     },
@@ -1067,6 +1096,10 @@ export const useGameStore = defineStore('game', {
       if (this.shipmentCooldownUntil === undefined) this.shipmentCooldownUntil = 0
       if (this.ticksSinceLastReport === undefined) this.ticksSinceLastReport = 0
       if (!this.offlineEvents) this.offlineEvents = []
+    },
+
+    toggleAutoRelaunch() {
+      this.autoRelaunch = !this.autoRelaunch
     },
   },
 })
