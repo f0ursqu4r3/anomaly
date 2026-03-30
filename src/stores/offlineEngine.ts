@@ -72,9 +72,10 @@ interface Rates {
 }
 
 function computeRates(state: ColonyState): Rates {
-  const alive = state.colonists.filter(c => c.health > 0)
-  const engineers = alive.filter(c => c.role === 'engineer').length
-  const drillers = alive.filter(c => c.role === 'driller').length
+  const aliveCount = state.colonists.filter(c => c.health > 0).length
+  const ratio = DIRECTIVE_RATIOS[state.activeDirective]
+  const engineers = Math.round(aliveCount * ratio.engineer)
+  const drillers = Math.round(aliveCount * ratio.driller)
   const mod = DIRECTIVE_MODIFIERS[state.activeDirective]
   const engBonus = (1 + engineers * ENGINEER_EFFICIENCY_BONUS) * mod.prodMult
 
@@ -91,7 +92,7 @@ function computeRates(state: ColonyState): Rates {
   const airProd = state.power > 0
     ? undamagedGenerators * O2_PRODUCTION_PER_GENERATOR * engBonus
     : 0
-  const airCons = alive.length * AIR_CONSUMPTION_PER_COLONIST
+  const airCons = aliveCount * AIR_CONSUMPTION_PER_COLONIST
   const airNet = airProd - airCons
 
   const drillMult = DIRECTIVE_MODIFIERS[state.activeDirective].drillMult
@@ -110,39 +111,6 @@ function computeRates(state: ColonyState): Rates {
 }
 
 // ── Helpers ────────────────────────────────────────────────────────
-
-function reassignRoles(state: ColonyState): void {
-  const alive = state.colonists.filter(c => c.health > 0)
-  if (alive.length === 0) return
-
-  const ratio = DIRECTIVE_RATIOS[state.activeDirective]
-  let targetDrillers = Math.round(alive.length * ratio.driller)
-  let targetEngineers = Math.round(alive.length * ratio.engineer)
-
-  if (state.air < state.airMax * 0.2 && state.buildings.some(b => b.type === 'o2generator' && !b.damaged)) {
-    targetEngineers = Math.min(alive.length, targetEngineers + 1)
-    targetDrillers = Math.max(0, targetDrillers - 1)
-  }
-  if (state.power < state.powerMax * 0.2) {
-    targetEngineers = Math.min(alive.length, targetEngineers + 1)
-    targetDrillers = Math.max(0, targetDrillers - 1)
-  }
-  if (state.buildings.some(b => b.damaged) && alive.filter(c => c.role === 'engineer').length === 0) {
-    targetEngineers = Math.max(1, targetEngineers)
-  }
-  if (targetDrillers + targetEngineers > alive.length) {
-    targetEngineers = Math.min(targetEngineers, alive.length)
-    targetDrillers = Math.min(targetDrillers, alive.length - targetEngineers)
-  }
-
-  let drillerSlots = targetDrillers
-  let engineerSlots = targetEngineers
-  for (const c of alive) {
-    if (drillerSlots > 0) { c.role = 'driller'; drillerSlots-- }
-    else if (engineerSlots > 0) { c.role = 'engineer'; engineerSlots-- }
-    else { c.role = 'idle' }
-  }
-}
 
 function applyHazard(state: ColonyState, rand: () => number, events: OfflineEvent[], offsetMs: number): void {
   const mod = DIRECTIVE_MODIFIERS[state.activeDirective]
@@ -200,7 +168,8 @@ function landShipments(state: ColonyState, rand: () => number, events: OfflineEv
           const name = available.length > 0
             ? available[Math.floor(rand() * available.length)]
             : `Crew-${state.colonists.length + 1}`
-          state.colonists.push({ id: uid(), name, role: 'idle', health: 100 })
+          const traits = ['hardy', 'diligent', 'social', 'cautious', 'efficient', 'stoic'] as const
+          state.colonists.push({ id: uid(), name, health: 100, energy: 80, morale: 70, trait: traits[Math.floor(rand() * traits.length)], currentAction: null, currentZone: 'habitat' })
           break
         }
         case 'repairKit': {
@@ -319,18 +288,15 @@ export function simulateOffline(inputState: ColonyState, elapsedMs: number): Off
     if (phaseReason === 'hazard') {
       timeSinceHazardCheck = 0
       applyHazard(state, rand, events, elapsedSoFar)
-      reassignRoles(state)
     }
 
     if (phaseReason === 'shipment') {
       landShipments(state, rand, events, elapsedSoFar)
-      reassignRoles(state)
     }
 
     if (state.activeDirective !== 'emergency') {
       if (state.air < state.airMax * 0.2 || state.power < state.powerMax * 0.2) {
         state.activeDirective = 'emergency'
-        reassignRoles(state)
         events.push({ type: 'auto_directive', severity: 'warning', offsetMs: elapsedSoFar, message: 'Auto-switched to Emergency Protocol — resources critical.' })
       }
     }
