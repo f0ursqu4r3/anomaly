@@ -1,52 +1,64 @@
 <template>
-  <div class="colony-map">
-    <!-- Scan line overlay -->
+  <div class="colony-map" ref="mapContainer"
+    @wheel.prevent="onWheel"
+    @pointerdown="onPointerDown"
+    @pointermove="onPointerMove"
+    @pointerup="onPointerUp"
+    @dblclick="resetView"
+  >
     <div class="scanlines" />
 
-    <!-- Zone markers -->
-    <div class="zone-marker" style="left: 50%; top: 38%">SEC-A: HAB</div>
-    <div class="zone-marker" style="left: 28%; top: 18%">SEC-B: POWER</div>
-    <div class="zone-marker" style="left: 72%; top: 18%">SEC-C: LIFE SUP</div>
-    <div class="zone-marker" style="left: 50%; top: 70%">SEC-D: DRILL</div>
-    <div class="zone-marker" style="left: 72%; top: 50%">SEC-E: MED</div>
+    <div class="map-content" :style="transformStyle">
+      <!-- Zone boundaries and paths (SVG) -->
+      <svg class="zone-overlay" viewBox="0 0 100 100" preserveAspectRatio="none">
+        <line v-for="(edge, i) in pathEdges" :key="'p'+i"
+          :x1="edge.x1" :y1="edge.y1" :x2="edge.x2" :y2="edge.y2"
+          stroke="var(--accent-dim)" stroke-width="0.3" opacity="0.12"
+        />
+        <circle v-for="zone in zones" :key="zone.id"
+          :cx="zone.x" :cy="zone.y" :r="zone.radius"
+          fill="none" :stroke="zone.color" stroke-width="0.2"
+          stroke-dasharray="1.5,1" opacity="0.15"
+        />
+      </svg>
 
-    <!-- Terrain craters -->
-    <div class="crater" style="left: 15%; top: 55%; width: 40px; height: 40px" />
-    <div class="crater" style="left: 85%; top: 75%; width: 25px; height: 25px" />
-    <div class="crater" style="left: 40%; top: 15%; width: 30px; height: 30px" />
-    <div class="crater" style="left: 60%; top: 65%; width: 20px; height: 20px" />
-    <div class="crater" style="left: 10%; top: 30%; width: 18px; height: 18px" />
-    <div class="crater" style="left: 90%; top: 40%; width: 22px; height: 22px" />
-    <div class="crater sm" style="left: 35%; top: 85%; width: 14px; height: 14px" />
-    <div class="crater sm" style="left: 75%; top: 88%; width: 12px; height: 12px" />
+      <!-- Zone labels -->
+      <div v-for="zone in zones" :key="'label-'+zone.id"
+        class="zone-marker"
+        :style="{ left: zone.x + '%', top: (zone.y - zone.radius - 2) + '%', color: zone.color }"
+      >
+        {{ zone.label }}
+      </div>
 
-    <!-- Habitat ring -->
-    <div class="habitat-ring" />
+      <!-- Terrain craters -->
+      <div class="crater" style="left: 15%; top: 55%; width: 40px; height: 40px" />
+      <div class="crater" style="left: 85%; top: 75%; width: 25px; height: 25px" />
+      <div class="crater" style="left: 40%; top: 15%; width: 30px; height: 30px" />
+      <div class="crater" style="left: 60%; top: 65%; width: 20px; height: 20px" />
+      <div class="crater" style="left: 10%; top: 30%; width: 18px; height: 18px" />
+      <div class="crater" style="left: 90%; top: 40%; width: 22px; height: 22px" />
+      <div class="crater sm" style="left: 35%; top: 85%; width: 14px; height: 14px" />
+      <div class="crater sm" style="left: 75%; top: 88%; width: 12px; height: 12px" />
 
-    <!-- Buildings -->
-    <MapBuilding v-for="b in game.buildings" :key="b.id" :building="b" />
+      <div class="habitat-ring" />
 
-    <!-- Supply drops -->
-    <MapSupplyDrop v-for="d in game.supplyDrops" :key="d.id" :drop="d" />
+      <MapBuilding v-for="b in game.buildings" :key="b.id" :building="b" />
+      <MapSupplyDrop v-for="d in game.supplyDrops" :key="d.id" :drop="d" />
 
-    <!-- Colonists -->
-    <MapColonist
-      v-for="c in game.colonists"
-      :key="c.id"
-      :colonist="c"
-      :x="getColonistState(c.id).x"
-      :y="getColonistState(c.id).y"
-      :state="getColonistState(c.id).state"
-      :transition-ms="getColonistState(c.id).transitionMs"
-    />
+      <MapColonist
+        v-for="c in game.colonists"
+        :key="c.id"
+        :colonist="c"
+        :x="getColonistState(c.id).x"
+        :y="getColonistState(c.id).y"
+        :visual-state="getColonistState(c.id).visualState"
+        :transition-ms="getColonistState(c.id).transitionMs"
+      />
+    </div>
 
-    <!-- Hazard alert (scoped to map) -->
     <HazardAlert />
-
-    <!-- HUD -->
     <ResourceHud />
 
-    <!-- Live feed indicator -->
     <div class="feed-indicator">
       <span class="feed-dot" />
       <span class="feed-text">LIVE</span>
@@ -55,8 +67,10 @@
 </template>
 
 <script setup lang="ts">
+import { ref, computed } from 'vue'
 import { useGameStore } from '@/stores/gameStore'
 import { useColonistMovement } from '@/composables/useColonistMovement'
+import { ZONES, PATH_EDGES, ZONE_MAP } from '@/systems/mapLayout'
 import HazardAlert from './HazardAlert.vue'
 import ResourceHud from './ResourceHud.vue'
 import MapBuilding from './MapBuilding.vue'
@@ -66,8 +80,57 @@ import MapSupplyDrop from './MapSupplyDrop.vue'
 const game = useGameStore()
 const { positions, getOrCreate } = useColonistMovement()
 
+const zones = ZONES
+const pathEdges = PATH_EDGES.map(e => ({
+  x1: ZONE_MAP[e.from].x,
+  y1: ZONE_MAP[e.from].y,
+  x2: ZONE_MAP[e.to].x,
+  y2: ZONE_MAP[e.to].y,
+}))
+
 function getColonistState(id: string) {
   return positions.value.get(id) || getOrCreate(id)
+}
+
+// Pan & Zoom
+const zoom = ref(1)
+const panX = ref(0)
+const panY = ref(0)
+const isPanning = ref(false)
+const lastPointer = ref({ x: 0, y: 0 })
+
+const transformStyle = computed(() => ({
+  transform: `scale(${zoom.value}) translate(${panX.value}px, ${panY.value}px)`,
+  transformOrigin: 'center center',
+}))
+
+function onWheel(e: WheelEvent) {
+  const delta = e.deltaY > 0 ? -0.1 : 0.1
+  zoom.value = Math.min(2.0, Math.max(0.8, zoom.value + delta))
+}
+
+function onPointerDown(e: PointerEvent) {
+  isPanning.value = true
+  lastPointer.value = { x: e.clientX, y: e.clientY }
+}
+
+function onPointerMove(e: PointerEvent) {
+  if (!isPanning.value) return
+  const dx = e.clientX - lastPointer.value.x
+  const dy = e.clientY - lastPointer.value.y
+  panX.value += dx / zoom.value
+  panY.value += dy / zoom.value
+  lastPointer.value = { x: e.clientX, y: e.clientY }
+}
+
+function onPointerUp() {
+  isPanning.value = false
+}
+
+function resetView() {
+  zoom.value = 1
+  panX.value = 0
+  panY.value = 0
 }
 </script>
 
@@ -198,5 +261,20 @@ function getColonistState(id: string) {
   50% {
     opacity: 0.2;
   }
+}
+
+.map-content {
+  position: absolute;
+  inset: 0;
+  transition: transform 0.15s ease-out;
+}
+
+.zone-overlay {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 1;
 }
 </style>

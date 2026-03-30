@@ -1,7 +1,7 @@
 <template>
   <div
     class="map-colonist"
-    :class="[roleClass, { dead: colonist.health <= 0, walking: state === 'walking' }]"
+    :class="[stateClass, visualState, { dead: colonist.health <= 0 }]"
     :style="{
       left: x + '%',
       top: y + '%',
@@ -9,26 +9,32 @@
     }"
   >
     <div class="colonist-dot" />
-    <!-- Motion trail -->
-    <div v-if="state === 'walking' && colonist.health > 0" class="colonist-trail" />
+    <div v-if="visualState === 'walking' && colonist.health > 0" class="colonist-trail" />
   </div>
 </template>
 
 <script setup lang="ts">
 import { computed } from 'vue'
 import type { Colonist } from '@/stores/gameStore'
+import type { VisualState } from '@/composables/useColonistMovement'
 
 const props = defineProps<{
   colonist: Colonist
   x: number
   y: number
-  state: 'walking' | 'working' | 'idle'
+  visualState: VisualState
   transitionMs: number
 }>()
 
-// View-only — no click interaction
-
-const roleClass = computed(() => `role-${props.colonist.role}`)
+const stateClass = computed(() => {
+  const action = props.colonist.currentAction?.type
+  if (action === 'drill') return 'action-drill'
+  if (action === 'engineer') return 'action-engineer'
+  if (action === 'repair') return 'action-repair'
+  if (action === 'unpack') return 'action-unpack'
+  if (action === 'seek_medical') return 'action-medical'
+  return 'action-idle'
+})
 </script>
 
 <style scoped>
@@ -51,23 +57,53 @@ const roleClass = computed(() => `role-${props.colonist.role}`)
   transition: all 0.2s;
 }
 
-.role-driller .colonist-dot {
+.action-drill .colonist-dot {
   background: var(--green);
-  box-shadow:
-    0 0 6px var(--green-glow),
-    0 0 12px rgba(52, 211, 153, 0.1);
+  box-shadow: 0 0 6px var(--green-glow), 0 0 12px rgba(52, 211, 153, 0.1);
 }
 
-.role-engineer .colonist-dot {
+.action-engineer .colonist-dot {
   background: var(--amber);
-  box-shadow:
-    0 0 6px var(--amber-glow),
-    0 0 12px rgba(245, 158, 11, 0.1);
+  box-shadow: 0 0 6px var(--amber-glow), 0 0 12px rgba(245, 158, 11, 0.1);
 }
 
-.role-idle .colonist-dot {
+.action-repair .colonist-dot {
+  background: var(--amber);
+  box-shadow: 0 0 6px var(--amber-glow), 0 0 12px rgba(245, 158, 11, 0.1);
+}
+
+.action-unpack .colonist-dot {
+  background: var(--cyan);
+  box-shadow: 0 0 6px var(--cyan-glow), 0 0 12px rgba(126, 207, 255, 0.1);
+}
+
+.action-medical .colonist-dot {
+  background: var(--red);
+  box-shadow: 0 0 6px var(--red-glow), 0 0 12px rgba(233, 69, 96, 0.1);
+}
+
+.action-idle .colonist-dot {
   background: var(--text-muted);
   box-shadow: 0 0 4px var(--accent-dim);
+}
+
+.resting .colonist-dot {
+  opacity: 0.4;
+  animation: rest-pulse 3s ease-in-out infinite;
+}
+
+.socializing .colonist-dot {
+  opacity: 0.7;
+}
+
+.injured .colonist-dot {
+  background: var(--red) !important;
+  opacity: 0.6;
+}
+
+@keyframes rest-pulse {
+  0%, 100% { opacity: 0.3; }
+  50% { opacity: 0.5; }
 }
 
 .walking .colonist-dot {
@@ -92,15 +128,20 @@ const roleClass = computed(() => `role-${props.colonist.role}`)
   animation: trail-fade 1.2s ease-out infinite;
 }
 
-.role-driller .colonist-trail {
+.action-drill .colonist-trail {
   background: var(--green);
 }
 
-.role-engineer .colonist-trail {
+.action-engineer .colonist-trail,
+.action-repair .colonist-trail {
   background: var(--amber);
 }
 
-.role-idle .colonist-trail {
+.action-unpack .colonist-trail {
+  background: var(--cyan);
+}
+
+.action-idle .colonist-trail {
   background: var(--text-muted);
 }
 

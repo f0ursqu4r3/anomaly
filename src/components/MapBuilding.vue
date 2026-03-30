@@ -2,7 +2,7 @@
   <div
     class="map-building"
     :class="[typeClass, { damaged: building.damaged }]"
-    :style="{ left: building.x + '%', top: building.y + '%' }"
+    :style="{ left: building.x + '%', top: building.y + '%', transform: `translate(-50%, -50%) rotate(${building.rotation || 0}deg)` }"
   >
     <!-- View-only — no click interaction -->
     <div class="building-sprite">
@@ -35,7 +35,6 @@ const typeClass = computed(() => `type-${props.building.type}`)
 <style scoped>
 .map-building {
   position: absolute;
-  transform: translate(-50%, -50%);
   display: flex;
   flex-direction: column;
   align-items: center;
