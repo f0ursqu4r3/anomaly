@@ -9,6 +9,12 @@
     }"
   >
     <div class="colonist-dot" />
+    <div
+      v-if="colonist.health > 0 && colonist.health < injuryThreshold"
+      class="health-pip"
+    >
+      <div class="health-fill" :style="{ width: healthPct + '%' }" />
+    </div>
     <div v-if="visualState === 'walking' && colonist.health > 0" class="colonist-trail" />
     <div v-if="settings.showActionStates && colonist.health > 0" class="action-label">
       {{ colonist.currentAction?.type || 'idle' }}
@@ -19,6 +25,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import type { Colonist } from '@/stores/gameStore'
+import { COLONIST_INJURY_VISIBLE_THRESHOLD } from '@/stores/gameStore'
 import type { VisualState } from '@/composables/useColonistMovement'
 import { useSettingsStore } from '@/stores/settingsStore'
 
@@ -31,6 +38,10 @@ const props = defineProps<{
   visualState: VisualState
   transitionMs: number
 }>()
+
+const injuryThreshold = COLONIST_INJURY_VISIBLE_THRESHOLD * 100
+
+const healthPct = computed(() => props.colonist.health)
 
 const stateClass = computed(() => {
   const action = props.colonist.currentAction?.type
@@ -184,5 +195,24 @@ const stateClass = computed(() => {
   color: var(--text-muted);
   white-space: nowrap;
   pointer-events: none;
+}
+
+.health-pip {
+  position: absolute;
+  bottom: -4px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 12px;
+  height: 2px;
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 1px;
+  overflow: hidden;
+}
+
+.health-fill {
+  height: 100%;
+  background: #ff9f43;
+  border-radius: 1px;
+  transition: width 0.3s;
 }
 </style>

@@ -149,6 +149,7 @@ export const ICE_PER_FIND = 1.0
 export const ENGINEER_EFFICIENCY_BONUS = 0.15
 export const MEDBAY_HEAL_PER_SEC = 0.5
 export const HEALTH_DRAIN_PER_SEC = 2.0
+export const COLONIST_INJURY_VISIBLE_THRESHOLD = 0.7
 
 export const HAZARD_CHECK_INTERVAL_MS = 20_000
 export const HAZARD_BASE_CHANCE = 0.02
