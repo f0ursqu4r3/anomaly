@@ -122,34 +122,34 @@ export interface ColonyState {
 
 const SAVE_KEY = 'colony-save-v2'
 
-const AIR_CONSUMPTION_PER_COLONIST = 0.5
-const O2_PRODUCTION_PER_GENERATOR = 2.0
-const POWER_PRODUCTION_PER_SOLAR = 1.5
-const POWER_CONSUMPTION_PER_BUILDING = 0.3
-const DRILL_SPEED_PER_DRILLER = 0.15
-const DRILL_SPEED_PER_RIG = 0.08
-const METALS_PER_DEPTH = 2.0
-const ICE_CHANCE_PER_TICK = 0.15
-const ICE_PER_FIND = 1.0
-const ENGINEER_EFFICIENCY_BONUS = 0.15
-const MEDBAY_HEAL_PER_SEC = 0.5
-const HEALTH_DRAIN_PER_SEC = 2.0
+export const AIR_CONSUMPTION_PER_COLONIST = 0.5
+export const O2_PRODUCTION_PER_GENERATOR = 2.0
+export const POWER_PRODUCTION_PER_SOLAR = 1.5
+export const POWER_CONSUMPTION_PER_BUILDING = 0.3
+export const DRILL_SPEED_PER_DRILLER = 0.15
+export const DRILL_SPEED_PER_RIG = 0.08
+export const METALS_PER_DEPTH = 2.0
+export const ICE_CHANCE_PER_TICK = 0.15
+export const ICE_PER_FIND = 1.0
+export const ENGINEER_EFFICIENCY_BONUS = 0.15
+export const MEDBAY_HEAL_PER_SEC = 0.5
+export const HEALTH_DRAIN_PER_SEC = 2.0
 
-const HAZARD_CHECK_INTERVAL_MS = 15_000
-const HAZARD_BASE_CHANCE = 0.03
-const HAZARD_DEPTH_SCALE = 0.00002
+export const HAZARD_CHECK_INTERVAL_MS = 15_000
+export const HAZARD_BASE_CHANCE = 0.03
+export const HAZARD_DEPTH_SCALE = 0.00002
 
 const STARTING_AIR = 60
-const STARTING_AIR_MAX = 125
+export const STARTING_AIR_MAX = 125
 const STARTING_POWER = 50
-const STARTING_POWER_MAX = 125
+export const STARTING_POWER_MAX = 125
 const STARTING_METALS = 10
 const STARTING_ICE = 0
 
 // Credit economy
-const BASE_CREDITS_PER_TICK = 1.0
-const CREDITS_PER_METAL_MINED = 0.1
-const CREDITS_PER_ICE_FOUND = 2.0
+export const BASE_CREDITS_PER_TICK = 1.0
+export const CREDITS_PER_METAL_MINED = 0.1
+export const CREDITS_PER_ICE_FOUND = 2.0
 const SHIPMENT_TRANSIT_MS = 10_000
 const EMERGENCY_TRANSIT_MS = 3_000
 const MAX_MESSAGES = 50
@@ -158,14 +158,14 @@ const MANIFEST_MAX_SLOTS = 4
 const CARGO_CAPACITY = 100
 
 // Directive config
-const DIRECTIVE_RATIOS: Record<Directive, { driller: number; engineer: number }> = {
+export const DIRECTIVE_RATIOS: Record<Directive, { driller: number; engineer: number }> = {
   mining: { driller: 0.7, engineer: 0.2 },
   safety: { driller: 0.2, engineer: 0.6 },
   balanced: { driller: 0.4, engineer: 0.4 },
   emergency: { driller: 0.1, engineer: 0.8 },
 }
 
-const DIRECTIVE_MODIFIERS: Record<
+export const DIRECTIVE_MODIFIERS: Record<
   Directive,
   { drillMult: number; hazardResist: number; prodMult: number }
 > = {
@@ -186,7 +186,7 @@ export const SHIPMENT_OPTIONS: ShipmentOption[] = [
   {
     type: 'equipment',
     label: 'Solar Panel',
-    description: 'Prefab solar panel',
+    description: 'Generates power for the colony',
     cost: 40,
     weight: 18,
     buildingType: 'solar',
@@ -194,7 +194,7 @@ export const SHIPMENT_OPTIONS: ShipmentOption[] = [
   {
     type: 'equipment',
     label: 'O2 Generator',
-    description: 'Prefab O2 generator',
+    description: 'Produces breathable air',
     cost: 50,
     weight: 32,
     buildingType: 'o2generator',
@@ -202,7 +202,7 @@ export const SHIPMENT_OPTIONS: ShipmentOption[] = [
   {
     type: 'equipment',
     label: 'Drill Rig',
-    description: 'Prefab drill rig',
+    description: 'Mines metals and ice automatically',
     cost: 65,
     weight: 55,
     buildingType: 'drillrig',
@@ -210,7 +210,7 @@ export const SHIPMENT_OPTIONS: ShipmentOption[] = [
   {
     type: 'equipment',
     label: 'Med Bay',
-    description: 'Prefab medical bay',
+    description: 'Heals injured crew over time',
     cost: 80,
     weight: 40,
     buildingType: 'medbay',
@@ -278,7 +278,7 @@ export const BLUEPRINTS: BuildingBlueprint[] = [
   },
 ]
 
-const COLONIST_NAMES = ['Kael', 'Mira', 'Tarn', 'Vex', 'Lira', 'Cade', 'Nyx', 'Orin', 'Zara', 'Pax']
+export const COLONIST_NAMES = ['Kael', 'Mira', 'Tarn', 'Vex', 'Lira', 'Cade', 'Nyx', 'Orin', 'Zara', 'Pax']
 
 // ── Map Zones ──────────────────────────────────────────────────────
 
@@ -306,7 +306,7 @@ const SLOT_OFFSETS = [
   { dx: -14, dy: 14 },
 ]
 
-function getBuildingPosition(
+export function getBuildingPosition(
   type: BuildingType,
   existingBuildings: Building[],
 ): { x: number; y: number } {
@@ -321,7 +321,7 @@ function getBuildingPosition(
 // ── Helpers ─────────────────────────────────────────────────────────
 
 let nextId = 1
-function uid(): string {
+export function uid(): string {
   return `${Date.now()}-${nextId++}`
 }
 
@@ -721,7 +721,7 @@ export const useGameStore = defineStore('game', {
       const itemCount = this.manifest.length
       const totalWeight = this.manifestWeight
       this.pushMessage(
-        `Care package launched: ${itemCount} item(s), ${totalWeight}kg. ETA ${transit / 1000}s.`,
+        `Shipment launched: ${itemCount} ${itemCount === 1 ? 'item' : 'items'}, ${totalWeight}kg. ETA ${transit / 1000}s.`,
         'event',
       )
       this.manifest = []
@@ -772,7 +772,7 @@ export const useGameStore = defineStore('game', {
           })
           const itemNames = crateItems.map((o) => o.label).join(', ')
           this.pushMessage(
-            `Care package landed (${crateWeight}kg): ${itemNames}. Crew needed.`,
+            `Shipment landed (${crateWeight}kg): ${itemNames}. Send crew to unpack.`,
             'event',
           )
         }
@@ -831,13 +831,16 @@ export const useGameStore = defineStore('game', {
               const label = BLUEPRINTS.find((b) => b.type === damaged.type)?.label || damaged.type
               this.pushMessage(`${label} repaired with kit.`, 'event')
             } else {
-              this.pushMessage('Repair kit unpacked but nothing to fix.', 'info')
+              this.pushMessage('Repair kit deployed. No damaged buildings found.', 'info')
             }
             break
           }
         }
       }
-      this.pushMessage(`Care package fully unpacked (${drop.contents.length} items).`, 'event')
+      this.pushMessage(
+        `Shipment unpacked: ${drop.contents.length} ${drop.contents.length === 1 ? 'item' : 'items'} deployed.`,
+        'event',
+      )
     },
 
     // ── Messages ──
@@ -861,7 +864,10 @@ export const useGameStore = defineStore('game', {
       }
       const damaged = this.buildings.filter((b) => b.damaged)
       if (damaged.length > 0) {
-        this.pushMessage(`${damaged.length} building(s) damaged. Send a repair kit.`, 'warning')
+        this.pushMessage(
+          `${damaged.length} ${damaged.length === 1 ? 'building' : 'buildings'} damaged. Send a repair kit.`,
+          'warning',
+        )
       }
       const injured = this.colonists.filter((c) => c.health > 0 && c.health < 50)
       if (injured.length > 0) {
