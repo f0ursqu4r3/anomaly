@@ -254,9 +254,9 @@ export function selectAction(
     }
   }
 
-  // REPAIR — heavily discounted if someone is already on it
+  // REPAIR — only if repair kits in stock
   const damaged = state.buildings.filter(b => b.damaged)
-  if (damaged.length > 0) {
+  if (damaged.length > 0 && state.repairKits > 0) {
     const target = damaged[0]
     const targetZone = ZONE_FOR_BUILDING[target.type]
     const repairersOnTarget = countWorkers(state, 'repair', target.id)

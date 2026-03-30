@@ -173,8 +173,7 @@ function landShipments(state: ColonyState, rand: () => number, events: OfflineEv
           break
         }
         case 'repairKit': {
-          const damaged = state.buildings.find(b => b.damaged)
-          if (damaged) damaged.damaged = false
+          state.repairKits++
           break
         }
       }
@@ -292,6 +291,15 @@ export function simulateOffline(inputState: ColonyState, elapsedMs: number): Off
 
     if (phaseReason === 'shipment') {
       landShipments(state, rand, events, elapsedSoFar)
+    }
+
+    // Offline repair — consume kits to fix damaged buildings
+    if (state.repairKits > 0) {
+      const damaged = state.buildings.find((b) => b.damaged)
+      if (damaged) {
+        damaged.damaged = false
+        state.repairKits--
+      }
     }
 
     if (state.activeDirective !== 'emergency') {

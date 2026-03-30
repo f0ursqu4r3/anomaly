@@ -118,6 +118,7 @@ export interface ColonyState {
   messages: ConsoleMessage[]
   inTransitShipments: InTransitShipment[]
   supplyDrops: SupplyDrop[]
+  repairKits: number
   manifest: ShipmentOption[] // items queued for next shipment
   shipmentCooldownUntil: number // totalPlaytimeMs when next shipment can launch
   ticksSinceLastReport: number
@@ -353,6 +354,7 @@ function freshState(): ColonyState {
     ],
     inTransitShipments: [],
     supplyDrops: [],
+    repairKits: 0,
     manifest: [],
     shipmentCooldownUntil: 0,
     ticksSinceLastReport: 0,
@@ -394,30 +396,42 @@ export const useGameStore = defineStore('game', {
       return (1 + count * ENGINEER_EFFICIENCY_BONUS) * mod
     },
 
-    airRate(s): number {
-      const alive = s.colonists.filter((c) => c.health > 0).length
-      const consumption = alive * AIR_CONSUMPTION_PER_COLONIST
+    airProduction(s): number {
       const generators = s.buildings.filter((b) => b.type === 'o2generator' && !b.damaged).length
       const workersAtLifeSup = s.colonists.filter(
         c => c.health > 0 && c.currentAction?.type === 'engineer' && c.currentAction?.targetZone === 'lifeSup' && !c.currentAction?.walkPath?.length
       ).length
       const mod = DIRECTIVE_MODIFIERS[s.activeDirective].prodMult
       const engBonus = (1 + workersAtLifeSup * ENGINEER_EFFICIENCY_BONUS) * mod
-      const production = s.power > 0 ? generators * O2_PRODUCTION_PER_GENERATOR * engBonus : 0
-      return production - consumption
+      return s.power > 0 ? generators * O2_PRODUCTION_PER_GENERATOR * engBonus : 0
     },
 
-    powerRate(s): number {
+    airConsumption(s): number {
+      const alive = s.colonists.filter((c) => c.health > 0).length
+      return alive * AIR_CONSUMPTION_PER_COLONIST
+    },
+
+    airRate(): number {
+      return this.airProduction - this.airConsumption
+    },
+
+    powerProduction(s): number {
       const solars = s.buildings.filter((b) => b.type === 'solar' && !b.damaged).length
       const workersAtPower = s.colonists.filter(
         c => c.health > 0 && c.currentAction?.type === 'engineer' && c.currentAction?.targetZone === 'power' && !c.currentAction?.walkPath?.length
       ).length
       const mod = DIRECTIVE_MODIFIERS[s.activeDirective].prodMult
       const engBonus = (1 + workersAtPower * ENGINEER_EFFICIENCY_BONUS) * mod
-      const production = solars * POWER_PRODUCTION_PER_SOLAR * engBonus
+      return solars * POWER_PRODUCTION_PER_SOLAR * engBonus
+    },
+
+    powerConsumption(s): number {
       const activeBuildings = s.buildings.filter((b) => !b.damaged).length
-      const consumption = activeBuildings * POWER_CONSUMPTION_PER_BUILDING
-      return production - consumption
+      return activeBuildings * POWER_CONSUMPTION_PER_BUILDING
+    },
+
+    powerRate(): number {
+      return this.powerProduction - this.powerConsumption
     },
 
     drillRate(s): number {
@@ -599,6 +613,24 @@ export const useGameStore = defineStore('game', {
             this.air <= 0
               ? 'The colony ran out of air.'
               : 'Total power failure. Life support offline.'
+        }
+      }
+
+      // Colonist repair — consume a kit if a repairer has arrived at target
+      if (this.repairKits > 0) {
+        const repairers = alive.filter(
+          (c) => c.currentAction?.type === 'repair' && c.currentAction.targetId && !c.currentAction.walkPath?.length
+        )
+        for (const repairer of repairers) {
+          if (this.repairKits <= 0) break
+          const building = this.buildings.find((b) => b.id === repairer.currentAction!.targetId && b.damaged)
+          if (building) {
+            building.damaged = false
+            this.repairKits--
+            const label = BLUEPRINTS.find((b) => b.type === building.type)?.label || building.type
+            this.pushMessage(`${label} repaired by ${repairer.name}.`, 'event')
+            repairer.currentAction = null // re-evaluate next tick
+          }
         }
       }
 
@@ -830,14 +862,8 @@ export const useGameStore = defineStore('game', {
             break
           }
           case 'repairKit': {
-            const damaged = this.buildings.find((b) => b.damaged)
-            if (damaged) {
-              damaged.damaged = false
-              const label = BLUEPRINTS.find((b) => b.type === damaged.type)?.label || damaged.type
-              this.pushMessage(`${label} repaired with kit.`, 'event')
-            } else {
-              this.pushMessage('Repair kit deployed. No damaged buildings found.', 'info')
-            }
+            this.repairKits++
+            this.pushMessage(`Repair kit added to inventory. (${this.repairKits} in stock)`, 'event')
             break
           }
         }
