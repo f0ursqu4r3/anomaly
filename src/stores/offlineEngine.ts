@@ -27,6 +27,9 @@ import {
   uid,
   PARTS_FACTORY_INTERVAL_MS,
   PARTS_FACTORY_METAL_COST,
+  SHIPMENT_COOLDOWN_MS,
+  SHIPMENT_TRANSIT_MS,
+  EMERGENCY_TRANSIT_MS,
 } from './gameStore'
 import { getBuildingPosition } from '@/systems/mapLayout'
 
@@ -312,6 +315,28 @@ export function simulateOffline(inputState: ColonyState, elapsedMs: number): Off
         state.metals -= PARTS_FACTORY_METAL_COST
         state.repairKits++
         state.lastPartsProducedAt = state.totalPlaytimeMs
+      }
+    }
+
+    // Auto-relaunch (offline)
+    if (state.autoRelaunch && state.lastManifest.length > 0 && state.totalPlaytimeMs >= state.shipmentCooldownUntil) {
+      const cost = state.lastManifest.reduce((sum, o) => sum + o.cost, 0)
+      if (state.credits >= cost) {
+        state.credits -= cost
+        const hasEmergency = state.lastManifest.some(
+          (o) => o.type === 'emergencyO2' || o.type === 'emergencyPower',
+        )
+        const transit = hasEmergency ? EMERGENCY_TRANSIT_MS : SHIPMENT_TRANSIT_MS
+        state.inTransitShipments.push({
+          id: uid(),
+          contents: [...state.lastManifest],
+          totalWeight: state.lastManifest.reduce((sum, o) => sum + o.weight, 0),
+          arrivalAt: state.totalPlaytimeMs + transit,
+        })
+        state.shipmentCooldownUntil = state.totalPlaytimeMs + SHIPMENT_COOLDOWN_MS
+        events.push({ type: 'shipment', severity: 'info', offsetMs: elapsedSoFar, message: 'Auto-relaunched shipment.' })
+      } else {
+        state.autoRelaunch = false
       }
     }
 
