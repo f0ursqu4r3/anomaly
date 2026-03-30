@@ -46,42 +46,42 @@ const typeClass = computed(() => `type-${props.building.type}`)
 .building-sprite {
   width: 30px;
   height: 30px;
-  border-radius: 4px;
+  border-radius: var(--radius-xs);
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(8, 12, 24, 0.85);
+  background: var(--sprite-bg);
   border: 1.5px solid transparent;
   transition: all 0.2s;
 }
 
 .type-solar .building-sprite {
   color: var(--amber);
-  border-color: rgba(245, 158, 11, 0.5);
-  box-shadow: 0 0 10px rgba(245, 158, 11, 0.2), 0 0 20px rgba(245, 158, 11, 0.08);
+  border-color: var(--amber-glow);
+  box-shadow: 0 0 10px var(--amber-glow), 0 0 20px rgba(245, 158, 11, 0.08);
 }
 
 .type-o2generator .building-sprite {
   color: var(--cyan);
-  border-color: rgba(126, 207, 255, 0.5);
-  box-shadow: 0 0 10px rgba(126, 207, 255, 0.2), 0 0 20px rgba(126, 207, 255, 0.08);
+  border-color: var(--cyan-glow);
+  box-shadow: 0 0 10px var(--cyan-glow), 0 0 20px rgba(126, 207, 255, 0.08);
 }
 
 .type-drillrig .building-sprite {
   color: var(--green);
-  border-color: rgba(52, 211, 153, 0.5);
-  box-shadow: 0 0 10px rgba(52, 211, 153, 0.2), 0 0 20px rgba(52, 211, 153, 0.08);
+  border-color: var(--green-glow);
+  box-shadow: 0 0 10px var(--green-glow), 0 0 20px rgba(52, 211, 153, 0.08);
 }
 
 .type-medbay .building-sprite {
   color: var(--red);
-  border-color: rgba(233, 69, 96, 0.5);
-  box-shadow: 0 0 10px rgba(233, 69, 96, 0.2), 0 0 20px rgba(233, 69, 96, 0.08);
+  border-color: var(--red-glow);
+  box-shadow: 0 0 10px var(--red-glow), 0 0 20px rgba(233, 69, 96, 0.08);
 }
 
 .damaged .building-sprite {
-  border-color: rgba(233, 69, 96, 0.7) !important;
-  box-shadow: 0 0 14px rgba(233, 69, 96, 0.3), 0 0 28px rgba(233, 69, 96, 0.1) !important;
+  border-color: var(--red) !important;
+  box-shadow: 0 0 14px var(--red-glow), 0 0 28px rgba(233, 69, 96, 0.1) !important;
   animation: dmg-pulse 1.5s ease-in-out infinite;
 }
 
@@ -98,8 +98,8 @@ const typeClass = computed(() => `type-${props.building.type}`)
 }
 
 @keyframes dmg-pulse {
-  0%, 100% { box-shadow: 0 0 10px rgba(233, 69, 96, 0.2); }
-  50% { box-shadow: 0 0 20px rgba(233, 69, 96, 0.4), 0 0 35px rgba(233, 69, 96, 0.15); }
+  0%, 100% { box-shadow: 0 0 10px var(--red-glow); }
+  50% { box-shadow: 0 0 20px var(--red-glow), 0 0 35px rgba(233, 69, 96, 0.15); }
 }
 
 @keyframes feed-blink {

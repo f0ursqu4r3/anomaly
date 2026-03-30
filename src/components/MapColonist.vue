@@ -53,17 +53,17 @@ const roleClass = computed(() => `role-${props.colonist.role}`)
 
 .role-driller .colonist-dot {
   background: var(--green);
-  box-shadow: 0 0 6px rgba(52, 211, 153, 0.5), 0 0 12px rgba(52, 211, 153, 0.2);
+  box-shadow: 0 0 6px var(--green-glow), 0 0 12px rgba(52, 211, 153, 0.1);
 }
 
 .role-engineer .colonist-dot {
   background: var(--amber);
-  box-shadow: 0 0 6px rgba(245, 158, 11, 0.5), 0 0 12px rgba(245, 158, 11, 0.2);
+  box-shadow: 0 0 6px var(--amber-glow), 0 0 12px rgba(245, 158, 11, 0.1);
 }
 
 .role-idle .colonist-dot {
   background: var(--text-muted);
-  box-shadow: 0 0 4px rgba(85, 85, 112, 0.4);
+  box-shadow: 0 0 4px var(--accent-dim);
 }
 
 .walking .colonist-dot {

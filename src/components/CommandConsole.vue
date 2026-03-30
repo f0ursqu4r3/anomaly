@@ -75,13 +75,13 @@ function fmtCredits(n: number): string {
   display: flex;
   flex-direction: column;
   background: var(--bg-primary);
-  border-top: 1px solid rgba(100, 160, 220, 0.12);
+  border-top: 1px solid var(--accent-muted);
 }
 
 .console-tabs {
   display: flex;
   flex-shrink: 0;
-  border-bottom: 1px solid rgba(100, 160, 220, 0.08);
+  border-bottom: 1px solid var(--accent-dim);
 }
 
 .tab-btn {
@@ -114,7 +114,7 @@ function fmtCredits(n: number): string {
   align-items: center;
   padding: 5px 8px calc(var(--safe-bottom) + 4px);
   background: var(--bg-deep);
-  border-top: 1px solid rgba(100, 160, 220, 0.08);
+  border-top: 1px solid var(--accent-dim);
   flex-shrink: 0;
 }
 

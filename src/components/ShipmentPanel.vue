@@ -210,7 +210,7 @@ function formatEta(arrivalAt: number): string {
 
 .cooldown-fill {
   height: 100%;
-  background: rgba(126, 207, 255, 0.12);
+  background: var(--accent-muted);
   transition: width 1s linear;
 }
 
@@ -233,8 +233,8 @@ function formatEta(arrivalAt: number): string {
   justify-content: space-between;
   align-items: center;
   padding: 5px 10px;
-  background: rgba(126, 207, 255, 0.08);
-  border: 1px solid rgba(126, 207, 255, 0.15);
+  background: var(--accent-dim);
+  border: 1px solid var(--accent-muted);
   border-radius: var(--radius-sm);
   margin-bottom: 3px;
 }
@@ -248,7 +248,7 @@ function formatEta(arrivalAt: number): string {
   border-radius: var(--radius-md);
   padding: 8px 10px;
   margin-bottom: 4px;
-  border: 1px solid rgba(126, 207, 255, 0.1);
+  border: 1px solid var(--accent-muted);
 }
 
 .manifest-list {

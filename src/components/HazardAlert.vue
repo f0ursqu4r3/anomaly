@@ -36,7 +36,7 @@ watch(() => game.lastHazard, (h) => {
   left: 16px;
   right: 16px;
   z-index: 100;
-  background: rgba(233, 69, 96, 0.9);
+  background: var(--red);
   backdrop-filter: blur(8px);
   border-radius: var(--radius-md);
   padding: 10px 16px;
@@ -45,13 +45,13 @@ watch(() => game.lastHazard, (h) => {
   gap: 10px;
   animation: shake 0.4s ease;
   pointer-events: none;
-  color: white;
+  color: var(--text-primary);
 }
 
 .hazard-message {
   font-size: 13px;
   font-weight: 700;
-  color: white;
+  color: var(--text-primary);
 }
 
 .hazard-enter-active { animation: toast-in 0.3s ease; }

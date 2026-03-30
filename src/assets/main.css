@@ -17,9 +17,22 @@
   --red: #e94560;
   --red-glow: rgba(233, 69, 96, 0.25);
   --cyan: #7ecfff;
+  --cyan-glow: rgba(126, 207, 255, 0.25);
   --green: #34d399;
+  --green-glow: rgba(52, 211, 153, 0.25);
   --purple: #a78bfa;
+  --purple-glow: rgba(167, 139, 250, 0.25);
 
+  /* Subtle accent used for borders, scanlines, zone markers */
+  --accent-muted: rgba(100, 160, 220, 0.12);
+  --accent-dim: rgba(100, 160, 220, 0.08);
+  --accent-faint: rgba(100, 160, 220, 0.03);
+
+  /* Component surfaces */
+  --sprite-bg: rgba(8, 12, 24, 0.85);
+  --overlay-bg: rgba(0, 0, 0, 0.85);
+
+  --radius-xs: 4px;
   --radius-sm: 6px;
   --radius-md: 10px;
   --radius-lg: 16px;

@@ -115,8 +115,8 @@ function getColonistState(id: string) {
     0deg,
     transparent,
     transparent 3px,
-    rgba(100, 160, 220, 0.015) 3px,
-    rgba(100, 160, 220, 0.015) 4px
+    var(--accent-faint) 3px,
+    var(--accent-faint) 4px
   );
 }
 
@@ -127,7 +127,7 @@ function getColonistState(id: string) {
   font-size: 7px;
   font-weight: 600;
   letter-spacing: 0.18em;
-  color: rgba(100, 160, 220, 0.18);
+  color: var(--accent-muted);
   pointer-events: none;
   z-index: 1;
 }
@@ -154,8 +154,8 @@ function getColonistState(id: string) {
   height: 50px;
   transform: translate(-50%, -50%);
   border-radius: 50%;
-  border: 1px solid rgba(100, 160, 220, 0.08);
-  box-shadow: 0 0 20px rgba(100, 160, 220, 0.03);
+  border: 1px solid var(--accent-dim);
+  box-shadow: 0 0 20px var(--accent-faint);
   pointer-events: none;
   z-index: 1;
 }
@@ -184,7 +184,7 @@ function getColonistState(id: string) {
   font-size: 8px;
   font-weight: 700;
   letter-spacing: 0.15em;
-  color: rgba(233, 69, 96, 0.6);
+  color: var(--red-glow);
 }
 
 @keyframes feed-blink {

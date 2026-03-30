@@ -42,7 +42,7 @@ const game = useGameStore()
   position: fixed;
   inset: 0;
   z-index: 200;
-  background: rgba(0, 0, 0, 0.85);
+  background: var(--overlay-bg);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -57,7 +57,7 @@ const game = useGameStore()
   max-width: 320px;
   width: 100%;
   animation: slide-up 0.3s ease;
-  border: 1px solid rgba(233, 69, 96, 0.2);
+  border: 1px solid var(--red-glow);
 }
 
 .modal-icon {

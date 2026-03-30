@@ -72,8 +72,8 @@ const directives: { value: Directive; label: string; icon: string; description: 
 
 .directive-btn.active {
   border-color: var(--cyan);
-  background: rgba(126, 207, 255, 0.08);
-  box-shadow: 0 0 12px rgba(126, 207, 255, 0.15);
+  background: var(--accent-dim);
+  box-shadow: 0 0 12px var(--cyan-glow);
 }
 
 .dir-header {

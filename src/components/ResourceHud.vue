@@ -65,8 +65,8 @@ function rateClass(n: number): string {
   justify-content: space-around;
   align-items: center;
   padding: calc(var(--safe-top) + 3px) 6px 4px;
-  background: rgba(5, 8, 16, 0.92);
-  border-bottom: 1px solid rgba(100, 160, 220, 0.1);
+  background: var(--overlay-bg);
+  border-bottom: 1px solid var(--accent-muted);
 }
 
 .hud-item {

@@ -48,26 +48,26 @@ const circumference = 2 * Math.PI * 15 // ~94.25
 .drop-sprite {
   width: 26px;
   height: 26px;
-  border-radius: 4px;
+  border-radius: var(--radius-xs);
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(8, 12, 24, 0.9);
-  border: 1.5px solid rgba(167, 139, 250, 0.6);
+  background: var(--sprite-bg);
+  border: 1.5px solid var(--purple-glow);
   color: var(--purple);
   position: relative;
 }
 
 /* Landed: pulsing glow to attract attention */
 .landed .drop-sprite {
-  box-shadow: 0 0 12px rgba(167, 139, 250, 0.4), 0 0 24px rgba(167, 139, 250, 0.15);
+  box-shadow: 0 0 12px var(--purple-glow), 0 0 24px rgba(167, 139, 250, 0.1);
   animation: drop-pulse 1.2s ease-in-out infinite;
 }
 
 /* Unpacking: steady glow */
 .unpacking .drop-sprite {
-  box-shadow: 0 0 10px rgba(167, 139, 250, 0.3);
-  border-color: rgba(126, 207, 255, 0.5);
+  box-shadow: 0 0 10px var(--purple-glow);
+  border-color: var(--cyan-glow);
   color: var(--cyan);
 }
 
@@ -79,7 +79,7 @@ const circumference = 2 * Math.PI * 15 // ~94.25
 .drop-label {
   font-family: var(--font-mono);
   font-size: 7px;
-  color: rgba(167, 139, 250, 0.6);
+  color: var(--purple-glow);
   margin-top: 2px;
   white-space: nowrap;
   letter-spacing: 0.05em;
@@ -99,7 +99,7 @@ const circumference = 2 * Math.PI * 15 // ~94.25
 
 .ring-bg {
   fill: none;
-  stroke: rgba(126, 207, 255, 0.1);
+  stroke: var(--accent-muted);
   stroke-width: 2;
 }
 
@@ -113,18 +113,18 @@ const circumference = 2 * Math.PI * 15 // ~94.25
 
 @keyframes drop-pulse {
   0%, 100% {
-    box-shadow: 0 0 8px rgba(167, 139, 250, 0.3);
+    box-shadow: 0 0 8px var(--purple-glow);
     transform: scale(1);
   }
   50% {
-    box-shadow: 0 0 18px rgba(167, 139, 250, 0.5), 0 0 30px rgba(167, 139, 250, 0.2);
+    box-shadow: 0 0 18px var(--purple-glow), 0 0 30px rgba(167, 139, 250, 0.1);
     transform: scale(1.08);
   }
 }
 
 @keyframes drop-done {
   0% { transform: scale(1); opacity: 1; }
-  30% { transform: scale(1.3); opacity: 1; box-shadow: 0 0 30px rgba(126, 207, 255, 0.6); }
+  30% { transform: scale(1.3); opacity: 1; box-shadow: 0 0 30px var(--cyan-glow); }
   100% { transform: scale(0.5); opacity: 0; }
 }
 </style>
