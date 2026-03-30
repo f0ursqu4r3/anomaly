@@ -62,6 +62,8 @@ onMounted(() => {
 .message-log {
   flex: 1;
   overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
   padding: 8px 10px;
   font-family: var(--font-mono);
   font-size: 11px;

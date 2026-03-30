@@ -39,6 +39,8 @@ const directives: { value: Directive; label: string; icon: string; description: 
 .directive-panel {
   flex: 1;
   overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
   padding: 8px 10px;
 }
 

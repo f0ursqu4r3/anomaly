@@ -78,6 +78,13 @@ function fmtCredits(n: number): string {
   border-top: 1px solid var(--accent-muted);
 }
 
+@media (orientation: landscape), (min-width: 768px) {
+  .command-console {
+    border-top: none;
+    border-left: 1px solid var(--accent-muted);
+  }
+}
+
 .console-tabs {
   display: flex;
   flex-shrink: 0;
@@ -86,9 +93,9 @@ function fmtCredits(n: number): string {
 
 .tab-btn {
   flex: 1;
-  padding: 8px 4px;
+  padding: 10px 4px;
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.12em;
   color: var(--text-muted);

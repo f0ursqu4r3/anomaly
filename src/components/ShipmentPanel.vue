@@ -177,6 +177,8 @@ function formatEta(arrivalAt: number): string {
 .shipment-panel {
   flex: 1;
   overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
   padding: 8px 10px;
 }
 
@@ -309,7 +311,7 @@ function formatEta(arrivalAt: number): string {
 }
 
 .clear-btn {
-  padding: 6px 12px;
+  padding: 8px 14px;
   font-family: var(--font-mono);
   font-size: 10px;
   font-weight: 600;
@@ -320,7 +322,7 @@ function formatEta(arrivalAt: number): string {
 }
 
 .launch-btn {
-  padding: 6px 20px;
+  padding: 8px 22px;
   font-family: var(--font-mono);
   font-size: 11px;
   font-weight: 700;
@@ -397,10 +399,10 @@ function formatEta(arrivalAt: number): string {
 }
 
 .qty-btn {
-  width: 28px;
-  height: 28px;
-  min-height: 28px;
-  font-size: 16px;
+  width: 36px;
+  height: 36px;
+  min-height: 36px;
+  font-size: 18px;
   font-weight: 700;
   display: flex;
   align-items: center;
