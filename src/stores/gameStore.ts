@@ -22,7 +22,7 @@ export interface Colonist {
   currentZone: string
 }
 
-export type BuildingType = 'o2generator' | 'solar' | 'drillrig' | 'medbay'
+export type BuildingType = 'o2generator' | 'solar' | 'drillrig' | 'medbay' | 'partsfactory'
 
 export interface Building {
   id: string
@@ -119,6 +119,7 @@ export interface ColonyState {
   inTransitShipments: InTransitShipment[]
   supplyDrops: SupplyDrop[]
   repairKits: number
+  lastPartsProducedAt: number
   manifest: ShipmentOption[] // items queued for next shipment
   shipmentCooldownUntil: number // totalPlaytimeMs when next shipment can launch
   ticksSinceLastReport: number
@@ -150,6 +151,9 @@ export const ENGINEER_EFFICIENCY_BONUS = 0.15
 export const MEDBAY_HEAL_PER_SEC = 0.5
 export const HEALTH_DRAIN_PER_SEC = 2.0
 export const COLONIST_INJURY_VISIBLE_THRESHOLD = 0.7
+
+export const PARTS_FACTORY_INTERVAL_MS = 45_000
+export const PARTS_FACTORY_METAL_COST = 2
 
 export const HAZARD_CHECK_INTERVAL_MS = 20_000
 export const HAZARD_BASE_CHANCE = 0.02
@@ -233,6 +237,14 @@ export const SHIPMENT_OPTIONS: ShipmentOption[] = [
     buildingType: 'medbay',
   },
   {
+    type: 'equipment',
+    label: 'Parts Factory',
+    description: 'Produces repair kits',
+    cost: 40,
+    weight: 30,
+    buildingType: 'partsfactory',
+  },
+  {
     type: 'newColonist',
     label: 'New Colonist',
     description: 'Recruit crew member',
@@ -292,6 +304,13 @@ export const BLUEPRINTS: BuildingBlueprint[] = [
     description: 'Heals injured colonists',
     costMetals: 30,
     costIce: 10,
+  },
+  {
+    type: 'partsfactory',
+    label: 'Parts Factory',
+    description: 'Produces repair kits from metals',
+    costMetals: 15,
+    costIce: 0,
   },
 ]
 
@@ -356,6 +375,7 @@ function freshState(): ColonyState {
     inTransitShipments: [],
     supplyDrops: [],
     repairKits: 0,
+    lastPartsProducedAt: 0,
     manifest: [],
     shipmentCooldownUntil: 0,
     ticksSinceLastReport: 0,
