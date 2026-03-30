@@ -20,17 +20,13 @@ The game can't idle. A playtester left for 45 minutes on the safest directive an
 
 ~~Hazards fire roughly every 10 seconds at depth (15s interval × 3% base + depth scaling, but in practice it feels relentless). The base rate needs a survivable floor. Depth scaling should ramp *from* comfortable, not *into* overwhelming. Consider: longer base interval, lower base chance, or a cooldown between consecutive hazards.~~
 
-### Parts Factory
+### ~~Parts Factory~~ ✓
 
-New building type: converts metals into repair kits over time. Without passive repair generation, the colony has zero self-healing — the player must manually ship repair kits every cooldown cycle or everything decays. This is the single most important building to add.
+~~New building type: converts metals into repair kits over time.~~ Parts Factory added: 15 metals to build, passive production of 1 kit per 45s (costs 2 metals, requires power). Multiple factories reduce interval. Workshop zone on map.
 
-- Cost: ~20 metals, 5 ice
-- Requires power, engineer assignment
-- Produces 1 repair kit per ~30-45s
+### ~~Standing Orders~~ ✓
 
-### Standing Orders
-
-"Always maintain N repair kits" or "auto-ship supply crates when metals < X" — auto-orders from credits when conditions are met. Without this, the player rebuilds the same manifest every 60 seconds. Could start simple: just auto-relaunch last manifest when cooldown expires.
+~~Auto-orders from credits when conditions are met.~~ Auto-relaunch implemented: saves last manifest, repeat toggle in shipment panel, auto-sends when cooldown expires. Disables on insufficient credits.
 
 ### ~~Repair Kit Targeting~~ ✓
 
