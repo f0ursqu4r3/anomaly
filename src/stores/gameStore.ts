@@ -1,5 +1,7 @@
 import { defineStore } from 'pinia'
 import { Preferences } from '@capacitor/preferences'
+import { simulateOffline } from './offlineEngine'
+import type { OfflineEvent, OfflineResult } from './offlineEngine'
 
 // ── Types ──────────────────────────────────────────────────────────
 
@@ -116,6 +118,7 @@ export interface ColonyState {
   totalPlaytimeMs: number
   lastTickAt: number
   lastSavedAt: number
+  offlineEvents: OfflineEvent[]
 }
 
 // ── Constants ──────────────────────────────────────────────────────
@@ -384,6 +387,7 @@ function freshState(): ColonyState {
     totalPlaytimeMs: 0,
     lastTickAt: Date.now(),
     lastSavedAt: Date.now(),
+    offlineEvents: [],
   }
 }
 
@@ -899,13 +903,43 @@ export const useGameStore = defineStore('game', {
     },
 
     // ── Offline ──
-    processOfflineTime() {
+    processOfflineTime(): OfflineResult | null {
       const now = Date.now()
       const elapsed = now - this.lastTickAt
-      if (elapsed > 2000) {
-        const capped = Math.min(elapsed, 5 * 60 * 1000)
-        this.tick(capped)
-      }
+      if (elapsed < 2000) return null
+
+      const result = simulateOffline(this.$state, elapsed)
+      const fs = result.finalState
+
+      this.$patch({
+        air: fs.air,
+        airMax: fs.airMax,
+        power: fs.power,
+        powerMax: fs.powerMax,
+        metals: fs.metals,
+        ice: fs.ice,
+        credits: fs.credits,
+        totalCreditsEarned: fs.totalCreditsEarned,
+        depth: fs.depth,
+        maxDepth: fs.maxDepth,
+        colonists: fs.colonists,
+        buildings: fs.buildings,
+        activeDirective: fs.activeDirective,
+        inTransitShipments: fs.inTransitShipments,
+        supplyDrops: fs.supplyDrops,
+        totalPlaytimeMs: fs.totalPlaytimeMs,
+        hazardCooldownUntil: fs.hazardCooldownUntil,
+        offlineEvents: result.events,
+      })
+
+      this.lastTickAt = now
+      this.lastSavedAt = now
+
+      return result
+    },
+
+    dismissShiftReport() {
+      this.offlineEvents = []
     },
 
     // ── Persistence ──
@@ -961,6 +995,7 @@ export const useGameStore = defineStore('game', {
       if (!this.manifest) this.manifest = []
       if (this.shipmentCooldownUntil === undefined) this.shipmentCooldownUntil = 0
       if (this.ticksSinceLastReport === undefined) this.ticksSinceLastReport = 0
+      if (!this.offlineEvents) this.offlineEvents = []
     },
   },
 })
