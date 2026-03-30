@@ -30,6 +30,7 @@ export function useGameLoop() {
     if (tickInterval) return
     const settings = useSettingsStore()
     tickInterval = setInterval(() => {
+      if (game.isPaused) return
       game.tick(TICK_MS)
       tickCount++
       if (settings.autoSave && tickCount % SAVE_EVERY_N_TICKS === 0) {
@@ -77,7 +78,11 @@ export function useGameLoop() {
       await scheduleOfflineNotifications(eagerResult.events, Date.now())
     } else {
       await cancelAllOfflineNotifications()
-      handleOfflineResult(game.processOfflineTime())
+      if (game.isPaused) {
+        startLoop() // restart interval but tick guard prevents execution
+      } else {
+        handleOfflineResult(game.processOfflineTime())
+      }
     }
   }
 
