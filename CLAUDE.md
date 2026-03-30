@@ -62,3 +62,29 @@ Manifest builder (max 4 items, 100kg) → launch (60s cooldown, deducts credits)
 - All game constants are defined at top of `gameStore.ts` (rates, costs, thresholds)
 - Capacitor plugins for native features (preferences, admob, IAP, notifications)
 - Retro CRT/terminal visual aesthetic (dark palette, monospace, scanlines)
+
+## Design Context
+
+### Users
+
+Remote operator watching an asteroid colony through a satellite feed. The player is detached — sending supplies and directives, not directly controlling colonists. Context is mobile-first idle gaming: short active sessions, longer idle stretches. The interface is the player's only window into the colony.
+
+### Brand Personality
+
+**Gritty, tense, industrial.** The colony is a hostile, fragile outpost. Every system could fail. The UI should feel like mission control hardware — functional, purposeful, built for survival, not comfort. Closer to Alien's Nostromo than Star Trek's Enterprise.
+
+### Aesthetic Direction
+
+- **Visual tone:** Dark CRT terminal with colored glows. Information-dense but not cluttered. Each element earns its screen space.
+- **References:** FTL / Into the Breach (clean, strategic, information-dense), Factorio / Shapez (systems-focused, efficiency aesthetic)
+- **Anti-references:** Generic mobile games (bright gradients, cartoon icons, popup spam), hyper-realistic 3D (we're a satellite feed, not a viewport)
+- **Theme:** Dark mode only. Deep navy/black backgrounds (#06060c → #181830). Semantic color glows: amber (power/warning), cyan (info/O2), red (danger), green (mining/positive). JetBrains Mono for data, Inter for body text. Scanline overlay for CRT texture.
+- **Emotional range:** Calm control as the baseline — you're the operator, detached and competent. Tension and urgency when systems fail — hazard alerts, resource warnings, the colony demanding your attention.
+
+### Design Principles
+
+1. **Satellite feed, not a viewport.** Everything is mediated through the terminal. UI elements should feel like HUD overlays on a feed, not floating game UI. Glows, scanlines, and monospace text reinforce this.
+2. **Information density over decoration.** Show what matters, hide what doesn't. No ornamental chrome. If an element doesn't inform a decision, it shouldn't be on screen.
+3. **Color means something.** Every color maps to a system: amber = power/economy, cyan = air/info, red = danger/medical, green = mining/positive. Never use color purely for decoration.
+4. **Tension through restraint.** The game feels tense because the UI is calm — when something goes wrong, the red glow and shake animations hit harder against the quiet baseline.
+5. **Touch-first, glance-friendly.** 44px minimum touch targets. Key status visible at a glance. The player should be able to assess colony health in under 2 seconds.
