@@ -105,6 +105,20 @@ export function useColonistMovement() {
     // We'll snap ms.x/ms.y to target when the walk completes
   }
 
+  /** Snap ms.x/ms.y to the estimated current visual position (lerped along the walk) */
+  function snapToCurrentVisualPos(ms: ColonistMapState) {
+    if (ms._arrivalTime <= 0 || ms.transitionMs <= 0) return
+    const now = Date.now()
+    const elapsed = ms.transitionMs - (ms._arrivalTime - now)
+    const t = clamp(elapsed / ms.transitionMs, 0, 1)
+    ms.x = ms.x + (ms.targetX - ms.x) * t
+    ms.y = ms.y + (ms.targetY - ms.y) * t
+    ms.targetX = ms.x
+    ms.targetY = ms.y
+    ms._arrivalTime = 0
+    ms.transitionMs = 0
+  }
+
   /** Check if current walk animation is done, snap position if so */
   function checkArrival(ms: ColonistMapState): boolean {
     if (ms._arrivalTime > 0 && Date.now() >= ms._arrivalTime) {
@@ -133,7 +147,7 @@ export function useColonistMovement() {
 
       // No action — idle at current position
       if (!action) {
-        checkArrival(ms)
+        snapToCurrentVisualPos(ms)
         ms.visualState = 'idle'
         ms.assignedDropId = null
         ms._settledAction = null
@@ -146,8 +160,8 @@ export function useColonistMovement() {
         const walkKey = `walk:${nextZoneId}`
 
         if (ms._settledAction !== walkKey) {
-          // Snap to current position first (in case previous walk was in progress)
-          checkArrival(ms)
+          // Snap to interpolated position if previous walk was in progress
+          snapToCurrentVisualPos(ms)
           const nextZone = ZONE_MAP[nextZoneId]
           if (nextZone) {
             startWalk(ms, jitter(nextZone.x, 3), jitter(nextZone.y, 3))
@@ -171,7 +185,7 @@ export function useColonistMovement() {
 
       if (!alreadySettled) {
         // New action — figure out where to go and walk there
-        checkArrival(ms) // snap if mid-walk
+        snapToCurrentVisualPos(ms) // snap to interpolated position if mid-walk
 
         const zone = ZONE_MAP[action.targetZone] || ZONE_MAP.habitat
         let targetX = zone.x

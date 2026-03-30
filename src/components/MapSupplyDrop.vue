@@ -58,6 +58,7 @@ const circumference = 2 * Math.PI * 15 // ~94.25
   border: 1.5px solid var(--purple-glow);
   color: var(--purple);
   position: relative;
+  transition: all 0.2s;
 }
 
 /* Landed: pulsing glow to attract attention */

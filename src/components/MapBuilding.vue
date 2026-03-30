@@ -59,7 +59,7 @@ const typeClass = computed(() => `type-${props.building.type}`)
   border-color: var(--amber-glow);
   box-shadow:
     0 0 10px var(--amber-glow),
-    0 0 20px rgba(245, 158, 11, 0.08);
+    0 0 20px rgba(245, 158, 11, 0.1);
 }
 
 .type-o2generator .building-sprite {
@@ -67,7 +67,7 @@ const typeClass = computed(() => `type-${props.building.type}`)
   border-color: var(--cyan-glow);
   box-shadow:
     0 0 10px var(--cyan-glow),
-    0 0 20px rgba(126, 207, 255, 0.08);
+    0 0 20px rgba(126, 207, 255, 0.1);
 }
 
 .type-drillrig .building-sprite {
@@ -75,7 +75,7 @@ const typeClass = computed(() => `type-${props.building.type}`)
   border-color: var(--green-glow);
   box-shadow:
     0 0 10px var(--green-glow),
-    0 0 20px rgba(52, 211, 153, 0.08);
+    0 0 20px rgba(52, 211, 153, 0.1);
 }
 
 .type-medbay .building-sprite {
@@ -83,7 +83,7 @@ const typeClass = computed(() => `type-${props.building.type}`)
   border-color: var(--red-glow);
   box-shadow:
     0 0 10px var(--red-glow),
-    0 0 20px rgba(233, 69, 96, 0.08);
+    0 0 20px rgba(233, 69, 96, 0.1);
 }
 
 .damaged .building-sprite {
