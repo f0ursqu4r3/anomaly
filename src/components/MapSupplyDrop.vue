@@ -39,7 +39,7 @@ const circumference = 2 * Math.PI * 15 // ~94.25
 <style scoped>
 .map-supply-drop {
   position: absolute;
-  transform: translate(-50%, -50%);
+  transform: translate(-50%, -50%) scale(var(--marker-scale, 1));
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -50,7 +50,7 @@ const circumference = 2 * Math.PI * 15 // ~94.25
 .drop-sprite {
   width: 26px;
   height: 26px;
-  border-radius: var(--radius-xs);
+  border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;

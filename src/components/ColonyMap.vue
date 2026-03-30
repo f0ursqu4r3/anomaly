@@ -10,7 +10,7 @@
 
     <div class="map-content" :style="transformStyle">
       <!-- Zone boundaries and paths (SVG) -->
-      <svg class="zone-overlay" viewBox="0 0 100 100" preserveAspectRatio="none">
+      <svg class="zone-overlay" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid meet">
         <line v-for="(edge, i) in pathEdges" :key="'p'+i"
           :x1="edge.x1" :y1="edge.y1" :x2="edge.x2" :y2="edge.y2"
           stroke="var(--accent-dim)" stroke-width="0.3" opacity="0.12"
@@ -25,7 +25,7 @@
       <!-- Zone labels -->
       <div v-for="zone in zones" :key="'label-'+zone.id"
         class="zone-marker"
-        :style="{ left: zone.x + '%', top: (zone.y - zone.radius - 2) + '%', color: zone.color }"
+        :style="{ left: zone.x + '%', top: (zone.y - zone.radius - 2) + '%', color: zone.color, transform: `translate(-50%, -50%) scale(var(--marker-scale, 1))` }"
       >
         {{ zone.label }}
       </div>
@@ -103,6 +103,7 @@ const transformStyle = computed(() => ({
   transform: `scale(${zoom.value}) translate(${panX.value}px, ${panY.value}px)`,
   transformOrigin: 'center center',
   transition: isPanning.value ? 'none' : 'transform 0.15s ease-out',
+  '--marker-scale': `${1 / zoom.value}`,
 }))
 
 function onWheel(e: WheelEvent) {
@@ -141,6 +142,7 @@ function resetView() {
   width: 100%;
   height: 100%;
   overflow: hidden;
+  container-type: size;
   background:
     radial-gradient(ellipse at 20% 70%, rgba(15, 20, 35, 0.8) 0%, transparent 50%),
     radial-gradient(ellipse at 75% 25%, rgba(20, 25, 40, 0.7) 0%, transparent 45%),
@@ -187,7 +189,6 @@ function resetView() {
 
 .zone-marker {
   position: absolute;
-  transform: translate(-50%, -50%);
   font-family: var(--font-mono);
   font-size: 7px;
   font-weight: 600;
@@ -219,7 +220,7 @@ function resetView() {
   top: 40%;
   width: 50px;
   height: 50px;
-  transform: translate(-50%, -50%);
+  transform: translate(-50%, -50%) scale(var(--marker-scale, 1));
   border-radius: 50%;
   border: 1px solid var(--accent-dim);
   box-shadow: 0 0 20px var(--accent-faint);
@@ -266,7 +267,12 @@ function resetView() {
 
 .map-content {
   position: absolute;
-  inset: 0;
+  /* Square: use the smaller container dimension so 100×100 grid isn't distorted */
+  width: min(100cqw, 100cqh);
+  height: min(100cqw, 100cqh);
+  left: 50%;
+  top: 50%;
+  translate: -50% -50%;
 }
 
 .zone-overlay {

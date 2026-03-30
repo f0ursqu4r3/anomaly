@@ -40,7 +40,7 @@ const stateClass = computed(() => {
 <style scoped>
 .map-colonist {
   position: absolute;
-  transform: translate(-50%, -50%);
+  transform: translate(-50%, -50%) scale(var(--marker-scale, 1));
   display: flex;
   align-items: center;
   justify-content: center;
