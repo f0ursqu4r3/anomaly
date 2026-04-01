@@ -146,10 +146,6 @@ const outpostTrianglePoints = computed(() => {
   pointer-events: none;
 }
 
-.scanning-text {
-  animation: pulse-glow 2s ease-in-out infinite;
-}
-
 @keyframes pulse-opacity {
   0%, 100% { opacity: 0.4; }
   50% { opacity: 1; }

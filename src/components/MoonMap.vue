@@ -198,7 +198,7 @@ import { ref, computed } from 'vue'
 import SectorHex from './SectorHex.vue'
 import { useMoonStore, OUTPOST_ESTABLISH_COST_METALS, OUTPOST_ESTABLISH_COST_CREDITS } from '@/stores/moonStore'
 import { useGameStore } from '@/stores/gameStore'
-import { TERRAIN_CONFIGS, COLONY_SECTOR_ID, travelTimeMs } from '@/systems/sectorGen'
+import { TERRAIN_CONFIGS, COLONY_SECTOR_ID } from '@/systems/sectorGen'
 import type { Sector, SurveyMission, OutpostLaunch, Outpost } from '@/types/moon'
 
 const moon = useMoonStore()
