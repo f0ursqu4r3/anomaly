@@ -151,6 +151,8 @@
                     :disabled="crewAction === 'survey' && selectedCrewIds.length >= 3 && !selectedCrewIds.includes(col.id)"
                   />
                   {{ col.name }}
+                  <span class="crew-trait">{{ SKILL_TRAIT_LABELS[col.skillTrait] }}</span>
+                  <span v-if="getExpertiseLabel(col)" class="crew-expertise">{{ getExpertiseLabel(col) }}</span>
                 </label>
               </div>
               <div class="crew-actions">
@@ -254,6 +256,8 @@ import { useGameStore } from '@/stores/gameStore'
 import { useMoonStore, PING_CHARGE_MS, OUTPOST_ESTABLISH_COST_METALS, OUTPOST_ESTABLISH_COST_CREDITS } from '@/stores/moonStore'
 import { useLensView } from '@/composables/useLensView'
 import { TERRAIN_CONFIGS } from '@/systems/sectorGen'
+import { getExpertiseLabel } from '@/systems/colonistIdentity'
+import { SKILL_TRAIT_LABELS } from '@/types/colonist'
 
 defineEmits<{ openSettings: [] }>()
 import SvgIcon from './SvgIcon.vue'
@@ -782,6 +786,20 @@ function missionStatusLabel(mission: SurveyMission): string {
 
 .crew-option input[type="checkbox"] {
   accent-color: var(--cyan);
+}
+
+.crew-trait {
+  color: var(--cyan, #4ecdc4);
+  font-size: 0.7rem;
+  margin-left: 0.3rem;
+  opacity: 0.7;
+}
+
+.crew-expertise {
+  color: var(--amber, #f5a623);
+  font-size: 0.7rem;
+  margin-left: 0.3rem;
+  opacity: 0.7;
 }
 
 .crew-actions {
