@@ -226,7 +226,7 @@ export const SHIPMENT_OPTIONS: ShipmentOption[] = [
   {
     type: 'equipment',
     label: 'Extraction Rig',
-    description: 'Extracts metals and ice automatically',
+    description: 'Automated resource extraction',
     cost: 65,
     weight: 55,
     buildingType: 'extractionrig',
@@ -297,7 +297,7 @@ export const BLUEPRINTS: BuildingBlueprint[] = [
   {
     type: 'extractionrig',
     label: 'Extraction Rig',
-    description: 'Auto-extracts resources',
+    description: 'Extracts metals and ice from deposits',
     costMetals: 25,
     costIce: 0,
   },

@@ -36,31 +36,31 @@ const directives: {
 }[] = [
   {
     value: 'mining',
-    label: 'Prioritize Mining',
+    label: 'Prioritize Extraction',
     icon: 'mining',
     description: '1.3x extraction speed, crew exposed to hazards',
-    ratioText: '70% extract / 20% eng',
+    ratioText: '70% extractors / 20% engineers',
   },
   {
     value: 'safety',
     label: 'Prioritize Safety',
     icon: 'safety',
     description: '40% hazard resist, 1.2x air & power output',
-    ratioText: '20% extract / 60% eng',
+    ratioText: '20% extractors / 60% engineers',
   },
   {
     value: 'balanced',
     label: 'Balanced Ops',
     icon: 'balanced',
     description: 'Even split, 15% hazard resist',
-    ratioText: '40% extract / 40% eng',
+    ratioText: '40% extractors / 40% engineers',
   },
   {
     value: 'emergency',
     label: 'Emergency Protocol',
     icon: 'emergency',
     description: '1.5x air & power output, minimal extraction',
-    ratioText: '10% extract / 80% eng',
+    ratioText: '10% extractors / 80% engineers',
   },
 ]
 </script>

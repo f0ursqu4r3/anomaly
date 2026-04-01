@@ -4,7 +4,7 @@
       <ColonyMap v-if="lens === 'close'" />
       <MoonMap v-else />
       <button class="lens-switch" @click="toggleLens">
-        {{ lens === 'close' ? 'MEDIUM LENS' : 'CLOSE LENS' }}
+        {{ lens === 'close' ? '◉ SURFACE' : '◉ COLONY' }}
       </button>
     </div>
     <div class="console-panel">

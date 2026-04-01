@@ -35,8 +35,8 @@
     <div class="hud-item outposts">
       <SvgIcon name="depth" size="xs" />
       <div class="hud-stack">
-        <span class="hud-val mono">{{ moon.activeOutposts.length }} sites</span>
-        <span class="hud-rate mono away-count" v-if="moon.awayCount > 0">{{ moon.awayCount }} away</span>
+        <span class="hud-val mono">{{ moon.activeOutposts.length }} outposts</span>
+        <span class="hud-rate mono away-count" v-if="moon.awayCount > 0">{{ moon.awayCount }} deployed</span>
       </div>
     </div>
   </div>

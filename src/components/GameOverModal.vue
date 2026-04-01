@@ -9,7 +9,7 @@
         <p class="modal-reason">{{ game.gameOverReason }}</p>
         <div class="modal-stats">
           <div class="stat">
-            <span class="stat-label">MAX DEPTH</span>
+            <span class="stat-label">PEAK DEPTH</span>
             <span class="stat-value mono">{{ fmtDepth(game.maxDepth) }}</span>
           </div>
           <div class="stat">

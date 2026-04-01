@@ -129,7 +129,7 @@
                 :disabled="!canAffordOutpost"
                 @click="openCrewSelect('outpost')"
               >
-                ESTABLISH OUTPOST (30m, 50cr)
+                ESTABLISH OUTPOST (30 metals, 50 cr)
               </button>
             </template>
 
@@ -214,7 +214,7 @@
             v-if="moon.activeOutposts.length === 0 && moon.activeMissions.length === 0"
             class="overview-empty"
           >
-            Select a sector on the map to view details and take action.
+            Tap a sector on the surface map to inspect it.
           </div>
         </div>
       </div>

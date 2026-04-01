@@ -36,7 +36,7 @@
             <span class="delta-value mono positive">+{{ Math.floor(deltaIce) }}</span>
           </div>
           <div class="delta">
-            <span class="delta-label">DEPTH</span>
+            <span class="delta-label">EXTRACTION</span>
             <span class="delta-value mono positive">+{{ fmtDepth(deltaDepth) }}</span>
           </div>
         </div>
