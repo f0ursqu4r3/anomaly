@@ -329,9 +329,11 @@ export function simulateOffline(inputState: ColonyState, elapsedMs: number): Off
       }
     }
 
-    // Parts Factory production (offline)
+    // Parts Factory production (offline) — only if engineers available to operate
     const factoryCount = state.buildings.filter(b => b.type === 'partsfactory' && !b.damaged).length
-    if (factoryCount > 0 && state.power > 0 && state.metals >= PARTS_FACTORY_METAL_COST) {
+    const offlineAlive = state.colonists.filter(c => c.health > 0).length
+    const offlineEngineers = Math.round(offlineAlive * DIRECTIVE_RATIOS[state.activeDirective].engineer)
+    if (factoryCount > 0 && offlineEngineers > 0 && state.power > 0 && state.metals >= PARTS_FACTORY_METAL_COST) {
       const interval = PARTS_FACTORY_INTERVAL_MS / factoryCount
       if (state.totalPlaytimeMs - state.lastPartsProducedAt >= interval) {
         state.metals -= PARTS_FACTORY_METAL_COST

@@ -268,6 +268,21 @@ export function selectAction(
         score: 45 * dirMod.engineer * mod.workUtilityMult * emergencyMult * saturationDiscount,
       })
     }
+
+    // WORKSHOP — Parts Factory needs an operator to produce repair kits
+    const factories = state.buildings.filter(b => b.type === 'partsfactory' && !b.damaged)
+    if (factories.length > 0) {
+      const factory = factories[Math.floor(Math.random() * factories.length)]
+      const workshopEngineers = countWorkers(state, 'engineer', factory.id)
+      // One operator per factory is enough — strong diminishing returns
+      const workerDiscount = workshopEngineers === 0 ? 1.0 : workshopEngineers === 1 ? 0.1 : 0.02
+      candidates.push({
+        type: 'engineer',
+        targetZone: 'workshop',
+        targetId: factory.id,
+        score: 35 * dirMod.engineer * mod.workUtilityMult * workerDiscount,
+      })
+    }
   }
 
   // REPAIR — only if repair kits in stock

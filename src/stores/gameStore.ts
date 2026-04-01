@@ -326,7 +326,7 @@ export const BLUEPRINTS: BuildingBlueprint[] = [
   {
     type: 'partsfactory',
     label: 'Parts Factory',
-    description: 'Produces repair kits from metals',
+    description: 'Produces repair kits from metals (requires operator)',
     costMetals: 15,
     costIce: 0,
   },
@@ -741,9 +741,12 @@ export const useGameStore = defineStore('game', {
         }
       }
 
-      // Parts Factory production
+      // Parts Factory production — requires an engineer operating the workshop
       const factoryCount = this.buildings.filter(b => b.type === 'partsfactory' && !b.damaged).length
-      if (factoryCount > 0 && this.power > 0 && this.metals >= PARTS_FACTORY_METAL_COST) {
+      const workshopOperators = alive.filter(
+        c => c.currentAction?.type === 'engineer' && c.currentAction?.targetZone === 'workshop' && !c.currentAction?.walkPath?.length
+      ).length
+      if (factoryCount > 0 && workshopOperators > 0 && this.power > 0 && this.metals >= PARTS_FACTORY_METAL_COST) {
         const interval = PARTS_FACTORY_INTERVAL_MS / factoryCount
         if (this.totalPlaytimeMs - this.lastPartsProducedAt >= interval) {
           this.metals -= PARTS_FACTORY_METAL_COST
