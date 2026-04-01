@@ -40,20 +40,21 @@ Two Pinia stores: `gameStore.ts` (~800 lines) holds colony state, getters for de
 
 ### Component Layout
 
-`GameView` switches between two lenses: `ColonyMap` (close lens — isometric terrain with buildings/colonists/drops/HUD) and `MoonMap` (medium lens — hex-grid moon surface with sectors, outposts, and survey overlays). `CommandConsole` (45% right, tabbed: comms/shipments/directives) is shared across lenses. `HazardAlert` and `GameOverModal` overlay from `App.vue`. Key components: `ColonyMap`, `MoonMap`, `SectorHex`.
+`GameView` switches between two lenses: `ColonyMap` (close lens — isometric terrain with buildings/colonists/drops/HUD) and `MoonMap` (medium lens — organic terrain map of the moon surface). `CommandConsole` (45% right) switches context per lens: comms/shipments/directives on close lens, moon controls (ping, sector info, outpost management) on medium lens. `HazardAlert` and `GameOverModal` overlay from `App.vue`. Key components: `ColonyMap`, `MoonMap`, `SectorHex`.
 
 #### Lens System
 
 The interface supports two zoom levels, toggled from the HUD:
 
 - **Close lens** (`ColonyMap`): The default colony view. Isometric terrain showing individual buildings, colonists, and supply drops. Full operational detail.
-- **Medium lens** (`MoonMap`): Pulls back to show the moon surface as a hex grid. Each hex is a `SectorHex` representing a scannable/surveyable sector. Outposts appear as overlays when established. Used for survey missions and outpost management.
+- **Medium lens** (`MoonMap`): Pure satellite feed of the moon surface. Hex grid under the hood, rendered as continuous organic terrain with biome-specific features (boulders, ice patches, volcanic glow, crater rings, canyon lines). Sectors discovered via blind orbital ping (cooldown-based). Colony sector shows miniature building/colonist positions. Pan/zoom with fixed-size markers. All controls in the command console, not overlaid on the map.
 
 Far lens (multi-colony overview) is planned but not yet implemented.
 
 ### Map Zones
 
 Buildings snap to named zones with slot offsets (up to 6 per zone):
+
 - habitat: 50,45 — colonist home base
 - extraction: 50,65 — extraction rigs
 - powerField: 28,28 — solar panels

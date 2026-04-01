@@ -4,7 +4,7 @@ Deep Station is a moon colony idle game where you're a remote operator watching 
 
 ## What We Have Now
 
-Core loop: scan sectors → launch survey missions → establish outposts → extract metals/ice/credits → order shipments → build infrastructure → manage hazards. Four directives shift colonist roles between extraction, safety, balanced, and emergency. Three hazard types scale with depth. Offline simulation catches you up when you return.
+Core loop: orbital ping (blind, cooldown-based) reveals nearby sectors with terrain and deposit signatures → send survey teams to confirm deposits (risk scales with distance + terrain) → establish outposts at confirmed deposits → outposts extract resources and launch payloads back to colony → order shipments → build infrastructure → manage hazards. Two satellite lenses: close (colony detail) and medium (moon surface hex grid with organic terrain rendering). Four directives shift colonist roles between extraction, safety, balanced, and emergency. Three hazard types scale with depth. Offline simulation catches you up when you return.
 
 ---
 
@@ -150,7 +150,7 @@ Default isometric colony view — buildings, colonists, supply drops, HUD overla
 
 ### ~~Medium Lens (Moon Surface)~~ ✓
 
-Hex-grid moon surface showing scannable sectors, survey missions, and established outposts. Close + Medium lenses are implemented and toggle from the HUD.
+Organic terrain map of the moon surface (hex grid under the hood, rendered as continuous terrain with biome-specific features). Blind orbital ping reveals sectors; survey teams confirm deposits; outposts extract and launch payloads. Colony miniature shows building/colonist positions. Pan/zoom with fixed-size markers. Controls in command console, not overlaid on map. Implemented and toggles from the HUD.
 
 ### Far Lens (Multi-Colony Overview)
 
