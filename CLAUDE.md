@@ -28,7 +28,7 @@ The game runs on a 1-second tick loop (`useGameLoop.ts` → `game.tick()`). Each
 6. Check hazards (every ~15s, chance scales with depth)
 7. Generate status messages (every 10 ticks)
 
-Auto-saves every 30 ticks. Save key: `colony-save-v2` via Capacitor Preferences (localStorage fallback).
+Auto-saves every 30 ticks. Save key: `colony-save-v4` via Capacitor Preferences (localStorage fallback).
 
 ### Store Pattern
 

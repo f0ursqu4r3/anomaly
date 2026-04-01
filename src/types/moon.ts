@@ -29,6 +29,7 @@ export interface Sector {
   deposit: Deposit | null           // null until surveyed
   scanSignature: ScanSignature | null  // set after orbital scan
   outpostId: string | null          // link to outpost if one exists
+  _pendingDeposit?: { type: DepositType; quality: DepositQuality } // preserved during scan→survey gap
 }
 
 export interface ScanSignature {

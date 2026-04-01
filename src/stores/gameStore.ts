@@ -439,8 +439,10 @@ export const useGameStore = defineStore('game', {
     },
 
     airConsumption(s): number {
-      const alive = s.colonists.filter((c) => c.health > 0).length
-      return alive * AIR_CONSUMPTION_PER_COLONIST
+      const moon = useMoonStore()
+      const away = moon.awayColonistIds
+      const atColony = s.colonists.filter(c => c.health > 0 && !away.has(c.id)).length
+      return atColony * AIR_CONSUMPTION_PER_COLONIST
     },
 
     airRate(): number {

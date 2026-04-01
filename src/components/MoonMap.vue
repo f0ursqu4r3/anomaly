@@ -281,13 +281,16 @@ function confirmCrew() {
       game.pushMessage,
     )
   } else {
-    // Deduct resources
-    game.metals -= OUTPOST_ESTABLISH_COST_METALS
-    game.credits -= OUTPOST_ESTABLISH_COST_CREDITS
     moon.establishOutpost(
       selectedSector.value.id,
       selectedCrewIds.value,
       game.totalPlaytimeMs,
+      () => {
+        if (game.metals < OUTPOST_ESTABLISH_COST_METALS || game.credits < OUTPOST_ESTABLISH_COST_CREDITS) return false
+        game.metals -= OUTPOST_ESTABLISH_COST_METALS
+        game.credits -= OUTPOST_ESTABLISH_COST_CREDITS
+        return true
+      },
       game.pushMessage,
     )
   }

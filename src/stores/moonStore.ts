@@ -197,9 +197,8 @@ export const useMoonStore = defineStore('moon', {
                 ]
               const quality = pickQuality()
 
-              // Store hidden quality for survey confirmation
-              ;(sector as any)._hiddenQuality = quality
-              ;(sector as any)._hiddenDepositType = depositType
+              // Store pending deposit for survey confirmation (serialized with state)
+              sector._pendingDeposit = { type: depositType, quality }
 
               sector.scanSignature = {
                 depositType,
@@ -243,7 +242,7 @@ export const useMoonStore = defineStore('moon', {
       pushMessage: (text: string, sev: 'info' | 'warning' | 'critical' | 'event') => void,
     ) {
       const sector = this.sectors.find((s) => s.id === sectorId)
-      if (!sector || sector.status !== 'scanned') return
+      if (!sector || sector.status !== 'scanned' || !sector.scanSignature) return
 
       const travel = travelTimeMs(sector.q, sector.r)
       const mission: SurveyMission = {
@@ -326,23 +325,21 @@ export const useMoonStore = defineStore('moon', {
           }
 
           // Confirm deposit
-          const hiddenQuality = (sector as any)._hiddenQuality as DepositQuality | undefined
-          const hiddenType = (sector as any)._hiddenDepositType as DepositType | undefined
+          const pending = sector._pendingDeposit
 
-          if (hiddenQuality && hiddenType) {
-            const [minYield, maxYield] = YIELD_RANGES[hiddenQuality]
+          if (pending) {
+            const [minYield, maxYield] = YIELD_RANGES[pending.quality]
             const totalYield = randomInRange(minYield, maxYield)
             sector.deposit = {
-              type: hiddenType,
-              quality: hiddenQuality,
+              type: pending.type,
+              quality: pending.quality,
               totalYield,
               remainingYield: totalYield,
             }
-            delete (sector as any)._hiddenQuality
-            delete (sector as any)._hiddenDepositType
+            sector._pendingDeposit = undefined
 
             pushMessage(
-              `Survey confirmed: ${hiddenQuality} ${hiddenType} deposit (${totalYield} units) in sector ${sector.q},${sector.r}.`,
+              `Survey confirmed: ${pending.quality} ${pending.type} deposit (${totalYield} units) in sector ${sector.q},${sector.r}.`,
               'event',
             )
           } else {
@@ -382,10 +379,12 @@ export const useMoonStore = defineStore('moon', {
       sectorId: string,
       crewIds: string[],
       totalPlaytimeMs: number,
+      deductResources: () => boolean,
       pushMessage: (text: string, sev: 'info' | 'warning' | 'critical' | 'event') => void,
-    ) {
+    ): boolean {
       const sector = this.sectors.find((s) => s.id === sectorId)
-      if (!sector || !sector.deposit || sector.outpostId) return
+      if (!sector || !sector.deposit || sector.outpostId) return false
+      if (!deductResources()) return false
 
       const usedNames = new Set(this.outposts.map((o) => o.name))
       const name = OUTPOST_NAMES.find((n) => !usedNames.has(n)) ?? `Outpost ${this.outposts.length + 1}`
@@ -410,6 +409,7 @@ export const useMoonStore = defineStore('moon', {
         `${name} established in sector ${sector.q},${sector.r}. Crew of ${crewIds.length} stationed.`,
         'event',
       )
+      return true
     },
 
     tickOutposts(
@@ -496,25 +496,16 @@ export const useMoonStore = defineStore('moon', {
       addResources: (metals: number, ice: number) => void,
       pushMessage: (text: string, sev: 'info' | 'warning' | 'critical' | 'event') => void,
     ) {
+      const arrived: string[] = []
       for (const launch of this.outpostLaunches) {
-        if ((launch as any)._delivered) continue
-
         if (totalPlaytimeMs >= launch.arrivalAt) {
           addResources(launch.payload.metals, launch.payload.ice)
-          // rareMinerals would need a separate handler — for now treat as credits bonus
-          pushMessage(
-            `Outpost launch arrived: +${launch.payload.metals.toFixed(0)} metals, +${launch.payload.ice.toFixed(0)} ice.`,
-            'event',
-          )
-          ;(launch as any)._delivered = true
+          const total = Math.floor(launch.payload.metals + launch.payload.ice + launch.payload.rareMinerals)
+          pushMessage(`Outpost payload arrived: ${total} units received.`, 'event')
+          arrived.push(launch.id)
         }
       }
-
-      // Clean up delivered launches
-      const before = this.outpostLaunches.length
-      this.outpostLaunches = this.outpostLaunches.filter((l) => !(l as any)._delivered)
-      // suppress unused
-      void before
+      this.outpostLaunches = this.outpostLaunches.filter(l => !arrived.includes(l.id))
     },
 
     abandonOutpost(
