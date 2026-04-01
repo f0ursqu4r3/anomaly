@@ -64,7 +64,7 @@ const consumption = computed(() => {
 const workerCount = computed(() => {
   const zone = props.building.type === 'solar' ? 'power'
     : props.building.type === 'o2generator' ? 'lifeSup'
-    : props.building.type === 'drillrig' ? 'drillSite'
+    : props.building.type === 'extractionrig' ? 'extraction'
     : props.building.type === 'medbay' ? 'medical'
     : null
   if (!zone) return 0

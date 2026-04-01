@@ -32,19 +32,23 @@
       <SvgIcon name="repair" size="xs" />
       <span class="hud-val mono">{{ game.repairKits }}</span>
     </div>
-    <div class="hud-item depth">
+    <div class="hud-item outposts">
       <SvgIcon name="depth" size="xs" />
-      <span class="hud-val mono">{{ fmtDepth(game.depth) }}</span>
+      <div class="hud-stack">
+        <span class="hud-val mono">{{ moon.activeOutposts.length }} sites</span>
+        <span class="hud-rate mono away-count" v-if="moon.awayCount > 0">{{ moon.awayCount }} away</span>
+      </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { useGameStore } from '@/stores/gameStore'
-import { fmtDepth } from '@/utils/format'
+import { useMoonStore } from '@/stores/moonStore'
 import SvgIcon from './SvgIcon.vue'
 
 const game = useGameStore()
+const moon = useMoonStore()
 
 function fmt(n: number): string {
   if (n < 10) return n.toFixed(1)
@@ -129,12 +133,15 @@ function rateClass(n: number): string {
   color: var(--amber);
 }
 
-.hud-item.depth {
+.hud-item.outposts {
   color: var(--cyan);
 }
-
-.hud-item.depth .hud-val {
+.hud-item.outposts .hud-val {
   color: var(--cyan);
   font-size: 10px;
+}
+.away-count {
+  font-size: 8px;
+  color: var(--amber);
 }
 </style>

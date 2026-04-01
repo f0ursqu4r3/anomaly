@@ -1,7 +1,7 @@
 export type Trait = 'hardy' | 'diligent' | 'social' | 'cautious' | 'efficient' | 'stoic'
 
 export type ActionType =
-  | 'drill'
+  | 'extract'
   | 'engineer'
   | 'repair'
   | 'unpack'

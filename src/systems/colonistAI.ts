@@ -21,7 +21,7 @@ const HEALTH_SEEK_MEDICAL = 70
 const HEALTH_SEEK_MEDICAL_URGENT = 40
 
 const DURATION: Record<ActionType, [number, number]> = {
-  drill:        [12, 25],
+  extract:      [12, 25],
   engineer:     [12, 25],
   repair:       [15, 30],
   unpack:       [5, 10],
@@ -51,11 +51,11 @@ const TRAIT_MODS: Record<Trait, TraitMod> = {
   stoic:     { energyDrainMult: 1.0,  moraleDrainMult: 0.7,  workUtilityMult: 1.0,  socialUtilityMult: 0.6,  repairUtilityMult: 1.0,  medicalThresholdBonus: 0,  durationMult: 1.0,  walkSpeedMult: 1.0 },
 }
 
-const DIRECTIVE_UTILITY: Record<Directive, { drill: number; engineer: number; repair: number }> = {
-  mining:    { drill: 1.5, engineer: 0.6, repair: 1.0 },
-  safety:    { drill: 0.6, engineer: 1.5, repair: 1.5 },
-  balanced:  { drill: 1.0, engineer: 1.0, repair: 1.0 },
-  emergency: { drill: 0.5, engineer: 2.0, repair: 2.0 },
+const DIRECTIVE_UTILITY: Record<Directive, { extract: number; engineer: number; repair: number }> = {
+  mining:    { extract: 1.5, engineer: 0.6, repair: 1.0 },
+  safety:    { extract: 0.6, engineer: 1.5, repair: 1.5 },
+  balanced:  { extract: 1.0, engineer: 1.0, repair: 1.0 },
+  emergency: { extract: 0.5, engineer: 2.0, repair: 2.0 },
 }
 
 // ── Needs Update ──
@@ -197,16 +197,16 @@ export function selectAction(
   const dirMod = DIRECTIVE_UTILITY[state.activeDirective]
   const candidates: ScoredAction[] = []
 
-  // DRILL
+  // EXTRACT
   if (colonist.energy > 20) {
-    const rigs = state.buildings.filter(b => b.type === 'drillrig' && !b.damaged)
+    const rigs = state.buildings.filter(b => b.type === 'extractionrig' && !b.damaged)
     if (rigs.length > 0) {
       const rig = rigs[Math.floor(Math.random() * rigs.length)]
       candidates.push({
-        type: 'drill',
-        targetZone: 'drill',
+        type: 'extract',
+        targetZone: 'extraction',
         targetId: rig.id,
-        score: 50 * dirMod.drill * mod.workUtilityMult,
+        score: 50 * dirMod.extract * mod.workUtilityMult,
       })
     }
   }

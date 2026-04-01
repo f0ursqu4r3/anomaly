@@ -1,10 +1,10 @@
 # Ideas
 
-Deep Station is an asteroid colony idle game where you're a remote operator watching through a satellite feed, sending supplies and directives to keep a colony alive as it drills deeper into hostile rock.
+Deep Station is a moon colony idle game where you're a remote operator watching through a satellite feed, sending supplies and directives to keep a colony alive as it surveys and extracts resources from a hostile lunar surface.
 
 ## What We Have Now
 
-Core loop: drill → earn metals/ice/credits → order shipments → build infrastructure → manage hazards → drill deeper. Four directives shift colonist roles between mining, safety, balanced, and emergency. Three hazard types scale with depth. Offline simulation catches you up when you return.
+Core loop: scan sectors → launch survey missions → establish outposts → extract metals/ice/credits → order shipments → build infrastructure → manage hazards. Four directives shift colonist roles between extraction, safety, balanced, and emergency. Three hazard types scale with depth. Offline simulation catches you up when you return.
 
 ---
 
@@ -50,22 +50,22 @@ These add meaningful progression and decision-making to the existing systems wit
 
 Colonists are interchangeable. Give them reasons to care:
 
-- **Traits**: 1-2 on arrival ("Steady Hands" +20% repair speed, "Claustrophobic" health drains below 500m, "Geologist" +10% ice find)
-- **Experience**: XP in current role over time. Leveled drillers drill faster, leveled engineers repair quicker
+- **Traits**: 1-2 on arrival ("Steady Hands" +20% repair speed, "Claustrophobic" health drains in cramped outposts, "Geologist" +10% ice find)
+- **Experience**: XP in current role over time. Leveled extractors extract faster, leveled engineers repair quicker
 - **Morale**: Affected by deaths, hazards, crowding, idle time. Low = slower. High = small bonus. Events in message log ("Riko and Juno argued", "Sable found a crystal — crew spirits lifted")
 - **Relationships**: Co-workers in same zone build rapport → small efficiency bonus
-- **Specializations**: At level thresholds (Driller → Blaster, Engineer → Medic)
+- **Specializations**: At level thresholds (Extractor → Blaster, Engineer → Medic)
 
 ### Depth Zones & Biomes
 
-Drilling should feel like exploration, not just a number going up:
+Partially implemented — sector terrain types on the moon surface already define distinct extraction environments. Expanding these into full biome progression:
 
-- **0–100m**: Regolith — baseline, tutorial-safe
-- **100–300m**: Iron Vein — 1.5× metals, new hazard: cave-in
-- **300–600m**: Crystal Shelf — 2× ice chance, more gas pockets
-- **600–1000m**: Thermal Layer — power drain increase, magma breach hazard
-- **1000m+**: Core Proximity — extreme hazards, rare minerals worth 10× credits
-- Visual shift per zone (color tint, particles on drill site)
+- **Regolith Plains**: Baseline, tutorial-safe
+- **Iron Vein Sectors**: 1.5× metals, new hazard: surface collapse
+- **Crystal Shelf Sectors**: 2× ice chance, more gas pockets
+- **Thermal Zone Sectors**: Power drain increase, magma breach hazard
+- **Deep Core Sectors**: Extreme hazards, rare minerals worth 10× credits
+- Visual shift per terrain type (color tint, particles on extraction zone)
 - Zone transitions trigger satellite alerts
 
 ### Economy & Trading
@@ -82,15 +82,15 @@ Credits are just shipment currency. Make them interesting:
 
 Three types gets repetitive. Add variety that changes how you respond:
 
-- **Cave-In**: Blocks drill site 30-60s, drillers must clear rubble
+- **Surface Collapse**: Blocks extraction zone 30-60s, extractors must clear rubble
 - **Dust Storm**: Solar panels offline 30s
 - **Radiation Burst**: Health damage to colonists outside habitat, 15s
 - **Equipment Failure**: One building at 50% efficiency for 60s (degraded, not broken)
 - **Seismic Tremor**: All production pauses 5-10s, small building damage chance
-- **Magma Breach** (600m+): Damages 2-3 buildings, extremely rare shallow
+- **Magma Breach** (deep sectors): Damages 2-3 buildings, extremely rare in surface sectors
 - **Comms Blackout**: No shipments for 90s, static on satellite feed
 - **Oxygen Leak**: Air drains 3× for 20s, engineers can patch faster
-- **Compound Events**: Two hazards chain (tremor → cave-in)
+- **Compound Events**: Two hazards chain (tremor → collapse)
 - **Hazard Warning**: Research unlock — see incoming hazard 15-30s early
 
 ### Research & Tech Tree
@@ -98,8 +98,8 @@ Three types gets repetitive. Add variety that changes how you respond:
 Progression is currently flat (more of same building). Research gives the colony something to work toward:
 
 - **Research Station** building — engineers generate research points
-- Tiers gated by depth milestones + research points
-- Example unlocks: Reinforced Hulls (-50% meteor damage), Deep Core Scanners (hazard preview), Efficient Recyclers (less air per colonist), Automated Drills (2× output, more power), Cryo Storage (ice capacity + value)
+- Tiers gated by sector depth milestones + research points
+- Example unlocks: Reinforced Hulls (-50% meteor damage), Deep Core Scanners (hazard preview), Efficient Recyclers (less air per colonist), Automated Extraction (2× output, more power), Cryo Storage (ice capacity + value)
 - Branching choices — can't unlock everything, so runs feel different
 
 ---
@@ -111,13 +111,13 @@ Polish and convenience. Can be sprinkled in alongside P0/P1 work.
 - **Tap colonist** to see stats/role/health tooltip
 - **Tap building** to see production rates, damage, assigned workers
 - **Fast-forward**: 2× and 4× game speed for active sessions
-- **Statistics screen**: Total metals mined, hazards survived, deepest drill, longest survival
+- **Statistics screen**: Total metals extracted, hazards survived, sectors surveyed, longest survival
 - **Message filters**: Toggle message types in comms tab
 - **Undo last shipment**: Remove a manifest item without clearing all
 - **Pinch-to-zoom** on colony map
 - **Launch Window vs Cooldown**: Windows of cheaper/faster transit as a timing layer on top of cooldown
-- **Directive Flavor Names**: Personality renames (e.g., "Prioritize Mining" → "Drill Baby Drill")
-- **Drill income scaling**: Currently takes too many drills to noticeably increase income — review the curve
+- **Directive Flavor Names**: Personality renames (e.g., "Prioritize Extraction" → "Full Extraction")
+- **Extraction income scaling**: Currently takes too many rigs to noticeably increase income — review the curve
 
 ---
 
@@ -135,36 +135,32 @@ Beyond Parts Factory (P0), these add strategic depth:
 - **Hazard Sensor**: Early warning of incoming hazards (research upgrade)
 - **Recycling Center**: Converts hazard scrap into small metals/ice trickle
 - **Automated Turret**: Chance to deflect meteors. Requires power + ammo
-- **Thermal Vent Tap** (600m+): Power without solar dependency
+- **Thermal Vent Tap** (thermal sectors): Power without solar dependency
 - **Terraforming Module**: Long-term project, -20% hazard frequency in zone
 - **Emergency Shelter**: Colonists auto-shelter during hazards, reduced health damage
-- **Mining Outpost**: Secondary drill site, simultaneous drilling in two zones
+- **Extraction Outpost**: Secondary extraction site, simultaneous extraction in two zones
 
 ---
 
 ## P4 — Zoom Levels & Expansion
 
-Major scope expansion. Don't start until P0-P1 are solid.
+### ~~Close Lens (Colony View)~~ ✓
 
-### Surrounding Area (Zoom Level 2)
+Default isometric colony view — buildings, colonists, supply drops, HUD overlays. Fully implemented.
 
-Medium zoom reveals terrain around the colony:
+### ~~Medium Lens (Moon Surface)~~ ✓
 
-- **Surface Expeditions**: Send teams to explore nearby POIs (abandoned equipment, ice deposits, ruins)
-- **Expedition Risk**: Farther = longer travel + higher risk
-- **Salvage**: Find broken equipment, repair instead of order (cheaper, needs engineer time)
-- **Radar Ping**: Periodic scan reveals new POIs. Research extends range
-- **Rival Outpost**: Trade or compete with another corporation's colony
+Hex-grid moon surface showing scannable sectors, survey missions, and established outposts. Close + Medium lenses are implemented and toggle from the HUD.
 
-### Multi-Colony (Zoom Level 3)
+### Far Lens (Multi-Colony Overview)
 
-Far view shows multiple colony sites:
+Far view shows multiple colony sites across the moon — planned, not yet implemented:
 
-- **Multiple sites** on asteroid surface, semi-independent
+- **Multiple sites** on moon surface, semi-independent
 - **Resource sharing**: Shuttle between colonies (transit time by distance)
-- **Specialization**: Mining colony, life support colony, research colony
+- **Specialization**: Extraction colony, life support colony, research colony
 - **Colony founding**: Large resource cost to establish new site
-- **Shared hazards**: Asteroid-wide events affect all colonies
+- **Shared hazards**: Moon-wide events affect all colonies
 - **Leaderboard**: Per-colony stats comparison
 
 ---
@@ -175,15 +171,15 @@ Once the core loop has enough depth:
 
 ### Prestige / New Game+
 
-- **Evacuation**: At extreme depth, trigger voluntary end. Score = depth + credits + colonists + time
+- **Evacuation**: At extreme extraction depth, trigger voluntary end. Score = sectors surveyed + credits + colonists + time
 - **Operator Rating**: Accumulates across runs, unlocks cosmetic satellite feed filters
 - **Starting Bonuses**: Completed runs give persistent bonuses (extra credits, faster first shipment, free building)
-- **Asteroid Selection**: Different compositions (ice-rich, metal-heavy, volatile) change strategy
-- **Mission Objectives**: Optional per-run goals ("Reach 500m without losing a colonist") for bonus prestige
+- **Moon Selection**: Different surface compositions (ice-rich, metal-heavy, volatile) change strategy
+- **Mission Objectives**: Optional per-run goals ("Survey 10 sectors without losing a colonist") for bonus prestige
 
 ### Notifications & Engagement
 
-- **Push Notifications**: "Colony air critical", "Shipment arrived", "New depth milestone"
+- **Push Notifications**: "Colony air critical", "Shipment arrived", "Survey complete"
 - **Daily Briefing**: Summary notification of overnight performance
 - **Scheduled Shipments**: Queue auto-launch on timer while away
-- **Shift Reports**: Expand with graphs (resource levels over time, depth progress curve)
+- **Shift Reports**: Expand with graphs (resource levels over time, sectors surveyed curve)

@@ -1,5 +1,6 @@
 import { ref, watch } from 'vue'
 import { useGameStore } from '@/stores/gameStore'
+import { useMoonStore } from '@/stores/moonStore'
 import type { Colonist } from '@/stores/gameStore'
 import { ZONE_MAP } from '@/systems/mapLayout'
 import type { ActionType } from '@/types/colonist'
@@ -132,7 +133,15 @@ export function useColonistMovement() {
   }
 
   function update(_dtMs: number) {
+    const moonStore = useMoonStore()
+    const awayIds = moonStore.awayColonistIds
+
     for (const colonist of game.colonists) {
+      if (awayIds.has(colonist.id)) {
+        positions.value.delete(colonist.id)
+        continue
+      }
+
       const ms = getOrCreate(colonist.id)
 
       if (colonist.health <= 0) {

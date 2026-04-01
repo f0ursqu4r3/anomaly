@@ -26,7 +26,7 @@ const iconName = computed(() => {
   const map: Record<string, string> = {
     o2generator: 'o2generator',
     solar: 'solar',
-    drillrig: 'drillrig',
+    extractionrig: 'extractionrig',
     medbay: 'medbay',
   }
   return map[props.building.type] || 'shipment'
@@ -74,7 +74,7 @@ const typeClass = computed(() => `type-${props.building.type}`)
     0 0 20px rgba(126, 207, 255, 0.1);
 }
 
-.type-drillrig .building-sprite {
+.type-extractionrig .building-sprite {
   color: var(--green);
   border-color: var(--green-glow);
   box-shadow:

@@ -4,8 +4,8 @@ import {
   O2_PRODUCTION_PER_GENERATOR,
   POWER_PRODUCTION_PER_SOLAR,
   POWER_CONSUMPTION_PER_BUILDING,
-  DRILL_SPEED_PER_DRILLER,
-  DRILL_SPEED_PER_RIG,
+  EXTRACT_SPEED_PER_WORKER,
+  EXTRACT_SPEED_PER_RIG,
   METALS_PER_DEPTH,
   ICE_CHANCE_PER_TICK,
   ICE_PER_FIND,
@@ -69,7 +69,7 @@ export function mulberry32(seed: number): () => number {
 interface Rates {
   powerNet: number
   airNet: number
-  drillRate: number
+  extractRate: number
   creditRate: number
   healRate: number
   healthDrain: number
@@ -80,7 +80,7 @@ function computeRates(state: ColonyState): Rates {
   const aliveCount = state.colonists.filter(c => c.health > 0).length
   const ratio = DIRECTIVE_RATIOS[state.activeDirective]
   const engineers = Math.round(aliveCount * ratio.engineer)
-  const drillers = Math.round(aliveCount * ratio.driller)
+  const extractors = Math.round(aliveCount * ratio.extractor)
   const mod = DIRECTIVE_MODIFIERS[state.activeDirective]
   const engBonus = (1 + engineers * ENGINEER_EFFICIENCY_BONUS) * mod.prodMult
 
@@ -88,7 +88,7 @@ function computeRates(state: ColonyState): Rates {
   const undamagedGenerators = state.buildings.filter(b => b.type === 'o2generator' && !b.damaged).length
   const undamagedMedbays = state.buildings.filter(b => b.type === 'medbay' && !b.damaged).length
   const activeBuildings = state.buildings.filter(b => !b.damaged).length
-  const undamagedRigs = state.buildings.filter(b => b.type === 'drillrig' && !b.damaged).length
+  const undamagedRigs = state.buildings.filter(b => b.type === 'extractionrig' && !b.damaged).length
 
   const powerProd = undamagedSolars * POWER_PRODUCTION_PER_SOLAR * engBonus
   const powerCons = activeBuildings * POWER_CONSUMPTION_PER_BUILDING
@@ -100,11 +100,11 @@ function computeRates(state: ColonyState): Rates {
   const airCons = aliveCount * AIR_CONSUMPTION_PER_COLONIST
   const airNet = airProd - airCons
 
-  const drillMult = DIRECTIVE_MODIFIERS[state.activeDirective].drillMult
-  const drillEngBonus = 1 + engineers * ENGINEER_EFFICIENCY_BONUS
-  const drillRate = (drillers * DRILL_SPEED_PER_DRILLER + undamagedRigs * DRILL_SPEED_PER_RIG) * drillEngBonus * drillMult
+  const extractMult = DIRECTIVE_MODIFIERS[state.activeDirective].extractMult
+  const extractEngBonus = 1 + engineers * ENGINEER_EFFICIENCY_BONUS
+  const extractRate = (extractors * EXTRACT_SPEED_PER_WORKER + undamagedRigs * EXTRACT_SPEED_PER_RIG) * extractEngBonus * extractMult
 
-  const creditRate = BASE_CREDITS_PER_TICK + drillRate * METALS_PER_DEPTH * CREDITS_PER_METAL_MINED
+  const creditRate = BASE_CREDITS_PER_TICK + extractRate * METALS_PER_DEPTH * CREDITS_PER_METAL_MINED
 
   const healRate = (state.power > 0 && undamagedMedbays > 0)
     ? undamagedMedbays * MEDBAY_HEAL_PER_SEC * engBonus
@@ -112,7 +112,7 @@ function computeRates(state: ColonyState): Rates {
 
   const healthDrain = (state.air <= 0 || state.power <= 0) ? HEALTH_DRAIN_PER_SEC : 0
 
-  return { powerNet, airNet, drillRate, creditRate, healRate, healthDrain, engineerBonus: engBonus }
+  return { powerNet, airNet, extractRate, creditRate, healRate, healthDrain, engineerBonus: engBonus }
 }
 
 // ── Helpers ────────────────────────────────────────────────────────
@@ -241,8 +241,8 @@ export function simulateOffline(inputState: ColonyState, elapsedMs: number): Off
     state.power = Math.min(state.powerMax, Math.max(0, state.power + rates.powerNet * phaseDt))
     state.air = Math.min(state.airMax, Math.max(0, state.air + rates.airNet * phaseDt))
 
-    if (rates.drillRate > 0) {
-      const depthGain = rates.drillRate * phaseDt
+    if (rates.extractRate > 0) {
+      const depthGain = rates.extractRate * phaseDt
       state.depth += depthGain
       if (state.depth > state.maxDepth) state.maxDepth = state.depth
       const metalGain = depthGain * METALS_PER_DEPTH
