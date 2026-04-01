@@ -109,4 +109,5 @@ export interface MoonState {
   pingCooldownUntil: number    // totalPlaytimeMs when next ping is available
   pingCharging: boolean
   pingChargeStartedAt: number
+  selectedSectorId: string | null  // UI state, not persisted
 }

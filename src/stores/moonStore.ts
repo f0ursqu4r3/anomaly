@@ -82,6 +82,7 @@ function freshMoonState(): MoonState {
     pingCooldownUntil: 0,
     pingCharging: false,
     pingChargeStartedAt: 0,
+    selectedSectorId: null,
   }
 }
 
@@ -135,9 +136,18 @@ export const useMoonStore = defineStore('moon', {
     awayCount(): number {
       return this.awayColonistIds.size
     },
+
+    selectedSector(s): Sector | null {
+      if (!s.selectedSectorId) return null
+      return s.sectors.find(sec => sec.id === s.selectedSectorId) ?? null
+    },
   },
 
   actions: {
+    selectSector(sectorId: string | null) {
+      this.selectedSectorId = sectorId
+    },
+
     initialize(seed: number) {
       const state = freshMoonState()
       state.sectors = generateSectors(seed, 3)
