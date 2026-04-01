@@ -603,6 +603,21 @@ export const useGameStore = defineStore('game', {
       // Update colonist bonds (co-location affinity)
       updateBonds(this.colonists)
 
+      // Check for newly formed bonds and emit messages
+      for (const c of alive) {
+        if (!c.bonds) continue
+        for (const [partnerId, affinity] of Object.entries(c.bonds)) {
+          if (affinity === 20) { // just crossed threshold
+            const partner = this.colonists.find(p => p.id === partnerId)
+            if (partner && partner.health > 0) {
+              this.pushMessage(`${c.name} and ${partner.name} seem to have each other's rhythm down.`, 'info')
+              // Only emit once — partner will have affinity 20 too, skip their message
+              break
+            }
+          }
+        }
+      }
+
       // Idle morale drain — colonists with no productive work lose morale
       for (const c of alive) {
         if (c.currentAction?.type === 'wander' || !c.currentAction) {
@@ -686,7 +701,8 @@ export const useGameStore = defineStore('game', {
       if (this.air <= 0 || this.power <= 0) {
         for (const c of this.colonists) {
           if (c.health > 0) {
-            c.health = Math.max(0, c.health - HEALTH_DRAIN_PER_SEC * dt)
+            const drainMult = c.skillTrait === 'ironStomach' ? 0.7 : 1.0
+            c.health = Math.max(0, c.health - HEALTH_DRAIN_PER_SEC * dt * drainMult)
           }
         }
         if (this.aliveColonists.length === 0) {
