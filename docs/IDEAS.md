@@ -85,6 +85,7 @@ Credits are just shipment currency. Make them interesting:
 Rethink hazards as environmental conditions you prepare for, not random punishment. Most hazards should be terrain-specific and mitigatable with infrastructure:
 
 **Routine environmental conditions** (frequent, mitigatable):
+
 - **High Winds**: Reduces solar output 30% for 30s. Windbreaks (building upgrade) negate this
 - **Dust Storm**: Solar panels offline, reduced visibility on medium lens. More common on rocky plains
 - **Thermal Cycling**: Equipment at ice flat outposts degrades. Insulated housing (upgrade) prevents it
@@ -92,6 +93,7 @@ Rethink hazards as environmental conditions you prepare for, not random punishme
 - **Oxygen Seep**: Air drains 2× for 20s at outposts near canyon faults. Sealed airlocks (upgrade) prevent it
 
 **Rare catastrophic events** (infrequent, high impact, can't fully prevent):
+
 - **Meteor Strike**: Damages a building. Shields reduce damage but can't prevent it
 - **Magma Breach** (volcanic sectors): Damages 2-3 buildings at outpost. Very rare
 - **Comms Blackout**: No shipments or ping for 90s. Static on satellite feed. Comms relay building reduces duration
@@ -141,6 +143,7 @@ Polish and convenience. Can be sprinkled in alongside P0/P1 work.
 Beyond Parts Factory (P0), these add strategic depth. Some now serve the outpost/survey systems:
 
 **Colony buildings:**
+
 - **Shield Generator**: Reduces hazard damage in its zone. Heavy power draw
 - **Comms Relay**: Increases credit income rate. Reduces comms blackout duration. Tier 2 unlocks market trading
 - **Crew Quarters**: Increases colonist cap. Passive morale boost
@@ -152,6 +155,7 @@ Beyond Parts Factory (P0), these add strategic depth. Some now serve the outpost
 - **Recycling Center**: Converts hazard scrap into small metals/ice trickle
 
 **Outpost upgrades** (built at outpost sites, not colony):
+
 - **Windbreak**: Negates wind hazard at outpost
 - **Insulated Housing**: Prevents thermal cycling damage at ice flat outposts
 - **Sealed Airlocks**: Prevents oxygen seep at canyon outposts

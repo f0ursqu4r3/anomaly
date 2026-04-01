@@ -25,7 +25,9 @@
       "Bash(/Users/kyle/.claude/plugins/cache/claude-plugins-official/superpowers/5.0.6/skills/brainstorming/scripts/start-server.sh:*)",
       "Bash(grep -E \"src/|package\\\\.json$|index\\\\.html$|tsconfig\")",
       "Bash(wc -l /Users/kyle/git/anomaly/src/**/*.ts /Users/kyle/git/anomaly/src/**/*.vue)",
-      "Bash(bunx vue-tsc:*)"
+      "Bash(bunx vue-tsc:*)",
+      "Bash(git -C /Users/kyle/git/anomaly add src/systems/colonistIdentity.ts)",
+      "Bash(git -C /Users/kyle/git/anomaly commit -m ':*)"
     ]
   }
 }
