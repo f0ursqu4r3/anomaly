@@ -106,6 +106,46 @@ const LOW_MORALE: string[] = [
   '{name}: Starting to feel the grind.',
 ]
 
+const BREAKDOWN: string[] = [
+  '{name}: I can\'t keep going. Need to stop.',
+  '{name}: ...I just need a minute. Please.',
+  '{name}: Everything\'s too much right now.',
+]
+
+const DEATH_GRIEF: string[] = [
+  '{name}: ...I can\'t believe {dead} is gone.',
+  '{name}: {dead}... no. Not like this.',
+  '{name}: We lost {dead}. I don\'t... I can\'t...',
+]
+
+const DEATH_BOND_GRIEF: string[] = [
+  '{name}: {dead} and I... we had a good thing going.',
+  '{name}: I keep looking for {dead} at the station. They\'re not coming back.',
+  '{name}: {dead} was the only one who made this place bearable.',
+]
+
+const HIGH_MORALE: string[] = [
+  '{name}: Feeling sharp today. Let\'s get it done.',
+  '{name}: Good shift. Crew\'s solid.',
+  '{name}: You know what, I think we\'re gonna be alright.',
+]
+
+const BOND_FORMED: string[] = [
+  '{name} and {other} seem to have each other\'s rhythm down.',
+  '{name} and {other} make a good team.',
+]
+
+const BOND_WORKING: string[] = [
+  '{name}: Good to have {other} on shift.',
+  '{name}: Working with {other} — always better.',
+]
+
+const SPECIALIZATION_UNLOCK: string[] = [
+  '{name} has earned the rank of {spec}.',
+]
+
+export { BREAKDOWN, DEATH_GRIEF, DEATH_BOND_GRIEF, BOND_FORMED, SPECIALIZATION_UNLOCK }
+
 // ── Helpers ──
 
 function pick(templates: string[]): string {
@@ -235,6 +275,31 @@ export function generateChatter(
       }
       if (c.morale < 20 && c.morale > 10 && Math.random() < 0.03) {
         emitMessage(c.id, now, emit, fill(pick(LOW_MORALE), { name: c.name }))
+      }
+    }
+
+    // ── High morale chatter (rare) ──
+    if (!actionChanged && canMessage(c.id, now)) {
+      if (c.morale > 85 && Math.random() < 0.015) {
+        emitMessage(c.id, now, emit, fill(pick(HIGH_MORALE), { name: c.name }))
+      }
+    }
+
+    // ── Bond working chatter ──
+    if (!actionChanged && curr && !curr.walkPath?.length && canMessage(c.id, now)) {
+      if (Math.random() < 0.01) {
+        // Check if bonded partner is in same zone
+        const bondPartner = allColonists.find(o =>
+          o.id !== c.id && o.health > 0 &&
+          o.currentZone === c.currentZone &&
+          c.bonds[o.id] >= 20
+        )
+        if (bondPartner) {
+          emitMessage(c.id, now, emit, fill(pick(BOND_WORKING), {
+            name: c.name,
+            other: bondPartner.name,
+          }))
+        }
       }
     }
 
