@@ -138,8 +138,8 @@ export interface ColonyState {
 
 // ── Constants ──────────────────────────────────────────────────────
 
-const SAVE_KEY = 'colony-save-v3'
-const LEGACY_SAVE_KEY = 'colony-save-v2'
+const SAVE_KEY = 'colony-save-v4'
+const LEGACY_SAVE_KEY = 'colony-save-v3'
 
 export const AIR_CONSUMPTION_PER_COLONIST = 0.5
 export const O2_PRODUCTION_PER_GENERATOR = 2.0
@@ -1066,37 +1066,63 @@ export const useGameStore = defineStore('game', {
 
     // ── Persistence ──
     async save() {
-      this.lastSavedAt = Date.now()
-      const data = JSON.stringify(this.$state)
+      const moon = useMoonStore()
+      const saveData = {
+        colony: this.$state,
+        moon: moon.$state,
+      }
       try {
-        await Preferences.set({ key: SAVE_KEY, value: data })
+        await Preferences.set({ key: SAVE_KEY, value: JSON.stringify(saveData) })
+        this.lastSavedAt = Date.now()
       } catch {
-        localStorage.setItem(SAVE_KEY, data)
+        try {
+          localStorage.setItem(SAVE_KEY, JSON.stringify(saveData))
+          this.lastSavedAt = Date.now()
+        } catch { /* silent */ }
       }
     },
 
     async load() {
-      for (const key of [SAVE_KEY, LEGACY_SAVE_KEY]) {
+      let raw: string | null = null
+      try {
+        const res = await Preferences.get({ key: SAVE_KEY })
+        raw = res.value
+      } catch {
+        raw = localStorage.getItem(SAVE_KEY)
+      }
+      // Try legacy key if nothing found
+      if (!raw) {
         try {
-          const { value } = await Preferences.get({ key })
-          if (value) {
-            const parsed = JSON.parse(value) as Partial<ColonyState>
-            this.$patch(parsed)
-            this.migrateState()
-            return
-          }
-        } catch { /* fall through */ }
-        const raw = localStorage.getItem(key)
-        if (raw) {
-          const parsed = JSON.parse(raw) as Partial<ColonyState>
-          this.$patch(parsed)
-          this.migrateState()
-          return
+          const res = await Preferences.get({ key: LEGACY_SAVE_KEY })
+          raw = res.value
+        } catch {
+          raw = localStorage.getItem(LEGACY_SAVE_KEY)
         }
       }
-      // No save found — initialize moon for new game
-      const moon = useMoonStore()
-      moon.initialize(Date.now())
+      if (raw) {
+        try {
+          const parsed = JSON.parse(raw)
+          const moon = useMoonStore()
+          if (parsed.colony) {
+            // New format: { colony, moon }
+            this.$patch(parsed.colony)
+            if (parsed.moon) {
+              moon.$patch(parsed.moon)
+            } else {
+              moon.initialize(Date.now())
+            }
+          } else {
+            // Legacy format: flat colony state
+            this.$patch(parsed)
+            moon.initialize(Date.now())
+          }
+          this.migrateState()
+        } catch { /* corrupt save, use fresh state */ }
+      } else {
+        // No save found — new game
+        const moon = useMoonStore()
+        moon.initialize(Date.now())
+      }
     },
 
     migrateState() {
