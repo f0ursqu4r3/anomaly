@@ -308,6 +308,27 @@ export function simulateOffline(inputState: ColonyState, elapsedMs: number): Off
       }
     }
 
+    // Approximate XP accrual during offline (every ~20s of game time)
+    const aliveOffline = state.colonists.filter(c => c.health > 0)
+    if (aliveOffline.length > 0 && phaseDt >= 1) {
+      const ratios = DIRECTIVE_RATIOS[state.activeDirective]
+      const extractorCount = Math.round(aliveOffline.length * ratios.extractor)
+      const engineerCount = Math.round(aliveOffline.length * ratios.engineer)
+      // ~1 XP per 20 seconds of game time
+      const xpGain = Math.floor(phaseDt / 20)
+      if (xpGain > 0) {
+        let assigned = 0
+        for (const c of aliveOffline) {
+          if (assigned < extractorCount) {
+            c.extractionXP = (c.extractionXP ?? 0) + xpGain
+          } else if (assigned < extractorCount + engineerCount) {
+            c.engineeringXP = (c.engineeringXP ?? 0) + xpGain
+          }
+          assigned++
+        }
+      }
+    }
+
     // Parts Factory production (offline)
     const factoryCount = state.buildings.filter(b => b.type === 'partsfactory' && !b.damaged).length
     if (factoryCount > 0 && state.power > 0 && state.metals >= PARTS_FACTORY_METAL_COST) {
