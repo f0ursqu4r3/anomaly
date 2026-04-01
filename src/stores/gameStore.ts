@@ -3,10 +3,18 @@ import { Preferences } from '@capacitor/preferences'
 import { simulateOffline } from './offlineEngine'
 import type { OfflineEvent, OfflineResult } from './offlineEngine'
 import type { Trait, Action, SkillTrait, Specialization } from '@/types/colonist'
-import { randomTrait, randomSkillTrait } from '@/types/colonist'
+import { randomTrait, randomSkillTrait, SPECIALIZATION_LABELS } from '@/types/colonist'
 import { getBuildingPosition, getLandingPosition } from '@/systems/mapLayout'
 import { updateNeeds, checkInterrupt, advanceAction, selectAction } from '@/systems/colonistAI'
 import { generateChatter } from '@/systems/radioChatter'
+import {
+  awardXP,
+  checkSpecialization,
+  updateBonds,
+  applyDeathMorale,
+  applyHazardMorale,
+  checkBreakdown,
+} from '@/systems/colonistIdentity'
 import { useSettingsStore } from '@/stores/settingsStore'
 import { useMoonStore } from '@/stores/moonStore'
 
@@ -552,9 +560,26 @@ export const useGameStore = defineStore('game', {
         updateNeeds(c)
         const interrupted = checkInterrupt(c)
         if (!interrupted) {
+          const prevAction = c.currentAction?.type
           const needsDecision = advanceAction(c)
           if (needsDecision) {
-            c.currentAction = selectAction(c, this.$state)
+            // Action just completed — award XP
+            if (prevAction) {
+              awardXP(c, prevAction)
+              const newSpec = checkSpecialization(c)
+              if (newSpec) {
+                this.pushMessage(`${c.name} has earned the rank of ${SPECIALIZATION_LABELS[newSpec]}.`, 'event')
+              }
+            }
+            // Check for breakdown before selecting next action
+            const breakdownTicks = checkBreakdown(c, this.totalPlaytimeMs)
+            if (breakdownTicks) {
+              c.currentAction = { type: 'rest', targetZone: 'habitat', remainingTicks: breakdownTicks }
+              c.currentZone = 'habitat'
+              this.pushMessage(`${c.name}: I can't keep going. Need to stop.`, 'info')
+            } else {
+              c.currentAction = selectAction(c, this.$state)
+            }
           }
         } else {
           c.currentAction = selectAction(c, this.$state)
@@ -574,6 +599,19 @@ export const useGameStore = defineStore('game', {
         this.totalPlaytimeMs,
         settingsState.radioChatter,
       )
+
+      // Update colonist bonds (co-location affinity)
+      updateBonds(this.colonists)
+
+      // Idle morale drain — colonists with no productive work lose morale
+      for (const c of alive) {
+        if (c.currentAction?.type === 'wander' || !c.currentAction) {
+          // Track idle time via a simple tick check (every 30 ticks)
+          if (this.ticksSinceLastReport % 30 === 0) {
+            c.morale = Math.max(0, c.morale - 2)
+          }
+        }
+      }
 
       // Count active workers by zone
       const workersAtPower = alive.filter(
@@ -641,6 +679,9 @@ export const useGameStore = defineStore('game', {
         }
       }
 
+      // Snapshot alive colonists before health drain (for death detection)
+      const aliveBeforeDrain = this.colonists.filter(c => c.health > 0).map(c => c.id)
+
       // Health drain when critical
       if (this.air <= 0 || this.power <= 0) {
         for (const c of this.colonists) {
@@ -654,6 +695,15 @@ export const useGameStore = defineStore('game', {
             this.air <= 0
               ? 'The colony ran out of air.'
               : 'Total power failure. Life support offline.'
+        }
+      }
+
+      // Check for deaths that happened this tick — fire morale events
+      for (const id of aliveBeforeDrain) {
+        const c = this.colonists.find(col => col.id === id)
+        if (c && c.health <= 0) {
+          applyDeathMorale(c, this.colonists)
+          this.pushMessage(`${c.name} has died.`, 'critical')
         }
       }
 
@@ -794,6 +844,9 @@ export const useGameStore = defineStore('game', {
           c.currentAction = selectAction(c, this.$state)
         }
       }
+
+      // Morale impact from hazard
+      applyHazardMorale(this.colonists)
     },
 
     // ── Directives ──
