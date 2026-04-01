@@ -14,7 +14,7 @@ No lint or test commands are configured.
 
 ## Architecture
 
-Asteroid colony idle game: Vue 3 + Pinia + TypeScript, wrapped with Capacitor for mobile.
+Moon colony idle game: Vue 3 + Pinia + TypeScript, wrapped with Capacitor for mobile.
 
 ### Tick-Driven Simulation
 
@@ -22,7 +22,7 @@ The game runs on a 1-second tick loop (`useGameLoop.ts` → `game.tick()`). Each
 
 1. Reassign colonist roles based on active directive (with emergency overrides at <20% air/power)
 2. Calculate power and air production/consumption
-3. Advance depth, mine metals, roll for ice, accumulate credits
+3. Extract resources at colony and outposts, process survey missions and outpost launches, accumulate credits
 4. Med bay healing / health drain when resources critical
 5. Process in-transit shipments → spawn supply drops on arrival
 6. Check hazards (every ~15s, chance scales with depth)
@@ -32,21 +32,30 @@ Auto-saves every 30 ticks. Save key: `colony-save-v2` via Capacitor Preferences 
 
 ### Store Pattern
 
-Single Pinia store (`gameStore.ts`, ~800 lines) holds all game state, getters for derived rates, and actions for mutations. The `ColonyState` interface is the source of truth — resources, colonists, buildings, supply drops, shipments, depth, messages, directives.
+Two Pinia stores: `gameStore.ts` (~800 lines) holds colony state, getters for derived rates, and actions for mutations. The `ColonyState` interface is the source of truth — resources, colonists, buildings, supply drops, shipments, depth, messages, directives. `moonStore.ts` holds sector and outpost state for the moon surface — scanned sectors, survey missions, active outposts, and launch queues.
 
 ### Visual Layer (Separate from Simulation)
 
-`useColonistMovement.ts` runs a parallel visual state machine for colonist positions on the map. It watches `game.lastTickAt` and updates a `Map<id, ColonistMapState>` with walking/working/idle states. Priority: unpack supply drops first, then role-based zone targeting (drillers→drill site, engineers→buildings, idle→habitat).
+`useColonistMovement.ts` runs a parallel visual state machine for colonist positions on the map. It watches `game.lastTickAt` and updates a `Map<id, ColonistMapState>` with walking/working/idle states. Priority: unpack supply drops first, then role-based zone targeting (extractors→extraction zone, engineers→buildings, idle→habitat).
 
 ### Component Layout
 
-`GameView` splits into two panels: `ColonyMap` (55% left, isometric terrain with buildings/colonists/drops/HUD) and `CommandConsole` (45% right, tabbed: comms/shipments/directives). `HazardAlert` and `GameOverModal` overlay from `App.vue`.
+`GameView` switches between two lenses: `ColonyMap` (close lens — isometric terrain with buildings/colonists/drops/HUD) and `MoonMap` (medium lens — hex-grid moon surface with sectors, outposts, and survey overlays). `CommandConsole` (45% right, tabbed: comms/shipments/directives) is shared across lenses. `HazardAlert` and `GameOverModal` overlay from `App.vue`. Key components: `ColonyMap`, `MoonMap`, `SectorHex`.
+
+#### Lens System
+
+The interface supports two zoom levels, toggled from the HUD:
+
+- **Close lens** (`ColonyMap`): The default colony view. Isometric terrain showing individual buildings, colonists, and supply drops. Full operational detail.
+- **Medium lens** (`MoonMap`): Pulls back to show the moon surface as a hex grid. Each hex is a `SectorHex` representing a scannable/surveyable sector. Outposts appear as overlays when established. Used for survey missions and outpost management.
+
+Far lens (multi-colony overview) is planned but not yet implemented.
 
 ### Map Zones
 
 Buildings snap to named zones with slot offsets (up to 6 per zone):
 - habitat: 50,45 — colonist home base
-- drillSite: 50,78 — drill rigs
+- extraction: 50,65 — extraction rigs
 - powerField: 28,28 — solar panels
 - lifeSup: 72,28 — O2 generators
 - medical: 72,58 — med bays
@@ -67,7 +76,7 @@ Manifest builder (max 4 items, 100kg) → launch (60s cooldown, deducts credits)
 
 ### Users
 
-Remote operator watching an asteroid colony through a satellite feed. The player is detached — sending supplies and directives, not directly controlling colonists. Context is mobile-first idle gaming: short active sessions, longer idle stretches. The interface is the player's only window into the colony.
+Remote operator watching a moon colony through a satellite feed. The player is detached — sending supplies and directives, not directly controlling colonists. Context is mobile-first idle gaming: short active sessions, longer idle stretches. The interface is the player's only window into the colony.
 
 ### Brand Personality
 
