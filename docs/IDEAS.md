@@ -4,7 +4,9 @@ Deep Station is a moon colony idle game where you're a remote operator watching 
 
 ## What We Have Now
 
-Core loop: orbital ping (blind, cooldown-based) reveals nearby sectors with terrain and deposit signatures → send survey teams to confirm deposits (risk scales with distance + terrain) → establish outposts at confirmed deposits → outposts extract resources and launch payloads back to colony → order shipments → build infrastructure → manage hazards. Two satellite lenses: close (colony detail) and medium (moon surface hex grid with organic terrain rendering). Four directives shift colonist roles between extraction, safety, balanced, and emergency. Three hazard types scale with depth. Offline simulation catches you up when you return.
+Core loop: orbital ping (blind, cooldown-based) reveals nearby sectors with terrain and deposit signatures → send survey teams to confirm deposits (risk scales with distance + terrain) → establish outposts at confirmed deposits → outposts extract resources and launch payloads back to colony → order shipments → build infrastructure → manage hazards. Two satellite lenses: close (colony detail) and medium (moon surface with organic terrain rendering). Four directives shift colonist roles between extraction, safety, balanced, and emergency. Three hazard types. Offline simulation catches you up when you return.
+
+Colony buildings: solar panels, O2 generators, extraction rigs, med bays, parts factories. Five terrain types on the moon surface: rocky plains, ice flats, volcanic ridges, craters, canyons — each with distinct deposits and survey risk. Colonists travel to outposts and survey sites, leaving the colony short-staffed. Outpost stockpiles must be launched back via platform.
 
 ---
 
@@ -48,58 +50,69 @@ These add meaningful progression and decision-making to the existing systems wit
 
 ### Colonist Identity
 
-Colonists are interchangeable. Give them reasons to care:
+Colonists are interchangeable. Give them reasons to care — especially now that you're choosing who to risk on surveys and who to station at remote outposts:
 
-- **Traits**: 1-2 on arrival ("Steady Hands" +20% repair speed, "Claustrophobic" health drains in cramped outposts, "Geologist" +10% ice find)
-- **Experience**: XP in current role over time. Leveled extractors extract faster, leveled engineers repair quicker
-- **Morale**: Affected by deaths, hazards, crowding, idle time. Low = slower. High = small bonus. Events in message log ("Riko and Juno argued", "Sable found a crystal — crew spirits lifted")
-- **Relationships**: Co-workers in same zone build rapport → small efficiency bonus
-- **Specializations**: At level thresholds (Extractor → Blaster, Engineer → Medic)
+- **Traits**: 1-2 on arrival ("Steady Hands" +20% repair speed, "Claustrophobic" morale drains at outposts, "Geologist" +10% deposit yield, "Pathfinder" reduced survey travel time)
+- **Experience**: XP in current role over time. Leveled extractors extract faster, leveled engineers repair quicker. XP carries across outpost assignments
+- **Morale**: Affected by deaths, hazards, isolation at outposts, idle time. Low = slower. High = small bonus. Events in message log ("Riko and Juno argued", "Sable found a crystal — crew spirits lifted")
+- **Relationships**: Co-workers at the same outpost or zone build rapport → small efficiency bonus. Losing a crewmate they're bonded with tanks morale
+- **Specializations**: At level thresholds (Extractor → Prospector, Engineer → Mechanic). Prospectors find richer deposits on surveys. Mechanics reduce outpost hazard damage
 
-### Depth Zones & Biomes
+### Terrain Mechanics
 
-Partially implemented — sector terrain types on the moon surface already define distinct extraction environments. Expanding these into full biome progression:
+Five terrain types exist on the moon surface but currently only affect survey risk and deposit type. Make each terrain feel meaningfully different:
 
-- **Regolith Plains**: Baseline, tutorial-safe
-- **Iron Vein Sectors**: 1.5× metals, new hazard: surface collapse
-- **Crystal Shelf Sectors**: 2× ice chance, more gas pockets
-- **Thermal Zone Sectors**: Power drain increase, magma breach hazard
-- **Deep Core Sectors**: Extreme hazards, rare minerals worth 10× credits
-- Visual shift per terrain type (color tint, particles on extraction zone)
-- Zone transitions trigger satellite alerts
+- **Rocky Plains**: Baseline. Low risk, common metals. No special mechanics — the "safe" terrain
+- **Ice Flats**: Ice deposits primary. Outposts here suffer periodic thermal cycling (equipment degrades faster). Low gravity hazard: colonists move slower
+- **Volcanic Ridge**: Rare minerals + metals. High risk. Outposts face magma vents (periodic power drain or building damage). Higher extraction yields to justify the danger
+- **Crater Basin**: Rich metals. Moderate risk. Crater walls provide natural shielding (reduced hazard frequency at outposts). Limited visibility — pings reveal less detail in craters
+- **Canyon Network**: Mixed deposits. Moderate-high risk. Long travel times (canyon navigation). But canyon outposts are sheltered from surface storms
+
+Each terrain should have distinct visual character on the medium lens (already partially implemented with organic terrain features) and affect outpost operations differently.
 
 ### Economy & Trading
 
 Credits are just shipment currency. Make them interesting:
 
 - **Market Prices**: Ice/metal prices fluctuate on a cycle (ticker in comms tab)
-- **Sell Orders**: Sell stockpiled metals/ice at current market rate
-- **Contracts**: Timed objectives ("Deliver 50 metals in 5 min" → bonus credits)
-- **Corporate Sponsors**: Persistent upgrades to supply chain (faster transit, cheaper shipments, larger cargo, shorter cooldowns)
+- **Sell Orders**: Sell stockpiled metals/ice at current market rate. Outpost launch payloads can be sold directly instead of received at colony
+- **Contracts**: Timed objectives ("Deliver 50 metals in 5 min" → bonus credits). Some contracts require specific terrain deposits
+- **Corporate Sponsors**: Persistent upgrades to supply chain (faster transit, cheaper shipments, larger cargo, shorter cooldowns, extended ping range)
 - **Insurance**: Recurring credit cost to auto-repair one building per hazard
 
-### Expanded Hazards
+### Environmental Hazards
 
-Three types gets repetitive. Add variety that changes how you respond:
+Rethink hazards as environmental conditions you prepare for, not random punishment. Most hazards should be terrain-specific and mitigatable with infrastructure:
 
-- **Surface Collapse**: Blocks extraction zone 30-60s, extractors must clear rubble
-- **Dust Storm**: Solar panels offline 30s
-- **Radiation Burst**: Health damage to colonists outside habitat, 15s
-- **Equipment Failure**: One building at 50% efficiency for 60s (degraded, not broken)
-- **Seismic Tremor**: All production pauses 5-10s, small building damage chance
-- **Magma Breach** (deep sectors): Damages 2-3 buildings, extremely rare in surface sectors
-- **Comms Blackout**: No shipments for 90s, static on satellite feed
-- **Oxygen Leak**: Air drains 3× for 20s, engineers can patch faster
-- **Compound Events**: Two hazards chain (tremor → collapse)
-- **Hazard Warning**: Research unlock — see incoming hazard 15-30s early
+**Routine environmental conditions** (frequent, mitigatable):
+- **High Winds**: Reduces solar output 30% for 30s. Windbreaks (building upgrade) negate this
+- **Dust Storm**: Solar panels offline, reduced visibility on medium lens. More common on rocky plains
+- **Thermal Cycling**: Equipment at ice flat outposts degrades. Insulated housing (upgrade) prevents it
+- **Seismic Tremor**: Brief production pause (5-10s), small building damage chance. More common near volcanic sectors
+- **Oxygen Seep**: Air drains 2× for 20s at outposts near canyon faults. Sealed airlocks (upgrade) prevent it
+
+**Rare catastrophic events** (infrequent, high impact, can't fully prevent):
+- **Meteor Strike**: Damages a building. Shields reduce damage but can't prevent it
+- **Magma Breach** (volcanic sectors): Damages 2-3 buildings at outpost. Very rare
+- **Comms Blackout**: No shipments or ping for 90s. Static on satellite feed. Comms relay building reduces duration
+- **Compound Events**: Two conditions chain (tremor → surface collapse at nearby outpost)
+
+**Design principle**: A well-prepared colony should handle routine hazards without player intervention. Catastrophic events should be rare enough to feel impactful but not constant.
 
 ### Research & Tech Tree
 
 Progression is currently flat (more of same building). Research gives the colony something to work toward:
 
 - **Research Station** building — engineers generate research points
-- Tiers gated by sector depth milestones + research points
-- Example unlocks: Reinforced Hulls (-50% meteor damage), Deep Core Scanners (hazard preview), Efficient Recyclers (less air per colonist), Automated Extraction (2× output, more power), Cryo Storage (ice capacity + value)
+- Tiers gated by sectors surveyed + outposts established + research points
+- Example unlocks:
+  - **Extended Ping Range**: Reveals sectors 2 rings out instead of 1
+  - **Hardened Structures**: -50% damage from environmental hazards
+  - **Efficient Recyclers**: Less air per colonist
+  - **Automated Outpost Extraction**: Outposts produce at 50% with no crew (still need crew to launch)
+  - **Advanced Surveying**: Survey teams return faster, lower incident rate
+  - **Rare Mineral Processing**: Colony can refine rare minerals for 10× credit value
+  - **Cryo Storage**: Ice capacity + preserved value over time
 - Branching choices — can't unlock everything, so runs feel different
 
 ---
@@ -108,41 +121,46 @@ Progression is currently flat (more of same building). Research gives the colony
 
 Polish and convenience. Can be sprinkled in alongside P0/P1 work.
 
-- **Tap colonist** to see stats/role/health tooltip
+- **Tap colonist** to see stats/role/health tooltip (especially important with Colonist Identity)
 - **Tap building** to see production rates, damage, assigned workers
 - **Fast-forward**: 2× and 4× game speed for active sessions
-- **Statistics screen**: Total metals extracted, hazards survived, sectors surveyed, longest survival
+- **Statistics screen**: Total metals extracted, hazards survived, sectors surveyed, outposts established, colonists lost, longest survival
 - **Message filters**: Toggle message types in comms tab
 - **Undo last shipment**: Remove a manifest item without clearing all
-- **Pinch-to-zoom** on colony map
+- **Pinch-to-zoom** on colony map (medium lens already has pan/zoom)
 - **Launch Window vs Cooldown**: Windows of cheaper/faster transit as a timing layer on top of cooldown
 - **Directive Flavor Names**: Personality renames (e.g., "Prioritize Extraction" → "Full Extraction")
 - **Extraction income scaling**: Currently takes too many rigs to noticeably increase income — review the curve
+- **Outpost overview**: Quick-glance list of all outposts with status, crew, stockpile from the medium lens console
+- **Survey team tracking**: Better visibility of active missions — ETA, risk level, crew names
 
 ---
 
 ## P3 — New Building Types
 
-Beyond Parts Factory (P0), these add strategic depth:
+Beyond Parts Factory (P0), these add strategic depth. Some now serve the outpost/survey systems:
 
+**Colony buildings:**
 - **Shield Generator**: Reduces hazard damage in its zone. Heavy power draw
-- **Comms Relay**: Increases credit income rate. Tier 2 unlocks market trading
-- **Crew Quarters**: Increases colonist cap (if added). Passive morale boost
+- **Comms Relay**: Increases credit income rate. Reduces comms blackout duration. Tier 2 unlocks market trading
+- **Crew Quarters**: Increases colonist cap. Passive morale boost
 - **Research Station**: Engineers generate research points (gates tech tree)
 - **Storage Silo**: Metal/ice capacity (requires adding caps first)
 - **Parts Depot**: Stores repair kits, enables auto-repair if insurance purchased
 - **Drone Bay**: Repair drones fix damaged buildings faster during hazards (power + credits)
-- **Hazard Sensor**: Early warning of incoming hazards (research upgrade)
-- **Recycling Center**: Converts hazard scrap into small metals/ice trickle
-- **Automated Turret**: Chance to deflect meteors. Requires power + ammo
-- **Thermal Vent Tap** (thermal sectors): Power without solar dependency
-- **Terraforming Module**: Long-term project, -20% hazard frequency in zone
 - **Emergency Shelter**: Colonists auto-shelter during hazards, reduced health damage
-- **Extraction Outpost**: Secondary extraction site, simultaneous extraction in two zones
+- **Recycling Center**: Converts hazard scrap into small metals/ice trickle
+
+**Outpost upgrades** (built at outpost sites, not colony):
+- **Windbreak**: Negates wind hazard at outpost
+- **Insulated Housing**: Prevents thermal cycling damage at ice flat outposts
+- **Sealed Airlocks**: Prevents oxygen seep at canyon outposts
+- **Automated Launcher**: Outpost auto-launches payload when stockpile is full
+- **Hazard Sensor**: Early warning of incoming hazards at this outpost (15-30s)
 
 ---
 
-## P4 — Zoom Levels & Expansion
+## P4 — Expansion
 
 ### ~~Close Lens (Colony View)~~ ✓
 
@@ -163,6 +181,16 @@ Far view shows multiple colony sites across the moon — planned, not yet implem
 - **Shared hazards**: Moon-wide events affect all colonies
 - **Leaderboard**: Per-colony stats comparison
 
+### Surface Expeditions
+
+Send teams beyond outpost range to explore the moon:
+
+- **Expedition system**: Multi-day missions to distant POIs (abandoned equipment, ice caves, ruins)
+- **Expedition risk**: Farther = longer travel + higher risk. Terrain affects route difficulty
+- **Salvage**: Find broken equipment, repair instead of ordering (cheaper, needs engineer time)
+- **Radar upgrades**: Periodic scan reveals new POIs. Research extends range
+- **Rival Outpost**: Discover another corporation's abandoned site. Salvage or compete
+
 ---
 
 ## P5 — Endgame & Replayability
@@ -171,15 +199,15 @@ Once the core loop has enough depth:
 
 ### Prestige / New Game+
 
-- **Evacuation**: At extreme extraction depth, trigger voluntary end. Score = sectors surveyed + credits + colonists + time
+- **Evacuation**: Trigger voluntary end when you've extracted enough value. Score = sectors surveyed + outposts established + credits + colonists alive + time survived
 - **Operator Rating**: Accumulates across runs, unlocks cosmetic satellite feed filters
-- **Starting Bonuses**: Completed runs give persistent bonuses (extra credits, faster first shipment, free building)
-- **Moon Selection**: Different surface compositions (ice-rich, metal-heavy, volatile) change strategy
-- **Mission Objectives**: Optional per-run goals ("Survey 10 sectors without losing a colonist") for bonus prestige
+- **Starting Bonuses**: Completed runs give persistent bonuses (extra credits, faster first shipment, free building, pre-surveyed sectors)
+- **Moon Selection**: Different surface compositions (ice-rich, metal-heavy, volatile) change strategy. Some moons have more volcanic terrain, others more canyons
+- **Mission Objectives**: Optional per-run goals ("Survey 10 sectors without losing a colonist", "Establish 5 outposts in 30 minutes") for bonus prestige
 
 ### Notifications & Engagement
 
-- **Push Notifications**: "Colony air critical", "Shipment arrived", "Survey complete"
+- **Push Notifications**: "Colony air critical", "Shipment arrived", "Survey team returned", "Outpost depleted"
 - **Daily Briefing**: Summary notification of overnight performance
 - **Scheduled Shipments**: Queue auto-launch on timer while away
-- **Shift Reports**: Expand with graphs (resource levels over time, sectors surveyed curve)
+- **Shift Reports**: Expand with graphs (resource levels over time, sectors surveyed curve, outpost production history)
