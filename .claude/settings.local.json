@@ -21,7 +21,11 @@
       "Bash(git checkout:*)",
       "Bash(git merge:*)",
       "Bash(git stash:*)",
-      "Bash(grep -E \"\\\\.\\(css|vue|html|md|json\\)$\")"
+      "Bash(grep -E \"\\\\.\\(css|vue|html|md|json\\)$\")",
+      "Bash(/Users/kyle/.claude/plugins/cache/claude-plugins-official/superpowers/5.0.6/skills/brainstorming/scripts/start-server.sh:*)",
+      "Bash(grep -E \"src/|package\\\\.json$|index\\\\.html$|tsconfig\")",
+      "Bash(wc -l /Users/kyle/git/anomaly/src/**/*.ts /Users/kyle/git/anomaly/src/**/*.vue)",
+      "Bash(bunx vue-tsc:*)"
     ]
   }
 }
