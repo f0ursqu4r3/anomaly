@@ -17,7 +17,8 @@ import {
   TERRAIN_CONFIGS,
   hexDistance,
 } from '@/systems/sectorGen'
-import { uid } from '@/stores/gameStore'
+import { uid, useGameStore } from '@/stores/gameStore'
+import { applySurveyReturnMorale, applyOutpostIsolationMorale } from '@/systems/colonistIdentity'
 
 // ── Constants ─────────────────────────────────────────────────────────
 
@@ -245,7 +246,16 @@ export const useMoonStore = defineStore('moon', {
       const sector = this.sectors.find((s) => s.id === sectorId)
       if (!sector || sector.status !== 'scanned' || !sector.scanSignature) return
 
-      const travel = travelTimeMs(sector.q, sector.r)
+      let travel = travelTimeMs(sector.q, sector.r)
+
+      // Pathfinder trait reduces travel time by 25%
+      const gameStore = useGameStore()
+      const crewColonists = colonistIds.map(id => gameStore.colonists.find(c => c.id === id)).filter(Boolean)
+      const hasPathfinder = crewColonists.some(c => c!.skillTrait === 'pathfinder')
+      if (hasPathfinder) {
+        travel = Math.max(1, Math.round(travel * 0.75))
+      }
+
       const mission: SurveyMission = {
         id: uid(),
         sectorId,
@@ -330,7 +340,16 @@ export const useMoonStore = defineStore('moon', {
 
           if (pending) {
             const [minYield, maxYield] = YIELD_RANGES[pending.quality]
-            const totalYield = randomInRange(minYield, maxYield)
+            let totalYield = randomInRange(minYield, maxYield)
+
+            // Prospector specialization: +15% deposit yield
+            const gameStore = useGameStore()
+            const crewColonists = mission.colonistIds.map(id => gameStore.colonists.find(c => c.id === id)).filter(Boolean)
+            const hasProspector = crewColonists.some(c => c!.specialization === 'prospector')
+            if (hasProspector) {
+              totalYield = Math.round(totalYield * 1.15)
+            }
+
             sector.deposit = {
               type: pending.type,
               quality: pending.quality,
@@ -368,6 +387,10 @@ export const useMoonStore = defineStore('moon', {
             }
             returnColonist(cid)
           }
+
+          // Survey return morale boost
+          const gameStore = useGameStore()
+          applySurveyReturnMorale(mission.colonistIds, gameStore.colonists)
 
           pushMessage(`Survey team has returned to the colony.`, 'event')
         }
@@ -418,8 +441,25 @@ export const useMoonStore = defineStore('moon', {
       dtMs: number,
       pushMessage: (text: string, sev: 'info' | 'warning' | 'critical' | 'event') => void,
     ) {
+      const ISOLATION_DRAIN_INTERVAL_MS = 60_000
+      const gameStore = useGameStore()
+
       for (const outpost of this.outposts) {
         if (outpost.status !== 'active') continue
+
+        // Outpost isolation morale drain — every 60 seconds per crew member
+        const elapsedMs = totalPlaytimeMs - outpost.establishedAt
+        const prevElapsedMs = elapsedMs - dtMs
+        const drainTicksCurrent = Math.floor(elapsedMs / ISOLATION_DRAIN_INTERVAL_MS)
+        const drainTicksPrev = Math.floor(prevElapsedMs / ISOLATION_DRAIN_INTERVAL_MS)
+        if (drainTicksCurrent > drainTicksPrev) {
+          for (const cid of outpost.crewIds) {
+            const colonist = gameStore.colonists.find(c => c.id === cid)
+            if (colonist) {
+              applyOutpostIsolationMorale(colonist)
+            }
+          }
+        }
 
         // Extraction — produce resources based on deposit type and crew
         const sector = this.sectors.find((s) => s.id === outpost.sectorId)
