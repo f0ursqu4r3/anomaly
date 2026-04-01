@@ -45,7 +45,7 @@ const healthPct = computed(() => props.colonist.health)
 
 const stateClass = computed(() => {
   const action = props.colonist.currentAction?.type
-  if (action === 'drill') return 'action-drill'
+  if (action === 'extract') return 'action-extract'
   if (action === 'engineer') return 'action-engineer'
   if (action === 'repair') return 'action-repair'
   if (action === 'unpack') return 'action-unpack'
@@ -74,7 +74,7 @@ const stateClass = computed(() => {
   transition: all 0.2s;
 }
 
-.action-drill .colonist-dot {
+.action-extract .colonist-dot {
   background: var(--green);
   box-shadow: 0 0 6px var(--green-glow), 0 0 12px rgba(52, 211, 153, 0.1);
 }
@@ -145,7 +145,7 @@ const stateClass = computed(() => {
   animation: trail-fade 1.2s ease-out infinite;
 }
 
-.action-drill .colonist-trail {
+.action-extract .colonist-trail {
   background: var(--green);
 }
 

@@ -22,7 +22,7 @@ export interface Colonist {
   currentZone: string
 }
 
-export type BuildingType = 'o2generator' | 'solar' | 'drillrig' | 'medbay' | 'partsfactory'
+export type BuildingType = 'o2generator' | 'solar' | 'extractionrig' | 'medbay' | 'partsfactory'
 
 export interface Building {
   id: string
@@ -144,8 +144,8 @@ export const AIR_CONSUMPTION_PER_COLONIST = 0.5
 export const O2_PRODUCTION_PER_GENERATOR = 2.0
 export const POWER_PRODUCTION_PER_SOLAR = 1.5
 export const POWER_CONSUMPTION_PER_BUILDING = 0.3
-export const DRILL_SPEED_PER_DRILLER = 0.15
-export const DRILL_SPEED_PER_RIG = 0.08
+export const EXTRACT_SPEED_PER_WORKER = 0.15
+export const EXTRACT_SPEED_PER_RIG = 0.08
 export const METALS_PER_DEPTH = 2.0
 export const ICE_CHANCE_PER_TICK = 0.15
 export const ICE_PER_FIND = 1.0
@@ -181,21 +181,21 @@ const MANIFEST_MAX_SLOTS = 4
 const CARGO_CAPACITY = 100
 
 // Directive config
-export const DIRECTIVE_RATIOS: Record<Directive, { driller: number; engineer: number }> = {
-  mining: { driller: 0.7, engineer: 0.2 },
-  safety: { driller: 0.2, engineer: 0.6 },
-  balanced: { driller: 0.4, engineer: 0.4 },
-  emergency: { driller: 0.1, engineer: 0.8 },
+export const DIRECTIVE_RATIOS: Record<Directive, { extractor: number; engineer: number }> = {
+  mining: { extractor: 0.7, engineer: 0.2 },
+  safety: { extractor: 0.2, engineer: 0.6 },
+  balanced: { extractor: 0.4, engineer: 0.4 },
+  emergency: { extractor: 0.1, engineer: 0.8 },
 }
 
 export const DIRECTIVE_MODIFIERS: Record<
   Directive,
-  { drillMult: number; hazardResist: number; prodMult: number }
+  { extractMult: number; hazardResist: number; prodMult: number }
 > = {
-  mining: { drillMult: 1.3, hazardResist: 0.0, prodMult: 1.0 },
-  safety: { drillMult: 0.7, hazardResist: 0.4, prodMult: 1.2 },
-  balanced: { drillMult: 1.0, hazardResist: 0.15, prodMult: 1.0 },
-  emergency: { drillMult: 0.5, hazardResist: 0.1, prodMult: 1.5 },
+  mining: { extractMult: 1.3, hazardResist: 0.0, prodMult: 1.0 },
+  safety: { extractMult: 0.7, hazardResist: 0.4, prodMult: 1.2 },
+  balanced: { extractMult: 1.0, hazardResist: 0.15, prodMult: 1.0 },
+  emergency: { extractMult: 0.5, hazardResist: 0.1, prodMult: 1.5 },
 }
 
 export const SHIPMENT_OPTIONS: ShipmentOption[] = [
@@ -224,11 +224,11 @@ export const SHIPMENT_OPTIONS: ShipmentOption[] = [
   },
   {
     type: 'equipment',
-    label: 'Drill Rig',
-    description: 'Mines metals and ice automatically',
+    label: 'Extraction Rig',
+    description: 'Extracts metals and ice automatically',
     cost: 65,
     weight: 55,
-    buildingType: 'drillrig',
+    buildingType: 'extractionrig',
   },
   {
     type: 'equipment',
@@ -294,9 +294,9 @@ export const BLUEPRINTS: BuildingBlueprint[] = [
     costIce: 0,
   },
   {
-    type: 'drillrig',
-    label: 'Drill Rig',
-    description: 'Auto-drills for resources',
+    type: 'extractionrig',
+    label: 'Extraction Rig',
+    description: 'Auto-extracts resources',
     costMetals: 25,
     costIce: 0,
   },
@@ -334,7 +334,7 @@ function makeStartingColonists(): Colonist[] {
 
 function makeStartingBuildings(): Building[] {
   const b: Building[] = []
-  const types: BuildingType[] = ['solar', 'o2generator', 'drillrig']
+  const types: BuildingType[] = ['solar', 'o2generator', 'extractionrig']
   for (const t of types) {
     const pos = getBuildingPosition(t, b)
     b.push({ id: uid(), type: t, damaged: false, x: pos.x, y: pos.y, rotation: pos.rotation })
@@ -369,7 +369,7 @@ function freshState(): ColonyState {
       },
       {
         id: uid(),
-        text: 'Starting structures deployed: Solar, O2 Gen, Drill Rig.',
+        text: 'Starting structures deployed: Solar, O2 Gen, Extraction Rig.',
         severity: 'info',
         timestamp: 0,
       },
@@ -405,8 +405,8 @@ export const useGameStore = defineStore('game', {
       c => c.health > 0 && c.currentAction?.type === 'engineer' && !c.currentAction?.walkPath?.length
     ),
 
-    activeDrillers: (s) => s.colonists.filter(
-      c => c.health > 0 && c.currentAction?.type === 'drill' && !c.currentAction?.walkPath?.length
+    activeExtractors: (s) => s.colonists.filter(
+      c => c.health > 0 && c.currentAction?.type === 'extract' && !c.currentAction?.walkPath?.length
     ),
 
     engineerBonus(s): number {
@@ -459,30 +459,30 @@ export const useGameStore = defineStore('game', {
       return this.powerProduction - this.powerConsumption
     },
 
-    drillRate(s): number {
-      const drillerCount = s.colonists.filter(
-        c => c.health > 0 && c.currentAction?.type === 'drill' && !c.currentAction?.walkPath?.length
+    extractRate(s): number {
+      const extractorCount = s.colonists.filter(
+        c => c.health > 0 && c.currentAction?.type === 'extract' && !c.currentAction?.walkPath?.length
       ).length
-      const rigCount = s.buildings.filter((b) => b.type === 'drillrig' && !b.damaged).length
+      const rigCount = s.buildings.filter((b) => b.type === 'extractionrig' && !b.damaged).length
       const totalEngineers = s.colonists.filter(
         c => c.health > 0 && c.currentAction?.type === 'engineer' && !c.currentAction?.walkPath?.length
       ).length
-      const mod = DIRECTIVE_MODIFIERS[s.activeDirective].drillMult
+      const mod = DIRECTIVE_MODIFIERS[s.activeDirective].extractMult
       const engBonus = 1 + totalEngineers * ENGINEER_EFFICIENCY_BONUS
-      return (drillerCount * DRILL_SPEED_PER_DRILLER + rigCount * DRILL_SPEED_PER_RIG) * engBonus * mod
+      return (extractorCount * EXTRACT_SPEED_PER_WORKER + rigCount * EXTRACT_SPEED_PER_RIG) * engBonus * mod
     },
 
     creditRate(s): number {
-      const drillerCount = s.colonists.filter(
-        c => c.health > 0 && c.currentAction?.type === 'drill' && !c.currentAction?.walkPath?.length
+      const extractorCount = s.colonists.filter(
+        c => c.health > 0 && c.currentAction?.type === 'extract' && !c.currentAction?.walkPath?.length
       ).length
-      const rigCount = s.buildings.filter((b) => b.type === 'drillrig' && !b.damaged).length
+      const rigCount = s.buildings.filter((b) => b.type === 'extractionrig' && !b.damaged).length
       const totalEngineers = s.colonists.filter(
         c => c.health > 0 && c.currentAction?.type === 'engineer' && !c.currentAction?.walkPath?.length
       ).length
-      const mod = DIRECTIVE_MODIFIERS[s.activeDirective].drillMult
+      const mod = DIRECTIVE_MODIFIERS[s.activeDirective].extractMult
       const engBonus = 1 + totalEngineers * ENGINEER_EFFICIENCY_BONUS
-      const rate = (drillerCount * DRILL_SPEED_PER_DRILLER + rigCount * DRILL_SPEED_PER_RIG) * engBonus * mod
+      const rate = (extractorCount * EXTRACT_SPEED_PER_WORKER + rigCount * EXTRACT_SPEED_PER_RIG) * engBonus * mod
       return BASE_CREDITS_PER_TICK + rate * METALS_PER_DEPTH * CREDITS_PER_METAL_MINED
     },
 
@@ -566,8 +566,8 @@ export const useGameStore = defineStore('game', {
       const workersAtLifeSup = alive.filter(
         c => c.currentAction?.type === 'engineer' && c.currentAction?.targetZone === 'lifeSup' && !c.currentAction?.walkPath?.length
       ).length
-      const activeDrillers = alive.filter(
-        c => c.currentAction?.type === 'drill' && !c.currentAction?.walkPath?.length
+      const activeExtractors = alive.filter(
+        c => c.currentAction?.type === 'extract' && !c.currentAction?.walkPath?.length
       ).length
 
       const mod = DIRECTIVE_MODIFIERS[this.activeDirective]
@@ -587,16 +587,16 @@ export const useGameStore = defineStore('game', {
       const airCons = alive.length * AIR_CONSUMPTION_PER_COLONIST
       this.air = Math.min(this.airMax, Math.max(0, this.air + (airProd - airCons) * dt))
 
-      // Drilling + credit income
-      const rigCount = this.buildings.filter((b) => b.type === 'drillrig' && !b.damaged).length
+      // Extraction + credit income
+      const rigCount = this.buildings.filter((b) => b.type === 'extractionrig' && !b.damaged).length
       const totalActiveEngineers = workersAtPower + workersAtLifeSup
-      const drillEngBonus = 1 + totalActiveEngineers * ENGINEER_EFFICIENCY_BONUS
-      const drillSpeed = (activeDrillers * DRILL_SPEED_PER_DRILLER + rigCount * DRILL_SPEED_PER_RIG) * drillEngBonus * mod.drillMult
+      const extractEngBonus = 1 + totalActiveEngineers * ENGINEER_EFFICIENCY_BONUS
+      const extractSpeed = (activeExtractors * EXTRACT_SPEED_PER_WORKER + rigCount * EXTRACT_SPEED_PER_RIG) * extractEngBonus * mod.extractMult
 
       const metalsBefore = this.metals
       let iceFound = false
-      if (drillSpeed > 0) {
-        const depthGain = drillSpeed * dt
+      if (extractSpeed > 0) {
+        const depthGain = extractSpeed * dt
         this.depth += depthGain
         if (this.depth > this.maxDepth) this.maxDepth = this.depth
         this.metals += depthGain * METALS_PER_DEPTH
@@ -750,7 +750,7 @@ export const useGameStore = defineStore('game', {
 
       // Urgent re-evaluation after hazard
       for (const c of this.colonists) {
-        if (c.health > 0 && (!c.currentAction || c.currentAction.type === 'wander' || c.currentAction.type === 'drill')) {
+        if (c.health > 0 && (!c.currentAction || c.currentAction.type === 'wander' || c.currentAction.type === 'extract')) {
           c.currentAction = selectAction(c, this.$state)
         }
       }

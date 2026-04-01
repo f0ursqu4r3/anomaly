@@ -24,12 +24,12 @@ type MessageEmitter = (text: string, severity: 'info' | 'event') => void
 
 // ── Message Templates ──
 
-const CHECKIN_DRILL: string[] = [
-  '{name}: On site at the drill. Starting shift.',
-  '{name} checking in — drill rig looks good.',
+const CHECKIN_EXTRACT: string[] = [
+  '{name}: On site at the extractor. Starting shift.',
+  '{name} checking in — extraction rig looks good.',
   '{name}: At the dig. Let\'s see what we find.',
-  '{name} here. Resuming drill ops.',
-  '{name}: Back at it. Drill running smooth.',
+  '{name} here. Resuming extraction ops.',
+  '{name}: Back at it. Rig running smooth.',
 ]
 
 const CHECKIN_ENGINEER: string[] = [
@@ -83,11 +83,11 @@ const MEDICAL_START: string[] = [
   '{name} here — could use some patching up.',
 ]
 
-const WORK_CHATTER_DRILL: string[] = [
-  '{name}: Interesting formations down here.',
-  '{name}: Depth\'s looking good. Steady progress.',
+const WORK_CHATTER_EXTRACT: string[] = [
+  '{name}: Interesting formations out here.',
+  '{name}: Yield\'s looking good. Steady progress.',
   '{name}: Found some ice deposits. Nice.',
-  '{name}: Drill\'s humming along.',
+  '{name}: Rig\'s humming along.',
 ]
 
 const WORK_CHATTER_ENGINEER: string[] = [
@@ -127,7 +127,7 @@ function zoneName(zoneId: string): string {
   switch (zoneId) {
     case 'power': return 'power grid'
     case 'lifeSup': return 'life support'
-    case 'drill': return 'drill site'
+    case 'extraction': return 'extraction site'
     case 'medical': return 'med bay'
     case 'habitat': return 'hab'
     case 'landing': return 'the LZ'
@@ -172,8 +172,8 @@ export function generateChatter(
 
     if (actionChanged && canMessage(c.id, now)) {
       // ── Arrival / Start messages ──
-      if (currType === 'drill' && prevType !== 'drill') {
-        emitMessage(c.id, now, emit, fill(pick(CHECKIN_DRILL), { name: c.name }))
+      if (currType === 'extract' && prevType !== 'extract') {
+        emitMessage(c.id, now, emit, fill(pick(CHECKIN_EXTRACT), { name: c.name }))
       } else if (currType === 'engineer') {
         const zone = curr!.targetZone
         emitMessage(c.id, now, emit, fill(pick(CHECKIN_ENGINEER), { name: c.name, zone: zoneName(zone) }))
@@ -217,8 +217,8 @@ export function generateChatter(
     if (!actionChanged && curr && !curr.walkPath?.length && canMessage(c.id, now)) {
       const chatterChance = 0.02 // 2% per tick = roughly every 50s
       if (Math.random() < chatterChance) {
-        if (currType === 'drill') {
-          emitMessage(c.id, now, emit, fill(pick(WORK_CHATTER_DRILL), { name: c.name }))
+        if (currType === 'extract') {
+          emitMessage(c.id, now, emit, fill(pick(WORK_CHATTER_EXTRACT), { name: c.name }))
         } else if (currType === 'engineer') {
           emitMessage(c.id, now, emit, fill(pick(WORK_CHATTER_ENGINEER), {
             name: c.name,

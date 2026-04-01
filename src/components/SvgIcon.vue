@@ -69,7 +69,7 @@ const ICONS: Record<string, IconDef> = {
            <circle cx="8.5" cy="11" r="2" stroke="currentColor" stroke-width="1.1"/>
            <path d="M7.5 4L9.5 5M8.5 9L6.5 8M10 7.5l-1 1.5" stroke="currentColor" stroke-width="0.8" opacity="0.4"/>`,
   },
-  drillrig: {
+  extractionrig: {
     viewBox: '0 0 16 16',
     path: `<path d="M8 2v8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
            <path d="M8 10l-2 4h4z" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/>
