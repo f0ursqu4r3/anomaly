@@ -150,7 +150,7 @@ function fmtOffsetTime(ms: number): string {
 
 .event-time {
   font-size: 10px;
-  color: var(--text-muted);
+  color: var(--text-secondary);
   flex-shrink: 0;
   min-width: 52px;
 }
@@ -190,11 +190,11 @@ function fmtOffsetTime(ms: number): string {
 }
 
 .delta-label {
-  font-size: 9px;
+  font-size: 10px;
   font-family: var(--font-mono);
   text-transform: uppercase;
   letter-spacing: 0.1em;
-  color: var(--text-muted);
+  color: var(--text-secondary);
 }
 
 .delta-value {

@@ -235,10 +235,10 @@ onUnmounted(() => cancelAnimationFrame(fpsRaf))
 .zone-marker {
   position: absolute;
   font-family: var(--font-mono);
-  font-size: 7px;
+  font-size: 10px;
   font-weight: 600;
   letter-spacing: 0.18em;
-  color: var(--accent-muted);
+  color: var(--text-secondary);
   pointer-events: none;
   z-index: 1;
 }
@@ -279,7 +279,7 @@ onUnmounted(() => cancelAnimationFrame(fpsRaf))
 
 .feed-text {
   font-family: var(--font-mono);
-  font-size: 8px;
+  font-size: 10px;
   font-weight: 700;
   letter-spacing: 0.15em;
   color: var(--red-glow);
@@ -328,8 +328,8 @@ onUnmounted(() => cancelAnimationFrame(fpsRaf))
   bottom: 8px;
   left: 8px;
   font-family: var(--font-mono);
-  font-size: 9px;
-  color: var(--text-muted);
+  font-size: 10px;
+  color: var(--text-secondary);
   z-index: 9;
   pointer-events: none;
 }
@@ -359,7 +359,7 @@ onUnmounted(() => cancelAnimationFrame(fpsRaf))
   bottom: 36px;
   left: 8px;
   z-index: 10;
-  font-size: 8px;
+  font-size: 10px;
   color: var(--amber);
   padding: 2px 6px;
   background: var(--bg-elevated);

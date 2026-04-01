@@ -457,7 +457,7 @@ function missionStatusLabel(mission: SurveyMission): string {
   font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.12em;
-  color: var(--text-muted);
+  color: var(--text-secondary);
   background: transparent;
   border-bottom: 2px solid transparent;
   transition: all 0.15s;
@@ -493,9 +493,9 @@ function missionStatusLabel(mission: SurveyMission): string {
 
 .status-label {
   font-family: var(--font-mono);
-  font-size: 8px;
+  font-size: 10px;
   letter-spacing: 0.1em;
-  color: var(--text-muted);
+  color: var(--text-secondary);
 }
 
 .status-val {
@@ -551,7 +551,7 @@ function missionStatusLabel(mission: SurveyMission): string {
 }
 
 .moon-stat-label {
-  color: var(--text-muted);
+  color: var(--text-secondary);
   letter-spacing: 0.05em;
 }
 
@@ -608,8 +608,7 @@ function missionStatusLabel(mission: SurveyMission): string {
 }
 
 .ping-cooldown-text {
-  font-size: 9px;
-  opacity: 0.7;
+  font-size: 10px;
 }
 
 .ping-progress-bar {
@@ -656,7 +655,7 @@ function missionStatusLabel(mission: SurveyMission): string {
 }
 
 .sector-coords {
-  color: var(--text-muted);
+  color: var(--text-secondary);
   font-size: 10px;
 }
 
@@ -805,7 +804,7 @@ function missionStatusLabel(mission: SurveyMission): string {
   font-size: 10px;
   font-weight: 700;
   letter-spacing: 0.1em;
-  color: var(--text-muted);
+  color: var(--text-secondary);
   margin-bottom: 8px;
   padding-bottom: 4px;
   border-bottom: 1px solid var(--accent-dim);

@@ -73,7 +73,7 @@ onMounted(() => {
 }
 
 .log-time {
-  color: var(--text-muted);
+  color: var(--text-secondary);
   flex-shrink: 0;
 }
 

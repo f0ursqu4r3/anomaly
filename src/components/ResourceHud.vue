@@ -102,7 +102,7 @@ function rateClass(n: number): string {
 }
 
 .hud-rate {
-  font-size: 8px;
+  font-size: 9px;
 }
 
 .rate-pos {
@@ -124,9 +124,8 @@ function rateClass(n: number): string {
 }
 
 .hud-breakdown {
-  font-size: 7px;
-  color: var(--text-muted);
-  opacity: 0.7;
+  font-size: 9px;
+  color: var(--text-secondary);
 }
 
 .hud-item.repair-kits {
@@ -141,7 +140,7 @@ function rateClass(n: number): string {
   font-size: 10px;
 }
 .away-count {
-  font-size: 8px;
+  font-size: 9px;
   color: var(--amber);
 }
 </style>

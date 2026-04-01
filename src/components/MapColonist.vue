@@ -191,8 +191,8 @@ const stateClass = computed(() => {
   left: 50%;
   transform: translateX(-50%);
   font-family: var(--font-mono);
-  font-size: 7px;
-  color: var(--text-muted);
+  font-size: 10px;
+  color: var(--text-secondary);
   white-space: nowrap;
   pointer-events: none;
 }

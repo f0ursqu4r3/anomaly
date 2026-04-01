@@ -84,7 +84,7 @@ const workerCount = computed(() => {
   border-radius: var(--radius-sm);
   padding: 6px 8px;
   font-family: var(--font-mono);
-  font-size: 9px;
+  font-size: 11px;
   color: var(--text-secondary);
   pointer-events: none;
   min-width: 100px;
@@ -110,7 +110,7 @@ const workerCount = computed(() => {
 }
 
 .info-label {
-  color: var(--text-muted);
+  color: var(--text-secondary);
 }
 
 .status-ok {

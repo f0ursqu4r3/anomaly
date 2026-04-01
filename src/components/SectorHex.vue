@@ -109,9 +109,9 @@
           :y="-hexSize * 0.15"
           text-anchor="middle"
           :fill="terrainConfig.color"
-          :font-size="hexSize * 0.2"
+          :font-size="hexSize * 0.25"
           font-family="var(--font-mono)"
-          opacity="0.7"
+          opacity="0.9"
         >
           {{ terrainConfig.label.toUpperCase() }}
         </text>
@@ -132,7 +132,7 @@
           :y="hexSize * 0.15"
           text-anchor="middle"
           fill="var(--cyan)"
-          :font-size="hexSize * 0.17"
+          :font-size="hexSize * 0.22"
           font-family="var(--font-mono)"
           opacity="0.9"
         >
@@ -146,7 +146,7 @@
           :y="sector.outpostId ? hexSize * 0.42 : hexSize * 0.15"
           text-anchor="middle"
           fill="var(--green)"
-          :font-size="hexSize * 0.16"
+          :font-size="hexSize * 0.2"
           font-family="var(--font-mono)"
           opacity="0.9"
         >

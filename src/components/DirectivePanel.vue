@@ -79,7 +79,7 @@ const directives: {
   font-size: 10px;
   font-weight: 700;
   letter-spacing: 0.15em;
-  color: var(--text-muted);
+  color: var(--text-secondary);
   margin-bottom: 8px;
 }
 
@@ -127,7 +127,7 @@ const directives: {
 
 .dir-desc {
   font-size: 11px;
-  color: var(--text-muted);
+  color: var(--text-secondary);
 }
 
 .dir-ratio {

@@ -249,7 +249,7 @@ function formatEta(arrivalAt: number): string {
   font-size: 10px;
   font-weight: 700;
   letter-spacing: 0.15em;
-  color: var(--text-muted);
+  color: var(--text-secondary);
   margin-bottom: 6px;
   display: flex;
   justify-content: space-between;
@@ -257,7 +257,7 @@ function formatEta(arrivalAt: number): string {
 }
 
 .manifest-meta {
-  font-size: 9px;
+  font-size: 10px;
   font-weight: 400;
   letter-spacing: 0.05em;
 }
@@ -284,7 +284,7 @@ function formatEta(arrivalAt: number): string {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 9px;
+  font-size: 10px;
   letter-spacing: 0.12em;
   color: var(--cyan);
 }
@@ -352,8 +352,8 @@ function formatEta(arrivalAt: number): string {
   min-width: 0;
 }
 .manifest-wt {
-  font-size: 9px;
-  color: var(--text-muted);
+  font-size: 10px;
+  color: var(--text-secondary);
   flex-shrink: 0;
 }
 
@@ -545,8 +545,8 @@ function formatEta(arrivalAt: number): string {
 }
 
 .relaunch-hint {
-  font-size: 9px;
-  color: var(--text-muted);
+  font-size: 10px;
+  color: var(--text-secondary);
 }
 
 .repeat-btn.standalone {
@@ -657,7 +657,7 @@ function formatEta(arrivalAt: number): string {
 }
 
 .cat-cost {
-  font-size: 9px;
+  font-size: 10px;
   color: var(--amber);
   display: flex;
   align-items: center;
@@ -665,8 +665,8 @@ function formatEta(arrivalAt: number): string {
 }
 
 .cat-weight {
-  font-size: 9px;
-  color: var(--text-muted);
+  font-size: 10px;
+  color: var(--text-secondary);
 }
 
 /* Qty controls (in manifest rows) */
