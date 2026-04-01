@@ -126,8 +126,8 @@ export function generateSectors(seed: number, maxRing: number = 3): Sector[] {
       const id = `sector-${q}-${r}`
       const isColony = q === 0 && r === 0
       const terrain: TerrainType = isColony ? 'rocky' : pickTerrain(rand)
-      // Ring 0 and 1 start visible, rest hidden
-      const status = ring <= 1 ? 'visible' : 'hidden'
+      // Ring 0 is surveyed (colony), ring 1 starts scanned, rest hidden
+      const status = ring <= 1 ? 'scanned' : 'hidden'
 
       sectors.push({
         id,

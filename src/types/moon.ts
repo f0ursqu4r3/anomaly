@@ -18,7 +18,7 @@ export type DepositQuality = 'poor' | 'moderate' | 'rich'
 
 // ── Sectors ──
 
-export type SectorStatus = 'hidden' | 'visible' | 'scanned' | 'scanning' | 'surveyed'
+export type SectorStatus = 'hidden' | 'scanned' | 'surveyed'
 
 export interface Sector {
   id: string
@@ -106,7 +106,7 @@ export interface MoonState {
   outposts: Outpost[]
   surveyMissions: SurveyMission[]
   outpostLaunches: OutpostLaunch[]
-  scanQueue: string[]       // sector IDs queued for orbital scan
-  activeScanId: string | null
-  scanStartedAt: number
+  pingCooldownUntil: number    // totalPlaytimeMs when next ping is available
+  pingCharging: boolean
+  pingChargeStartedAt: number
 }

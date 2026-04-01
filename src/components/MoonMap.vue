@@ -10,10 +10,26 @@
         <span class="hud-label">AWAY</span>
         <span class="hud-value amber">{{ moon.awayCount }}</span>
       </span>
-      <span class="hud-item" v-if="moon.activeScanId">
-        <span class="hud-label">SCANNING</span>
-        <span class="hud-value cyan scanning-indicator">&#9679;</span>
-      </span>
+      <button
+        class="ping-btn"
+        :class="{ charging: moon.pingCharging, cooldown: pingOnCooldown }"
+        :disabled="!pingReady && !moon.pingCharging"
+        @click="doPing"
+      >
+        <template v-if="moon.pingCharging">
+          <span class="ping-label">CHARGING</span>
+          <span class="ping-progress-bar">
+            <span class="ping-progress-fill" :style="{ width: pingChargePercent + '%' }"></span>
+          </span>
+        </template>
+        <template v-else-if="pingOnCooldown">
+          <span class="ping-label">PING</span>
+          <span class="ping-cooldown-text">{{ pingCooldownDisplay }}s</span>
+        </template>
+        <template v-else>
+          <span class="ping-label">PING</span>
+        </template>
+      </button>
     </div>
 
     <!-- SVG Map -->
@@ -22,7 +38,43 @@
       class="hex-svg"
       @click.self="selectedSector = null"
     >
+      <defs>
+        <filter id="glow">
+          <feGaussianBlur stdDeviation="2" result="blur" />
+          <feMerge>
+            <feMergeNode in="blur" />
+            <feMergeNode in="SourceGraphic" />
+          </feMerge>
+        </filter>
+      </defs>
+
       <g transform="translate(250, 250)">
+        <!-- Faint topographic contour lines -->
+        <circle
+          v-for="r in contourRadii"
+          :key="'contour-' + r"
+          cx="0"
+          cy="0"
+          :r="r"
+          fill="none"
+          stroke="var(--accent-dim)"
+          stroke-width="0.5"
+          opacity="0.08"
+        />
+
+        <!-- Faint coordinate grid -->
+        <line
+          v-for="g in gridLines"
+          :key="g.key"
+          :x1="g.x1"
+          :y1="g.y1"
+          :x2="g.x2"
+          :y2="g.y2"
+          stroke="var(--accent-dim)"
+          stroke-width="0.3"
+          opacity="0.05"
+        />
+
         <!-- Survey team paths -->
         <template v-for="mission in moon.activeMissions" :key="mission.id">
           <line
@@ -123,15 +175,6 @@
 
         <!-- Action buttons (no outpost) -->
         <div v-else class="panel-actions">
-          <!-- Scan -->
-          <button
-            v-if="selectedSector.status === 'visible' && selectedSector.id !== COLONY_SECTOR_ID"
-            class="action-btn cyan"
-            @click="doScan(selectedSector!.id)"
-          >
-            INITIATE SCAN
-          </button>
-
           <!-- Survey -->
           <template v-if="selectedSector.status === 'scanned' && selectedSector.scanSignature">
             <button
@@ -196,9 +239,9 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 import SectorHex from './SectorHex.vue'
-import { useMoonStore, OUTPOST_ESTABLISH_COST_METALS, OUTPOST_ESTABLISH_COST_CREDITS } from '@/stores/moonStore'
+import { useMoonStore, PING_CHARGE_MS, OUTPOST_ESTABLISH_COST_METALS, OUTPOST_ESTABLISH_COST_CREDITS } from '@/stores/moonStore'
 import { useGameStore } from '@/stores/gameStore'
-import { TERRAIN_CONFIGS, COLONY_SECTOR_ID } from '@/systems/sectorGen'
+import { TERRAIN_CONFIGS } from '@/systems/sectorGen'
 import type { Sector, SurveyMission, OutpostLaunch, Outpost } from '@/types/moon'
 
 const moon = useMoonStore()
@@ -214,6 +257,54 @@ function hexPx(q: number): number {
 
 function hexPy(q: number, r: number): number {
   return hexSize * (Math.sqrt(3) / 2 * q + Math.sqrt(3) * r)
+}
+
+// ── Contour and grid overlays ──
+
+const contourRadii = computed(() => {
+  const radii: number[] = []
+  for (let ring = 1; ring <= 4; ring++) {
+    radii.push(hexSize * Math.sqrt(3) * ring * 0.9)
+  }
+  return radii
+})
+
+const gridLines = computed(() => {
+  const lines: { key: string; x1: number; y1: number; x2: number; y2: number }[] = []
+  const span = 200
+  const step = 50
+  for (let x = -span; x <= span; x += step) {
+    lines.push({ key: `v${x}`, x1: x, y1: -span, x2: x, y2: span })
+  }
+  for (let y = -span; y <= span; y += step) {
+    lines.push({ key: `h${y}`, x1: -span, y1: y, x2: span, y2: y })
+  }
+  return lines
+})
+
+// ── Ping system ──
+
+const pingReady = computed(() => {
+  return !moon.pingCharging && game.totalPlaytimeMs >= moon.pingCooldownUntil
+})
+
+const pingOnCooldown = computed(() => {
+  return !moon.pingCharging && game.totalPlaytimeMs < moon.pingCooldownUntil
+})
+
+const pingCooldownDisplay = computed(() => {
+  const remaining = Math.max(0, moon.pingCooldownUntil - game.totalPlaytimeMs)
+  return Math.ceil(remaining / 1000)
+})
+
+const pingChargePercent = computed(() => {
+  if (!moon.pingCharging) return 0
+  const elapsed = game.totalPlaytimeMs - moon.pingChargeStartedAt
+  return Math.min(100, (elapsed / PING_CHARGE_MS) * 100)
+})
+
+function doPing() {
+  moon.initiatePing(game.totalPlaytimeMs)
 }
 
 // ── Sector selection ──
@@ -264,11 +355,6 @@ function totalStockpile(outpost: Outpost): number {
 }
 
 // ── Actions ──
-
-function doScan(sectorId: string) {
-  moon.queueScan(sectorId)
-  selectedSector.value = null
-}
 
 function confirmCrew() {
   if (!selectedSector.value || !crewSelectionValid.value) return
@@ -374,6 +460,7 @@ function launchPos(launch: OutpostLaunch): { x: number; y: number } | null {
   left: 0;
   right: 0;
   display: flex;
+  align-items: center;
   gap: 16px;
   padding: 6px 12px;
   padding-top: calc(6px + var(--safe-top));
@@ -403,13 +490,67 @@ function launchPos(launch: OutpostLaunch): { x: number; y: number } | null {
 .hud-value.amber { color: var(--amber); }
 .hud-value.cyan { color: var(--cyan); }
 
-.scanning-indicator {
-  animation: pulse-opacity 1.5s ease-in-out infinite;
+/* ── Ping button ── */
+
+.ping-btn {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.05em;
+  padding: 4px 10px;
+  border: 1px solid var(--cyan);
+  background: transparent;
+  color: var(--cyan);
+  cursor: pointer;
+  min-height: 28px;
+  min-width: 64px;
 }
 
-@keyframes pulse-opacity {
-  0%, 100% { opacity: 0.3; }
-  50% { opacity: 1; }
+.ping-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+  border-color: var(--accent-muted);
+  color: var(--text-muted);
+}
+
+.ping-btn.charging {
+  border-color: var(--amber);
+  color: var(--amber);
+}
+
+.ping-btn.cooldown {
+  border-color: var(--accent-muted);
+  color: var(--text-muted);
+}
+
+.ping-btn:not(:disabled):hover {
+  background: rgba(126, 207, 255, 0.08);
+}
+
+.ping-label {
+  font-weight: 700;
+}
+
+.ping-cooldown-text {
+  font-size: 9px;
+  opacity: 0.7;
+}
+
+.ping-progress-bar {
+  width: 32px;
+  height: 4px;
+  background: rgba(245, 158, 11, 0.15);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.ping-progress-fill {
+  height: 100%;
+  background: var(--amber);
+  transition: width 0.3s linear;
 }
 
 /* ── SVG ── */

@@ -9,23 +9,20 @@ import type {
   Deposit,
   DepositType,
   DepositQuality,
-  ScanSignature,
-  SurveyIncident,
   OutpostStockpile,
 } from '@/types/moon'
 import {
   generateSectors,
-  getAdjacentSectorIds,
   travelTimeMs,
   TERRAIN_CONFIGS,
-  COLONY_SECTOR_ID,
   hexDistance,
 } from '@/systems/sectorGen'
 import { uid } from '@/stores/gameStore'
 
 // ── Constants ─────────────────────────────────────────────────────────
 
-export const SCAN_DURATION_MS = 45_000
+export const PING_COOLDOWN_MS = 60_000
+export const PING_CHARGE_MS = 5_000
 export const SURVEY_ONSITE_MS = 90_000
 export const OUTPOST_EXTRACT_INTERVAL_MS = 10_000
 export const OUTPOST_LAUNCH_LOAD_MS = 15_000
@@ -82,9 +79,9 @@ function freshMoonState(): MoonState {
     outposts: [],
     surveyMissions: [],
     outpostLaunches: [],
-    scanQueue: [],
-    activeScanId: null,
-    scanStartedAt: 0,
+    pingCooldownUntil: 0,
+    pingCharging: false,
+    pingChargeStartedAt: 0,
   }
 }
 
@@ -94,14 +91,8 @@ export const useMoonStore = defineStore('moon', {
   state: (): MoonState => freshMoonState(),
 
   getters: {
-    scannableSectors(s): Sector[] {
-      return s.sectors.filter(
-        (sec) =>
-          sec.status === 'visible' &&
-          sec.id !== COLONY_SECTOR_ID &&
-          !s.scanQueue.includes(sec.id) &&
-          s.activeScanId !== sec.id,
-      )
+    canPing(s): boolean {
+      return !s.pingCharging && s.pingCooldownUntil <= 0
     },
 
     availableForOutpost(s): Sector[] {
@@ -150,86 +141,86 @@ export const useMoonStore = defineStore('moon', {
     initialize(seed: number) {
       const state = freshMoonState()
       state.sectors = generateSectors(seed, 3)
-      this.$patch(state)
-    },
 
-    // ── Scanning ──
-
-    queueScan(sectorId: string) {
-      const sector = this.sectors.find((s) => s.id === sectorId)
-      if (!sector || sector.status !== 'visible') return
-      if (this.scanQueue.includes(sectorId)) return
-      this.scanQueue.push(sectorId)
-    },
-
-    tickScanning(
-      totalPlaytimeMs: number,
-      pushMessage: (text: string, sev: 'info' | 'warning' | 'critical' | 'event') => void,
-    ) {
-      // Start next scan if idle
-      if (!this.activeScanId && this.scanQueue.length > 0) {
-        const nextId = this.scanQueue.shift()!
-        const sector = this.sectors.find((s) => s.id === nextId)
-        if (sector && sector.status === 'visible') {
-          this.activeScanId = nextId
-          this.scanStartedAt = totalPlaytimeMs
-          sector.status = 'scanning'
-          pushMessage(`Orbital scan initiated: sector ${sector.q},${sector.r} (${TERRAIN_CONFIGS[sector.terrain].label}).`, 'info')
-        } else {
-          this.activeScanId = null
+      // Ring 0 is already 'surveyed' (colony). Ring 1 should start as 'scanned' with deposits generated.
+      for (const sector of state.sectors) {
+        const dist = hexDistance(0, 0, sector.q, sector.r)
+        if (Math.round(dist) === 1) {
+          sector.status = 'scanned'
+          // Generate deposit for ring 1 sectors
+          const terrainConf = TERRAIN_CONFIGS[sector.terrain]
+          if (Math.random() < 0.7 && terrainConf.depositTypes.length > 0) {
+            const depositType = terrainConf.depositTypes[Math.floor(Math.random() * terrainConf.depositTypes.length)]
+            const quality = pickQuality()
+            sector.scanSignature = {
+              depositType,
+              qualityHint: QUALITY_HINTS[quality],
+            }
+            sector._pendingDeposit = { type: depositType, quality }
+          }
         }
       }
 
-      // Check scan completion
-      if (this.activeScanId) {
-        const elapsed = totalPlaytimeMs - this.scanStartedAt
-        if (elapsed >= SCAN_DURATION_MS) {
-          const sector = this.sectors.find((s) => s.id === this.activeScanId)
-          if (sector) {
-            sector.status = 'scanned'
+      this.$patch(state)
+    },
 
-            // 70% chance a deposit is found
-            if (Math.random() < 0.7) {
-              const terrainConfig = TERRAIN_CONFIGS[sector.terrain]
-              const depositType =
-                terrainConfig.depositTypes[
-                  Math.floor(Math.random() * terrainConfig.depositTypes.length)
-                ]
-              const quality = pickQuality()
+    // ── Ping ──
 
-              // Store pending deposit for survey confirmation (serialized with state)
-              sector._pendingDeposit = { type: depositType, quality }
+    initiatePing(totalPlaytimeMs: number) {
+      if (this.pingCharging) return
+      if (totalPlaytimeMs < this.pingCooldownUntil) return
+      this.pingCharging = true
+      this.pingChargeStartedAt = totalPlaytimeMs
+    },
 
-              sector.scanSignature = {
-                depositType,
-                qualityHint: QUALITY_HINTS[quality],
-              }
+    tickPing(
+      totalPlaytimeMs: number,
+      pushMessage: (text: string, sev: 'info' | 'warning' | 'critical' | 'event') => void,
+    ) {
+      if (!this.pingCharging) return
 
-              pushMessage(
-                `Scan complete: ${QUALITY_HINTS[quality]} of ${depositType} detected in sector ${sector.q},${sector.r}.`,
-                'event',
-              )
-            } else {
-              sector.scanSignature = null
-              pushMessage(
-                `Scan complete: No significant deposits in sector ${sector.q},${sector.r}.`,
-                'info',
-              )
+      const elapsed = totalPlaytimeMs - this.pingChargeStartedAt
+      if (elapsed < PING_CHARGE_MS) return
+
+      // Ping fires — find the nearest ring of hidden sectors and reveal them
+      this.pingCharging = false
+      this.pingCooldownUntil = totalPlaytimeMs + PING_COOLDOWN_MS
+
+      let revealed = 0
+      for (let ring = 1; ring <= 3; ring++) {
+        const hiddenInRing = this.sectors.filter((s) => {
+          const dist = hexDistance(0, 0, s.q, s.r)
+          return Math.round(dist) === ring && s.status === 'hidden'
+        })
+
+        if (hiddenInRing.length === 0) continue
+
+        for (const sector of hiddenInRing) {
+          sector.status = 'scanned'
+
+          // Generate deposit signature
+          const terrainConf = TERRAIN_CONFIGS[sector.terrain]
+          const hasDeposit = Math.random() < 0.7
+          if (hasDeposit && terrainConf.depositTypes.length > 0) {
+            const depositType = terrainConf.depositTypes[Math.floor(Math.random() * terrainConf.depositTypes.length)]
+            const quality = pickQuality()
+            sector.scanSignature = {
+              depositType,
+              qualityHint: QUALITY_HINTS[quality],
             }
-
-            // Reveal adjacent hidden sectors
-            const adjacentIds = getAdjacentSectorIds(sector.q, sector.r)
-            for (const adjId of adjacentIds) {
-              const adj = this.sectors.find((s) => s.id === adjId)
-              if (adj && adj.status === 'hidden') {
-                adj.status = 'visible'
-              }
-            }
+            sector._pendingDeposit = { type: depositType, quality }
           }
-
-          this.activeScanId = null
-          this.scanStartedAt = 0
+          revealed++
         }
+
+        // Only reveal one ring per ping
+        break
+      }
+
+      if (revealed > 0) {
+        pushMessage(`Orbital ping complete — ${revealed} sector${revealed > 1 ? 's' : ''} revealed.`, 'event')
+      } else {
+        pushMessage(`Orbital ping: all sectors in range already mapped.`, 'info')
       }
     },
 

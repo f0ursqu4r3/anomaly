@@ -4,24 +4,103 @@
     :class="['sector-hex', { hidden: sector.status === 'hidden' }]"
     @click="sector.status !== 'hidden' && $emit('select', sector)"
   >
-    <!-- Hex polygon -->
-    <polygon
-      :points="hexPoints"
-      :fill="sector.status === 'hidden' ? 'var(--bg-deep)' : terrainConfig.bgColor"
-      :stroke="sector.status === 'hidden' ? 'var(--accent-dim)' : terrainConfig.color"
-      stroke-width="1.5"
-      :opacity="sector.status === 'hidden' ? 0.3 : 1"
+    <!-- Organic hex shape -->
+    <path
+      :d="organicHexPath"
+      :fill="sector.status === 'hidden' ? '#08080f' : terrainConfig.bgColor"
+      :stroke="sector.status === 'hidden' ? 'none' : terrainConfig.color"
+      :stroke-width="sector.status === 'hidden' ? 0 : 0.5"
+      :stroke-opacity="0.15"
+      :opacity="sector.status === 'hidden' ? 0.4 : 1"
     />
 
-    <!-- Fog overlay for hidden sectors -->
-    <polygon
-      v-if="sector.status === 'hidden'"
-      :points="hexPoints"
-      fill="var(--bg-deep)"
-      opacity="0.7"
-    />
+    <!-- Hidden sector: subtle noise dots -->
+    <template v-if="sector.status === 'hidden'">
+      <circle
+        v-for="(dot, i) in noiseDots"
+        :key="'n' + i"
+        :cx="dot.x"
+        :cy="dot.y"
+        :r="dot.r"
+        fill="#0a0a14"
+        :opacity="dot.o"
+      />
+    </template>
 
+    <!-- Scanned / Surveyed terrain features -->
     <template v-if="sector.status !== 'hidden'">
+      <!-- Rocky: scattered boulders -->
+      <template v-if="sector.terrain === 'rocky'">
+        <circle
+          v-for="(b, i) in rockyFeatures"
+          :key="'b' + i"
+          :cx="b.x"
+          :cy="b.y"
+          :r="b.r"
+          :fill="terrainConfig.color"
+          :opacity="b.o"
+        />
+      </template>
+
+      <!-- Ice: soft lighter patches -->
+      <template v-if="sector.terrain === 'ice'">
+        <ellipse
+          v-for="(p, i) in iceFeatures"
+          :key="'ip' + i"
+          :cx="p.x"
+          :cy="p.y"
+          :rx="p.rx"
+          :ry="p.ry"
+          :fill="terrainConfig.color"
+          :opacity="p.o"
+        />
+      </template>
+
+      <!-- Volcanic: warm glow spots -->
+      <template v-if="sector.terrain === 'volcanic'">
+        <circle
+          v-for="(g, i) in volcanicFeatures"
+          :key="'vg' + i"
+          :cx="g.x"
+          :cy="g.y"
+          :r="g.r"
+          :fill="terrainConfig.color"
+          :opacity="g.o"
+          :filter="i < 2 ? 'url(#glow)' : undefined"
+        />
+      </template>
+
+      <!-- Crater: circular ring features -->
+      <template v-if="sector.terrain === 'crater'">
+        <circle
+          v-for="(c, i) in craterFeatures"
+          :key="'cr' + i"
+          :cx="c.x"
+          :cy="c.y"
+          :r="c.r"
+          fill="none"
+          :stroke="terrainConfig.color"
+          :stroke-width="0.8"
+          :opacity="c.o"
+        />
+      </template>
+
+      <!-- Canyon: thin line striations -->
+      <template v-if="sector.terrain === 'canyon'">
+        <line
+          v-for="(l, i) in canyonFeatures"
+          :key="'cn' + i"
+          :x1="l.x1"
+          :y1="l.y1"
+          :x2="l.x2"
+          :y2="l.y2"
+          :stroke="terrainConfig.color"
+          :stroke-width="0.7"
+          :opacity="l.o"
+          stroke-linecap="round"
+        />
+      </template>
+
       <!-- Terrain label -->
       <text
         x="0"
@@ -30,7 +109,7 @@
         :fill="terrainConfig.color"
         :font-size="hexSize * 0.2"
         font-family="var(--font-mono)"
-        opacity="0.8"
+        opacity="0.7"
       >
         {{ terrainConfig.label.toUpperCase() }}
       </text>
@@ -78,19 +157,15 @@
         {{ sector.deposit.quality.toUpperCase() }} {{ sector.deposit.type.toUpperCase() }}
       </text>
 
-      <!-- Scanning indicator -->
-      <text
-        v-if="sector.status === 'scanning'"
-        x="0"
-        :y="hexSize * 0.15"
-        text-anchor="middle"
-        fill="var(--amber)"
-        :font-size="hexSize * 0.18"
-        font-family="var(--font-mono)"
-        class="scanning-text"
-      >
-        SCANNING...
-      </text>
+      <!-- Surveyed confirmed indicator -->
+      <circle
+        v-if="sector.status === 'surveyed' && sector.deposit"
+        :cx="hexSize * 0.3"
+        :cy="-hexSize * 0.3"
+        :r="hexSize * 0.06"
+        fill="var(--green)"
+        opacity="0.8"
+      />
     </template>
   </g>
 </template>
@@ -111,17 +186,160 @@ defineEmits<{ select: [sector: Sector] }>()
 
 const terrainConfig = computed(() => TERRAIN_CONFIGS[props.sector.terrain])
 
-// Flat-top hexagon points
-const hexPoints = computed(() => {
-  const s = props.hexSize * 0.9
-  const points: string[] = []
+// Seeded random from sector id for deterministic features
+function sectorRng(seed: string) {
+  let h = 0
+  for (let i = 0; i < seed.length; i++) {
+    h = Math.imul(31, h) + seed.charCodeAt(i) | 0
+  }
+  return () => {
+    h = Math.imul(h ^ (h >>> 15), 1 | h)
+    h = (h + Math.imul(h ^ (h >>> 7), 61 | h)) ^ h
+    return ((h ^ (h >>> 14)) >>> 0) / 4294967296
+  }
+}
+
+// Organic hex path with slight vertex irregularity
+const organicHexPath = computed(() => {
+  const s = props.hexSize * 0.92
+  const rand = sectorRng(props.sector.id)
+  const points: [number, number][] = []
+
   for (let i = 0; i < 6; i++) {
     const angle = (Math.PI / 180) * (60 * i)
-    const x = s * Math.cos(angle)
-    const y = s * Math.sin(angle)
-    points.push(`${x.toFixed(2)},${y.toFixed(2)}`)
+    const jitter = 1 + (rand() - 0.5) * 0.12
+    const x = s * jitter * Math.cos(angle)
+    const y = s * jitter * Math.sin(angle)
+    points.push([x, y])
   }
-  return points.join(' ')
+
+  // Build smooth path using quadratic curves between midpoints
+  let d = ''
+  for (let i = 0; i < points.length; i++) {
+    const curr = points[i]
+    const next = points[(i + 1) % points.length]
+    const midX = (curr[0] + next[0]) / 2
+    const midY = (curr[1] + next[1]) / 2
+
+    if (i === 0) {
+      const prev = points[points.length - 1]
+      const startMidX = (prev[0] + curr[0]) / 2
+      const startMidY = (prev[1] + curr[1]) / 2
+      d += `M ${startMidX.toFixed(2)} ${startMidY.toFixed(2)} `
+    }
+
+    d += `Q ${curr[0].toFixed(2)} ${curr[1].toFixed(2)} ${midX.toFixed(2)} ${midY.toFixed(2)} `
+  }
+  d += 'Z'
+  return d
+})
+
+// Noise dots for hidden sectors
+const noiseDots = computed(() => {
+  const rand = sectorRng(props.sector.id + '-noise')
+  const s = props.hexSize * 0.7
+  const dots: { x: number; y: number; r: number; o: number }[] = []
+  for (let i = 0; i < 8; i++) {
+    dots.push({
+      x: (rand() - 0.5) * s * 2,
+      y: (rand() - 0.5) * s * 2,
+      r: rand() * 2 + 0.5,
+      o: rand() * 0.15 + 0.05,
+    })
+  }
+  return dots
+})
+
+// Terrain-specific features, deterministic per sector (separate computeds for type safety)
+
+function makeFeatureRng() {
+  return sectorRng(props.sector.id + '-feat')
+}
+
+const rockyFeatures = computed(() => {
+  const rand = makeFeatureRng()
+  const s = props.hexSize * 0.55
+  const features: { x: number; y: number; r: number; o: number }[] = []
+  const count = 5 + Math.floor(rand() * 4)
+  for (let i = 0; i < count; i++) {
+    features.push({
+      x: (rand() - 0.5) * s * 2,
+      y: (rand() - 0.5) * s * 2,
+      r: rand() * 2.5 + 0.8,
+      o: rand() * 0.12 + 0.04,
+    })
+  }
+  return features
+})
+
+const iceFeatures = computed(() => {
+  const rand = makeFeatureRng()
+  const s = props.hexSize * 0.55
+  const features: { x: number; y: number; rx: number; ry: number; o: number }[] = []
+  const count = 3 + Math.floor(rand() * 3)
+  for (let i = 0; i < count; i++) {
+    features.push({
+      x: (rand() - 0.5) * s * 1.6,
+      y: (rand() - 0.5) * s * 1.6,
+      rx: rand() * 6 + 3,
+      ry: rand() * 4 + 2,
+      o: rand() * 0.08 + 0.03,
+    })
+  }
+  return features
+})
+
+const volcanicFeatures = computed(() => {
+  const rand = makeFeatureRng()
+  const s = props.hexSize * 0.55
+  const features: { x: number; y: number; r: number; o: number }[] = []
+  const count = 3 + Math.floor(rand() * 3)
+  for (let i = 0; i < count; i++) {
+    features.push({
+      x: (rand() - 0.5) * s * 1.6,
+      y: (rand() - 0.5) * s * 1.6,
+      r: rand() * 4 + 1.5,
+      o: rand() * 0.15 + 0.05,
+    })
+  }
+  return features
+})
+
+const craterFeatures = computed(() => {
+  const rand = makeFeatureRng()
+  const s = props.hexSize * 0.55
+  const features: { x: number; y: number; r: number; o: number }[] = []
+  const count = 2 + Math.floor(rand() * 2)
+  for (let i = 0; i < count; i++) {
+    features.push({
+      x: (rand() - 0.5) * s * 1.4,
+      y: (rand() - 0.5) * s * 1.4,
+      r: rand() * 6 + 3,
+      o: rand() * 0.1 + 0.04,
+    })
+  }
+  return features
+})
+
+const canyonFeatures = computed(() => {
+  const rand = makeFeatureRng()
+  const s = props.hexSize * 0.55
+  const features: { x1: number; y1: number; x2: number; y2: number; o: number }[] = []
+  const count = 4 + Math.floor(rand() * 3)
+  for (let i = 0; i < count; i++) {
+    const baseAngle = rand() * Math.PI * 0.4 + Math.PI * 0.3
+    const cx = (rand() - 0.5) * s * 1.4
+    const cy = (rand() - 0.5) * s * 1.4
+    const len = rand() * 8 + 4
+    features.push({
+      x1: cx - Math.cos(baseAngle) * len,
+      y1: cy - Math.sin(baseAngle) * len,
+      x2: cx + Math.cos(baseAngle) * len,
+      y2: cy + Math.sin(baseAngle) * len,
+      o: rand() * 0.1 + 0.04,
+    })
+  }
+  return features
 })
 
 // Small upward triangle for outpost marker
@@ -138,20 +356,11 @@ const outpostTrianglePoints = computed(() => {
   transition: opacity 0.2s;
 }
 
-.sector-hex:hover:not(.hidden) polygon:first-child {
+.sector-hex:hover:not(.hidden) path {
   filter: brightness(1.3);
 }
 
 .sector-hex.hidden {
   pointer-events: none;
-}
-
-@keyframes pulse-opacity {
-  0%, 100% { opacity: 0.4; }
-  50% { opacity: 1; }
-}
-
-.scanning-text {
-  animation: pulse-opacity 1.5s ease-in-out infinite;
 }
 </style>

@@ -714,7 +714,7 @@ export const useGameStore = defineStore('game', {
 
       // Moon systems
       const moon = useMoonStore()
-      moon.tickScanning(this.totalPlaytimeMs, (text, sev) => this.pushMessage(text, sev))
+      moon.tickPing(this.totalPlaytimeMs, (text, sev) => this.pushMessage(text, sev))
       moon.tickSurveys(
         this.totalPlaytimeMs,
         (text, sev) => this.pushMessage(text, sev),
