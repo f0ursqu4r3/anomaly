@@ -60,6 +60,10 @@
     <HazardAlert />
     <ResourceHud />
 
+    <div v-if="moon.awayCount > 0" class="away-indicator mono">
+      {{ moon.awayCount }} CREW DEPLOYED
+    </div>
+
     <PauseButton />
 
     <div v-if="game.isPaused" class="pause-overlay">
@@ -80,6 +84,7 @@ import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useGameStore } from '@/stores/gameStore'
 import type { Building } from '@/stores/gameStore'
 import { useSettingsStore } from '@/stores/settingsStore'
+import { useMoonStore } from '@/stores/moonStore'
 import { useColonistMovement } from '@/composables/useColonistMovement'
 import { ZONES, PATH_EDGES, ZONE_MAP } from '@/systems/mapLayout'
 import HazardAlert from './HazardAlert.vue'
@@ -92,6 +97,7 @@ import BuildingInfo from './BuildingInfo.vue'
 
 const game = useGameStore()
 const settings = useSettingsStore()
+const moon = useMoonStore()
 const { positions, getOrCreate } = useColonistMovement()
 
 const zones = ZONES
@@ -346,5 +352,18 @@ onUnmounted(() => cancelAnimationFrame(fpsRaf))
   letter-spacing: 8px;
   text-transform: uppercase;
   opacity: 0.6;
+}
+
+.away-indicator {
+  position: absolute;
+  bottom: 36px;
+  left: 8px;
+  z-index: 10;
+  font-size: 8px;
+  color: var(--amber);
+  padding: 2px 6px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--accent-dim);
+  border-radius: 2px;
 }
 </style>
