@@ -1,6 +1,7 @@
-import type { Action, ActionType, Trait } from '@/types/colonist'
+import type { Action, ActionType, Trait, SkillTrait, Specialization } from '@/types/colonist'
 import type { ColonyState, Building, Directive, SupplyDrop } from '@/stores/gameStore'
 import { ZONE_FOR_BUILDING, ZONE_MAP, findPath } from '@/systems/mapLayout'
+import { getEfficiencyMultiplier, getBondBonus } from '@/systems/colonistIdentity'
 
 // ── Constants ──
 
@@ -66,6 +67,13 @@ export interface ColonistLike {
   energy: number
   morale: number
   trait: Trait
+  skillTrait: SkillTrait
+  extractionXP: number
+  engineeringXP: number
+  medicalXP: number
+  specialization: Specialization | null
+  bonds: Record<string, number>
+  lastBreakdownAt: number | null
   currentAction: Action | null
   currentZone: string
 }
@@ -86,7 +94,12 @@ export function updateNeeds(colonist: ColonistLike): void {
     } else if (action.type === 'wander') {
       // No drain while wandering
     } else {
-      colonist.energy = Math.max(0, colonist.energy - ENERGY_DRAIN_WORKING * mod.energyDrainMult)
+      // Working energy drain — Night Owl reduces drain at low energy
+      if (colonist.skillTrait === 'nightOwl' && colonist.energy < 30) {
+        colonist.energy = Math.max(0, colonist.energy - ENERGY_DRAIN_WORKING * mod.energyDrainMult * 0.3)
+      } else {
+        colonist.energy = Math.max(0, colonist.energy - ENERGY_DRAIN_WORKING * mod.energyDrainMult)
+      }
     }
   }
 
@@ -145,7 +158,7 @@ export function advanceAction(colonist: ColonistLike): boolean {
       if (action.walkPath.length <= 1) {
         // Reached final zone — start the actual work action
         action.walkPath = undefined
-        action.remainingTicks = getActionDuration(action.type, colonist.trait)
+        action.remainingTicks = getActionDuration(action.type, colonist)
       } else {
         // More segments — set ticks for next hop
         action.remainingTicks = walkTicksBetween(action.walkPath[0], action.walkPath[1])
@@ -162,10 +175,13 @@ export function advanceAction(colonist: ColonistLike): boolean {
   return false
 }
 
-function getActionDuration(type: ActionType, trait: Trait): number {
+function getActionDuration(type: ActionType, colonist: ColonistLike): number {
   const [min, max] = DURATION[type]
   const base = min + Math.floor(Math.random() * (max - min + 1))
-  return Math.max(1, Math.round(base * TRAIT_MODS[trait].durationMult))
+  const traitMult = TRAIT_MODS[colonist.trait].durationMult
+  const efficiency = getEfficiencyMultiplier(colonist as any, type)
+  // Higher efficiency = shorter duration
+  return Math.max(1, Math.round(base * traitMult / efficiency))
 }
 
 // ── Utility Scoring ──
@@ -330,6 +346,20 @@ export function selectAction(
     c.score *= 0.9 + Math.random() * 0.2
   }
 
+  // Bond partner proximity bonus — prefer actions in partner's zone
+  if (colonist.bonds) {
+    for (const c of candidates) {
+      for (const [partnerId, affinity] of Object.entries(colonist.bonds)) {
+        if (affinity < 20) continue
+        const partner = state.colonists.find(p => p.id === partnerId && p.health > 0)
+        if (partner && partner.currentZone === c.targetZone) {
+          c.score *= 1.1 // small preference
+          break
+        }
+      }
+    }
+  }
+
   candidates.sort((a, b) => b.score - a.score)
   const best = candidates[0]
 
@@ -348,7 +378,7 @@ export function selectAction(
     type: best.type,
     targetZone: best.targetZone,
     targetId: best.targetId,
-    remainingTicks: needsWalk ? firstSegmentTicks : getActionDuration(best.type, colonist.trait),
+    remainingTicks: needsWalk ? firstSegmentTicks : getActionDuration(best.type, colonist),
     walkPath: needsWalk ? walkPath : undefined,
   }
 }
