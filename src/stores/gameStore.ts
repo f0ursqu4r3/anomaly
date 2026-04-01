@@ -8,6 +8,7 @@ import { getBuildingPosition, getLandingPosition } from '@/systems/mapLayout'
 import { updateNeeds, checkInterrupt, advanceAction, selectAction } from '@/systems/colonistAI'
 import { generateChatter } from '@/systems/radioChatter'
 import { useSettingsStore } from '@/stores/settingsStore'
+import { useMoonStore } from '@/stores/moonStore'
 
 // ── Types ──────────────────────────────────────────────────────────
 
@@ -401,6 +402,12 @@ export const useGameStore = defineStore('game', {
   getters: {
     aliveColonists: (s) => s.colonists.filter((c) => c.health > 0),
 
+    colonyColonists(s): Colonist[] {
+      const moon = useMoonStore()
+      const away = moon.awayColonistIds
+      return s.colonists.filter(c => c.health > 0 && !away.has(c.id))
+    },
+
     activeEngineers: (s) => s.colonists.filter(
       c => c.health > 0 && c.currentAction?.type === 'engineer' && !c.currentAction?.walkPath?.length
     ),
@@ -524,12 +531,12 @@ export const useGameStore = defineStore('game', {
       this.totalPlaytimeMs += dtMs
       this.lastTickAt = Date.now()
 
-      const alive = this.aliveColonists
-      if (alive.length === 0) {
+      if (this.aliveColonists.length === 0) {
         this.gameOver = true
         this.gameOverReason = 'All colonists have perished.'
         return
       }
+      const alive = this.colonyColonists
 
       // Colonist AI
       for (const c of alive) {
@@ -702,6 +709,30 @@ export const useGameStore = defineStore('game', {
       }
 
       this.processSupplyDrops(dtMs)
+
+      // Moon systems
+      const moon = useMoonStore()
+      moon.tickScanning(this.totalPlaytimeMs, (text, sev) => this.pushMessage(text, sev))
+      moon.tickSurveys(
+        this.totalPlaytimeMs,
+        (text, sev) => this.pushMessage(text, sev),
+        (colonistId) => {
+          const c = this.colonists.find(col => col.id === colonistId)
+          if (c) {
+            c.currentZone = 'habitat'
+            c.currentAction = null
+          }
+        },
+      )
+      moon.tickOutposts(this.totalPlaytimeMs, dtMs, (text, sev) => this.pushMessage(text, sev))
+      moon.tickLaunches(
+        this.totalPlaytimeMs,
+        (metals, ice) => {
+          this.metals += metals
+          this.ice += ice
+        },
+        (text, sev) => this.pushMessage(text, sev),
+      )
 
       // Hazards
       this.checkHazards()
@@ -989,6 +1020,8 @@ export const useGameStore = defineStore('game', {
     // ── Reset ──
     resetGame() {
       Object.assign(this, freshState())
+      const moon = useMoonStore()
+      moon.initialize(Date.now())
     },
 
     // ── Offline ──
@@ -1061,6 +1094,9 @@ export const useGameStore = defineStore('game', {
           return
         }
       }
+      // No save found — initialize moon for new game
+      const moon = useMoonStore()
+      moon.initialize(Date.now())
     },
 
     migrateState() {
