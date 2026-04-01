@@ -48,15 +48,15 @@ The game can't idle. A playtester left for 45 minutes on the safest directive an
 
 These add meaningful progression and decision-making to the existing systems without new major mechanics. Each is independently shippable.
 
-### Colonist Identity
+### ~~Colonist Identity~~ ✓
 
-Colonists are interchangeable. Give them reasons to care — especially now that you're choosing who to risk on surveys and who to station at remote outposts:
+~~Colonists are interchangeable. Give them reasons to care.~~ Colonists now have individual identity across five systems:
 
-- **Traits**: 1-2 on arrival ("Steady Hands" +20% repair speed, "Claustrophobic" morale drains at outposts, "Geologist" +10% deposit yield, "Pathfinder" reduced survey travel time)
-- **Experience**: XP in current role over time. Leveled extractors extract faster, leveled engineers repair quicker. XP carries across outpost assignments
-- **Morale**: Affected by deaths, hazards, isolation at outposts, idle time. Low = slower. High = small bonus. Events in message log ("Riko and Juno argued", "Sable found a crystal — crew spirits lifted")
-- **Relationships**: Co-workers at the same outpost or zone build rapport → small efficiency bonus. Losing a crewmate they're bonded with tanks morale
-- **Specializations**: At level thresholds (Extractor → Prospector, Engineer → Mechanic). Prospectors find richer deposits on surveys. Mechanics reduce outpost hazard damage
+- **Skill Traits**: 8 traits assigned on arrival (Steady Hands, Geologist, Pathfinder, Field Medic, Claustrophobic, Iron Stomach, Tinkerer, Night Owl). 15% chance of negative trait. Visible in crew selector.
+- **Experience**: 3 XP tracks (extraction, engineering, medical). +1 XP per completed action. Levels 1-5, +5% efficiency per level. XP carries across outpost assignments. Offline XP approximation via directive ratios.
+- **Morale**: Reactive to colony events — deaths (-15, -30 bonded), hazards (-5), survey returns (+5), outpost isolation (-1/60s, -2 claustrophobic), idle drain. Continuous multiplier: >80 = +10%, <30 = -20%. Breakdown at <15 (30-60s forced rest, 5min cooldown).
+- **Relationships**: Co-location affinity (+1/60s), decay when apart (-1/120s). Bond at 20+ affinity (max 3). Bonded pairs: +10% efficiency co-located, -30 morale on partner death, AI prefers partner's zone. Radio chatter on formation and co-working.
+- **Specializations**: Auto-unlock at level 3 (25 XP). Prospector (+15% survey yield, +10% extraction), Mechanic (+50% repair speed, -10% hazard damage), Medic (2x healing, passive 1 HP/60s to zone). One per colonist.
 
 ### Terrain Mechanics
 

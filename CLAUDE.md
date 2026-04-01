@@ -20,19 +20,32 @@ Moon colony idle game: Vue 3 + Pinia + TypeScript, wrapped with Capacitor for mo
 
 The game runs on a 1-second tick loop (`useGameLoop.ts` → `game.tick()`). Each tick:
 
-1. Reassign colonist roles based on active directive (with emergency overrides at <20% air/power)
+1. Colonist AI: update needs, advance/complete actions, award XP on completion, check for breakdowns, select next action via utility scoring
 2. Calculate power and air production/consumption
 3. Extract resources at colony and outposts, process survey missions and outpost launches, accumulate credits
-4. Med bay healing / health drain when resources critical
-5. Process in-transit shipments → spawn supply drops on arrival
-6. Check hazards (every ~15s, chance scales with depth)
-7. Generate status messages (every 10 ticks)
+4. Med bay healing / health drain when resources critical (Iron Stomach trait reduces drain 30%)
+5. Detect colonist deaths → apply morale events to survivors (bonded partners hit harder)
+6. Process in-transit shipments → spawn supply drops on arrival
+7. Radio chatter — action transitions, bond working, high/low morale
+8. Update colonist bonds (co-location affinity) and idle morale drain
+9. Check hazards (every ~15s, chance scales with depth) → morale impact on all colonists
+10. Generate status messages (every 10 ticks)
 
 Auto-saves every 30 ticks. Save key: `colony-save-v4` via Capacitor Preferences (localStorage fallback).
 
 ### Store Pattern
 
-Two Pinia stores: `gameStore.ts` (~800 lines) holds colony state, getters for derived rates, and actions for mutations. The `ColonyState` interface is the source of truth — resources, colonists, buildings, supply drops, shipments, depth, messages, directives. `moonStore.ts` holds sector and outpost state for the moon surface — scanned sectors, survey missions, active outposts, and launch queues.
+Two Pinia stores: `gameStore.ts` holds colony state, getters for derived rates, and actions for mutations. The `ColonyState` interface is the source of truth — resources, colonists, buildings, supply drops, shipments, depth, messages, directives. `moonStore.ts` holds sector and outpost state for the moon surface — scanned sectors, survey missions, active outposts, and launch queues.
+
+### Colonist Identity System
+
+Each colonist has a personality trait (drives AI behavior) and a skill trait (gameplay bonuses). Identity is managed across three modules:
+
+- **`types/colonist.ts`**: `Trait` (personality), `SkillTrait` (8 skill traits: Steady Hands, Geologist, Pathfinder, Field Medic, Claustrophobic, Iron Stomach, Tinkerer, Night Owl), `Specialization`, `XPTrack`, level thresholds
+- **`systems/colonistIdentity.ts`**: XP accrual (1 per completed action, 3 tracks), bond updates (co-location affinity ±1 every 60-120s, threshold 20, max 3), morale events (death/hazard/survey/isolation/idle), breakdown checks (<15 morale), efficiency multiplier calculation, specialization unlock (level 3 → Prospector/Mechanic/Medic)
+- **`systems/colonistAI.ts`**: Utility-based action selection incorporating efficiency multiplier (XP + skill trait + specialization + morale + bond = additive), Night Owl energy handling, bond partner zone preference
+
+Efficiency bonuses are additive: `1.0 + xpLevel*0.05 + skillTrait + specialization + morale + bond`. Max realistic ~30-40%.
 
 ### Visual Layer (Separate from Simulation)
 
@@ -69,7 +82,7 @@ Manifest builder (max 4 items, 100kg) → launch (60s cooldown, deducts credits)
 
 - Path alias: `@/*` → `./src/*`
 - TypeScript strict mode, ES2020 target
-- All game constants are defined at top of `gameStore.ts` (rates, costs, thresholds)
+- All game constants are defined at top of `gameStore.ts` (rates, costs, thresholds) and `colonistIdentity.ts` (bond/morale/XP constants)
 - Capacitor plugins for native features (preferences, admob, IAP, notifications)
 - Retro CRT/terminal visual aesthetic (dark palette, monospace, scanlines)
 
