@@ -1,4 +1,5 @@
 import type { ColonyState } from './gameStore'
+import { randomSkillTrait } from '@/types/colonist'
 import {
   AIR_CONSUMPTION_PER_COLONIST,
   O2_PRODUCTION_PER_GENERATOR,
@@ -174,7 +175,7 @@ function landShipments(state: ColonyState, rand: () => number, events: OfflineEv
             ? available[Math.floor(rand() * available.length)]
             : `Crew-${state.colonists.length + 1}`
           const traits = ['hardy', 'diligent', 'social', 'cautious', 'efficient', 'stoic'] as const
-          state.colonists.push({ id: uid(), name, health: 100, energy: 80, morale: 70, trait: traits[Math.floor(rand() * traits.length)], currentAction: null, currentZone: 'habitat' })
+          state.colonists.push({ id: uid(), name, health: 100, energy: 80, morale: 70, trait: traits[Math.floor(rand() * traits.length)], skillTrait: randomSkillTrait(), extractionXP: 0, engineeringXP: 0, medicalXP: 0, specialization: null, bonds: {}, lastBreakdownAt: null, currentAction: null, currentZone: 'habitat' })
           break
         }
         case 'repairKit': {

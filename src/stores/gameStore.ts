@@ -2,8 +2,8 @@ import { defineStore } from 'pinia'
 import { Preferences } from '@capacitor/preferences'
 import { simulateOffline } from './offlineEngine'
 import type { OfflineEvent, OfflineResult } from './offlineEngine'
-import type { Trait, Action } from '@/types/colonist'
-import { randomTrait } from '@/types/colonist'
+import type { Trait, Action, SkillTrait, Specialization } from '@/types/colonist'
+import { randomTrait, randomSkillTrait } from '@/types/colonist'
 import { getBuildingPosition, getLandingPosition } from '@/systems/mapLayout'
 import { updateNeeds, checkInterrupt, advanceAction, selectAction } from '@/systems/colonistAI'
 import { generateChatter } from '@/systems/radioChatter'
@@ -19,6 +19,13 @@ export interface Colonist {
   energy: number
   morale: number
   trait: Trait
+  skillTrait: SkillTrait
+  extractionXP: number
+  engineeringXP: number
+  medicalXP: number
+  specialization: Specialization | null
+  bonds: Record<string, number>
+  lastBreakdownAt: number | null
   currentAction: Action | null
   currentZone: string
 }
@@ -328,8 +335,8 @@ export function uid(): string {
 
 function makeStartingColonists(): Colonist[] {
   return [
-    { id: uid(), name: 'Riko', health: 100, energy: 80, morale: 70, trait: randomTrait(), currentAction: null, currentZone: 'habitat' },
-    { id: uid(), name: 'Sable', health: 100, energy: 80, morale: 70, trait: randomTrait(), currentAction: null, currentZone: 'habitat' },
+    { id: uid(), name: 'Riko', health: 100, energy: 80, morale: 70, trait: randomTrait(), skillTrait: randomSkillTrait(), extractionXP: 0, engineeringXP: 0, medicalXP: 0, specialization: null, bonds: {}, lastBreakdownAt: null, currentAction: null, currentZone: 'habitat' },
+    { id: uid(), name: 'Sable', health: 100, energy: 80, morale: 70, trait: randomTrait(), skillTrait: randomSkillTrait(), extractionXP: 0, engineeringXP: 0, medicalXP: 0, specialization: null, bonds: {}, lastBreakdownAt: null, currentAction: null, currentZone: 'habitat' },
   ]
 }
 
@@ -951,6 +958,9 @@ export const useGameStore = defineStore('game', {
             this.colonists.push({
               id: uid(), name, health: 100,
               energy: 80, morale: 70, trait: randomTrait(),
+              skillTrait: randomSkillTrait(),
+              extractionXP: 0, engineeringXP: 0, medicalXP: 0,
+              specialization: null, bonds: {}, lastBreakdownAt: null,
               currentAction: null, currentZone: 'habitat',
             })
             this.pushMessage(`${name} has joined the colony.`, 'event')
@@ -1136,6 +1146,14 @@ export const useGameStore = defineStore('game', {
         if ((c as any).currentAction === undefined) c.currentAction = null
         if ((c as any).currentZone === undefined) c.currentZone = 'habitat'
         delete (c as any).role
+        // v4→v5: Add identity fields
+        if ((c as any).skillTrait === undefined) c.skillTrait = randomSkillTrait()
+        if ((c as any).extractionXP === undefined) (c as any).extractionXP = 0
+        if ((c as any).engineeringXP === undefined) (c as any).engineeringXP = 0
+        if ((c as any).medicalXP === undefined) (c as any).medicalXP = 0
+        if ((c as any).specialization === undefined) (c as any).specialization = null
+        if ((c as any).bonds === undefined) (c as any).bonds = {}
+        if ((c as any).lastBreakdownAt === undefined) (c as any).lastBreakdownAt = null
       }
 
       // Recalculate building positions with organic scatter
