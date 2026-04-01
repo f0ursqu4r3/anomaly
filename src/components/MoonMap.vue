@@ -81,7 +81,7 @@
           opacity="0.05"
         />
 
-        <!-- Survey team paths -->
+        <!-- Survey team paths (line stays scaled, markers counter-scaled) -->
         <template v-for="mission in moon.activeMissions" :key="mission.id">
           <line
             v-if="missionTarget(mission)"
@@ -90,31 +90,27 @@
             :x2="missionTarget(mission)!.x"
             :y2="missionTarget(mission)!.y"
             stroke="var(--amber)"
-            stroke-width="1"
+            :stroke-width="1 * inverseZoom"
             stroke-dasharray="4 3"
             opacity="0.4"
           />
-          <!-- Team position marker -->
-          <circle
+          <!-- Team position marker (fixed size) -->
+          <g
             v-if="missionPos(mission)"
-            :cx="missionPos(mission)!.x"
-            :cy="missionPos(mission)!.y"
-            r="4"
-            fill="var(--amber)"
-            opacity="0.9"
-          />
+            :transform="`translate(${missionPos(mission)!.x}, ${missionPos(mission)!.y}) scale(${inverseZoom})`"
+          >
+            <circle r="4" fill="var(--amber)" opacity="0.9" />
+          </g>
         </template>
 
-        <!-- Outpost launch markers -->
+        <!-- Outpost launch markers (fixed size) -->
         <template v-for="launch in moon.outpostLaunches" :key="launch.id">
-          <circle
+          <g
             v-if="launchPos(launch)"
-            :cx="launchPos(launch)!.x"
-            :cy="launchPos(launch)!.y"
-            r="3.5"
-            fill="var(--green)"
-            opacity="0.9"
-          />
+            :transform="`translate(${launchPos(launch)!.x}, ${launchPos(launch)!.y}) scale(${inverseZoom})`"
+          >
+            <circle r="3.5" fill="var(--green)" opacity="0.9" />
+          </g>
         </template>
 
         <!-- Sector hexes -->
@@ -125,6 +121,9 @@
           :px="hexPx(sector.q)"
           :py="hexPy(sector.q, sector.r)"
           :hex-size="hexSize"
+          :inverse-zoom="inverseZoom"
+          :colony-buildings="sector.id === COLONY_SECTOR_ID ? game.buildings : undefined"
+          :colony-colonist-positions="sector.id === COLONY_SECTOR_ID ? colonistDots : undefined"
           @select="onSelectSector"
         />
       </g>
@@ -247,7 +246,8 @@ import { ref, computed } from 'vue'
 import SectorHex from './SectorHex.vue'
 import { useMoonStore, PING_CHARGE_MS, OUTPOST_ESTABLISH_COST_METALS, OUTPOST_ESTABLISH_COST_CREDITS } from '@/stores/moonStore'
 import { useGameStore } from '@/stores/gameStore'
-import { TERRAIN_CONFIGS } from '@/systems/sectorGen'
+import { TERRAIN_CONFIGS, COLONY_SECTOR_ID } from '@/systems/sectorGen'
+import { useColonistMovement } from '@/composables/useColonistMovement'
 import type { Sector, SurveyMission, OutpostLaunch, Outpost } from '@/types/moon'
 
 const moon = useMoonStore()
@@ -313,6 +313,25 @@ function resetView() {
   svgPanX.value = 0
   svgPanY.value = 0
 }
+
+const inverseZoom = computed(() => 1 / svgZoom.value)
+
+// ── Colony miniature data ──
+
+const { positions } = useColonistMovement()
+
+const colonistDots = computed(() => {
+  const dots: { id: string; x: number; y: number }[] = []
+  const away = moon.awayColonistIds
+  for (const c of game.colonists) {
+    if (c.health <= 0 || away.has(c.id)) continue
+    const pos = positions.value.get(c.id)
+    if (pos) {
+      dots.push({ id: c.id, x: pos.targetX, y: pos.targetY })
+    }
+  }
+  return dots
+})
 
 // ── Contour and grid overlays ──
 

@@ -101,71 +101,95 @@
         />
       </template>
 
-      <!-- Terrain label -->
-      <text
-        x="0"
-        :y="-hexSize * 0.15"
-        text-anchor="middle"
-        :fill="terrainConfig.color"
-        :font-size="hexSize * 0.2"
-        font-family="var(--font-mono)"
-        opacity="0.7"
-      >
-        {{ terrainConfig.label.toUpperCase() }}
-      </text>
+      <!-- Labels & markers: counter-scaled so they stay fixed size on zoom -->
+      <g :transform="`scale(${inverseZoom})`">
+        <!-- Terrain label -->
+        <text
+          x="0"
+          :y="-hexSize * 0.15"
+          text-anchor="middle"
+          :fill="terrainConfig.color"
+          :font-size="hexSize * 0.2"
+          font-family="var(--font-mono)"
+          opacity="0.7"
+        >
+          {{ terrainConfig.label.toUpperCase() }}
+        </text>
 
-      <!-- Colony marker -->
-      <template v-if="sector.id === COLONY_SECTOR_ID">
-        <circle cx="0" :cy="hexSize * 0.15" :r="hexSize * 0.18" fill="none" stroke="var(--cyan)" stroke-width="1.5" />
-        <circle cx="0" :cy="hexSize * 0.15" :r="hexSize * 0.06" fill="var(--cyan)" />
-      </template>
+        <!-- Outpost marker (non-colony) -->
+        <template v-if="sector.outpostId && sector.id !== COLONY_SECTOR_ID">
+          <circle cx="0" :cy="hexSize * 0.15" :r="hexSize * 0.15" fill="none" stroke="var(--green)" stroke-width="1.5" />
+          <polygon
+            :points="outpostTrianglePoints"
+            fill="var(--green)"
+          />
+        </template>
 
-      <!-- Outpost marker -->
-      <template v-else-if="sector.outpostId">
-        <circle cx="0" :cy="hexSize * 0.15" :r="hexSize * 0.15" fill="none" stroke="var(--green)" stroke-width="1.5" />
-        <polygon
-          :points="outpostTrianglePoints"
+        <!-- Scan signature hint -->
+        <text
+          v-if="sector.scanSignature && !sector.deposit"
+          x="0"
+          :y="hexSize * 0.15"
+          text-anchor="middle"
+          fill="var(--cyan)"
+          :font-size="hexSize * 0.17"
+          font-family="var(--font-mono)"
+          opacity="0.9"
+        >
+          {{ sector.scanSignature.depositType.toUpperCase() }}
+        </text>
+
+        <!-- Confirmed deposit label -->
+        <text
+          v-if="sector.deposit"
+          x="0"
+          :y="sector.outpostId ? hexSize * 0.42 : hexSize * 0.15"
+          text-anchor="middle"
           fill="var(--green)"
+          :font-size="hexSize * 0.16"
+          font-family="var(--font-mono)"
+          opacity="0.9"
+        >
+          {{ sector.deposit.quality.toUpperCase() }} {{ sector.deposit.type.toUpperCase() }}
+        </text>
+
+        <!-- Surveyed confirmed indicator -->
+        <circle
+          v-if="sector.status === 'surveyed' && sector.deposit"
+          :cx="hexSize * 0.3"
+          :cy="-hexSize * 0.3"
+          :r="hexSize * 0.06"
+          fill="var(--green)"
+          opacity="0.8"
+        />
+      </g>
+
+      <!-- Colony miniature: shows actual buildings and colonists -->
+      <template v-if="sector.id === COLONY_SECTOR_ID">
+        <circle cx="0" cy="0" :r="hexSize * 0.4" fill="none" stroke="var(--cyan)" stroke-width="0.6" opacity="0.3" />
+        <!-- Buildings rendered at relative positions (colony coords 0-100 mapped to hex area) -->
+        <rect
+          v-for="b in colonyBuildings"
+          :key="b.id"
+          :x="mapColonyCoord(b.x, 'x') - 1.2"
+          :y="mapColonyCoord(b.y, 'y') - 1.2"
+          width="2.4"
+          height="2.4"
+          :fill="b.damaged ? 'var(--red)' : buildingColor(b.type)"
+          :opacity="b.damaged ? 0.5 : 0.8"
+          rx="0.4"
+        />
+        <!-- Colonists as tiny dots -->
+        <circle
+          v-for="c in colonyColonistPositions"
+          :key="c.id"
+          :cx="mapColonyCoord(c.x, 'x')"
+          :cy="mapColonyCoord(c.y, 'y')"
+          r="0.8"
+          fill="var(--text-primary)"
+          opacity="0.7"
         />
       </template>
-
-      <!-- Scan signature hint -->
-      <text
-        v-if="sector.scanSignature && !sector.deposit"
-        x="0"
-        :y="hexSize * 0.15"
-        text-anchor="middle"
-        fill="var(--cyan)"
-        :font-size="hexSize * 0.17"
-        font-family="var(--font-mono)"
-        opacity="0.9"
-      >
-        {{ sector.scanSignature.depositType.toUpperCase() }}
-      </text>
-
-      <!-- Confirmed deposit label -->
-      <text
-        v-if="sector.deposit"
-        x="0"
-        :y="sector.outpostId ? hexSize * 0.42 : hexSize * 0.15"
-        text-anchor="middle"
-        fill="var(--green)"
-        :font-size="hexSize * 0.16"
-        font-family="var(--font-mono)"
-        opacity="0.9"
-      >
-        {{ sector.deposit.quality.toUpperCase() }} {{ sector.deposit.type.toUpperCase() }}
-      </text>
-
-      <!-- Surveyed confirmed indicator -->
-      <circle
-        v-if="sector.status === 'surveyed' && sector.deposit"
-        :cx="hexSize * 0.3"
-        :cy="-hexSize * 0.3"
-        :r="hexSize * 0.06"
-        fill="var(--green)"
-        opacity="0.8"
-      />
     </template>
   </g>
 </template>
@@ -173,6 +197,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import type { Sector } from '@/types/moon'
+import type { Building, BuildingType } from '@/stores/gameStore'
 import { TERRAIN_CONFIGS, COLONY_SECTOR_ID } from '@/systems/sectorGen'
 
 const props = defineProps<{
@@ -180,6 +205,9 @@ const props = defineProps<{
   px: number
   py: number
   hexSize: number
+  inverseZoom: number
+  colonyBuildings?: Building[]
+  colonyColonistPositions?: { id: string; x: number; y: number }[]
 }>()
 
 defineEmits<{ select: [sector: Sector] }>()
@@ -341,6 +369,24 @@ const canyonFeatures = computed(() => {
   }
   return features
 })
+
+// Map colony coordinates (0-100%) to hex-local coordinates
+function mapColonyCoord(val: number, axis: 'x' | 'y'): number {
+  // Colony map is 0-100, center at 50. Map to hex area with radius ~40% of hexSize
+  const range = props.hexSize * 0.35
+  return ((val - 50) / 50) * range
+}
+
+function buildingColor(type: BuildingType): string {
+  switch (type) {
+    case 'solar': return 'var(--amber)'
+    case 'o2generator': return 'var(--cyan)'
+    case 'extractionrig': return 'var(--green)'
+    case 'medbay': return 'var(--red)'
+    case 'partsfactory': return 'var(--orange)'
+    default: return 'var(--text-muted)'
+  }
+}
 
 // Small upward triangle for outpost marker
 const outpostTrianglePoints = computed(() => {
