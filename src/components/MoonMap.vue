@@ -37,6 +37,12 @@
       viewBox="0 0 500 500"
       class="hex-svg"
       @click.self="selectedSector = null"
+      @wheel.prevent="onWheel"
+      @pointerdown="onPointerDown"
+      @pointermove="onPointerMove"
+      @pointerup="onPointerUp"
+      @pointerleave="onPointerUp"
+      @dblclick="resetView"
     >
       <defs>
         <filter id="glow">
@@ -48,7 +54,7 @@
         </filter>
       </defs>
 
-      <g transform="translate(250, 250)">
+      <g :transform="svgTransform">
         <!-- Faint topographic contour lines -->
         <circle
           v-for="r in contourRadii"
@@ -259,6 +265,55 @@ function hexPy(q: number, r: number): number {
   return hexSize * (Math.sqrt(3) / 2 * q + Math.sqrt(3) * r)
 }
 
+// ── Pan & Zoom ──
+
+const svgZoom = ref(1)
+const svgPanX = ref(0)
+const svgPanY = ref(0)
+const isPanning = ref(false)
+const lastPointer = ref({ x: 0, y: 0 })
+const panMoved = ref(false)
+
+const svgTransform = computed(() =>
+  `translate(${250 + svgPanX.value}, ${250 + svgPanY.value}) scale(${svgZoom.value})`,
+)
+
+function onWheel(e: WheelEvent) {
+  const delta = e.deltaY > 0 ? -0.1 : 0.1
+  svgZoom.value = Math.min(2.5, Math.max(0.6, svgZoom.value + delta))
+}
+
+function onPointerDown(e: PointerEvent) {
+  isPanning.value = true
+  panMoved.value = false
+  lastPointer.value = { x: e.clientX, y: e.clientY }
+}
+
+function onPointerMove(e: PointerEvent) {
+  if (!isPanning.value) return
+  const dx = e.clientX - lastPointer.value.x
+  const dy = e.clientY - lastPointer.value.y
+  if (Math.abs(dx) > 2 || Math.abs(dy) > 2) panMoved.value = true
+  // Scale pointer movement to SVG coordinate space
+  const svg = e.currentTarget as SVGSVGElement
+  const rect = svg.getBoundingClientRect()
+  const scaleX = 500 / rect.width
+  const scaleY = 500 / rect.height
+  svgPanX.value += dx * scaleX / svgZoom.value
+  svgPanY.value += dy * scaleY / svgZoom.value
+  lastPointer.value = { x: e.clientX, y: e.clientY }
+}
+
+function onPointerUp() {
+  isPanning.value = false
+}
+
+function resetView() {
+  svgZoom.value = 1
+  svgPanX.value = 0
+  svgPanY.value = 0
+}
+
 // ── Contour and grid overlays ──
 
 const contourRadii = computed(() => {
@@ -339,6 +394,7 @@ const crewSelectionValid = computed(() => {
 })
 
 function onSelectSector(sector: Sector) {
+  if (panMoved.value) return // ignore clicks that were pans
   selectedSector.value = sector
   showCrewSelect.value = false
   selectedCrewIds.value = []
