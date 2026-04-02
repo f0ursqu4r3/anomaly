@@ -891,10 +891,14 @@ export const useGameStore = defineStore('game', {
 
       // Storage — auto-build one silo when at capacity, then clamp overflow
       const caps = this.storageCap
+      // Platform capacity counts as available storage — no need for a silo if the platform can absorb overflow
+      const plat = this.exportPlatform
+      const platformSpace = (plat.built && plat.status === 'docked') ? plat.capacity - (plat.cargo.metals + plat.cargo.ice + plat.cargo.rareMinerals) : 0
       const metalsAtCap = this.metals >= caps.metals
       const iceAtCap = this.ice >= caps.ice
+      const overflowAmount = Math.max(0, this.metals - caps.metals) + Math.max(0, this.ice - caps.ice)
 
-      if ((metalsAtCap || iceAtCap) && this.metals >= 20) {
+      if ((metalsAtCap || iceAtCap) && overflowAmount > platformSpace && this.metals >= 20) {
         this.metals -= 20
         const pos = getBuildingPosition('storageSilo', this.buildings)
         this.buildings.push({ id: uid(), type: 'storageSilo', damaged: false, x: pos.x, y: pos.y, rotation: pos.rotation })
