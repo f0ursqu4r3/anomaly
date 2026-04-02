@@ -47,6 +47,15 @@ Each colonist has a personality trait (drives AI behavior) and a skill trait (ga
 
 Efficiency bonuses are additive: `1.0 + xpLevel*0.05 + skillTrait + specialization + morale + bond`. Max realistic ~30-40%.
 
+### Economy System
+
+Credits earned primarily through resource exports to HQ, not passive income. The colony exists to produce value for HQ.
+
+- **`systems/economy.ts`**: HQ rate bulletin system. Base rates (metals 15cr, ice 40cr, rare minerals 100cr). Event-driven rate shifts every 10-15 min lasting 90-120s. Weighted random events: metal demand, ice shortage, rare mineral rush, supply glut, quarterly push.
+- **Export platform**: Colony-built building (30 metals, auto-constructed). Colonists `load` resources to platform (AI-scored action). 100-unit capacity. Launch → 120s transit → HQ credits at current rates → 180s return (270s if force-launched). Auto-launch toggle. Auto-reserves (parts factory + silo cost, player overridable).
+- **Storage caps**: Base 50 metals / 25 ice / 10 rare minerals. Storage Silos auto-built by engineers when >80% full (+100m/+50i/+25r per silo). Overflow clamped with radio warnings.
+- **Pricing (10x scale)**: All credit values use 10x scale for readability. Passive stipend 2cr/sec. Shipments 600-1,750cr. Starting credits 1,000.
+
 ### Visual Layer (Separate from Simulation)
 
 `useColonistMovement.ts` runs a parallel visual state machine for colonist positions on the map. It watches `game.lastTickAt` and updates a `Map<id, ColonistMapState>` with walking/working/idle states. Priority: unpack supply drops first, then role-based zone targeting (extractors→extraction zone, engineers→buildings, idle→habitat).

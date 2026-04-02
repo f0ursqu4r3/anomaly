@@ -70,15 +70,17 @@ Five terrain types exist on the moon surface but currently only affect survey ri
 
 Each terrain should have distinct visual character on the medium lens (already partially implemented with organic terrain features) and affect outpost operations differently.
 
-### Economy & Trading
+### ~~Economy & Trading~~ ✓ (Core)
 
-Credits are just shipment currency. Make them interesting:
+~~Credits are just shipment currency.~~ Economy reworked — credits now earned primarily through resource exports to HQ:
 
-- **Market Prices**: Ice/metal prices fluctuate on a cycle (ticker in comms tab)
-- **Sell Orders**: Sell stockpiled metals/ice at current market rate. Outpost launch payloads can be sold directly instead of received at colony
-- **Contracts**: Timed objectives ("Deliver 50 metals in 5 min" → bonus credits). Some contracts require specific terrain deposits
-- **Corporate Sponsors**: Persistent upgrades to supply chain (faster transit, cheaper shipments, larger cargo, shorter cooldowns, extended ping range)
-- **Insurance**: Recurring credit cost to auto-repair one building per hazard
+- ~~**Adjust Current Prices**~~: All prices scaled 10x. Passive income reduced (2cr/sec stipend). Credits are scarce and meaningful.
+- ~~**Market Prices**~~: HQ rate bulletins — event-driven rate shifts every 10-15 min (metal demand, ice shortage, rare mineral rush, supply glut, quarterly push). Rates displayed on EXPORT tab.
+- ~~**Sell Orders**~~: Export launch platform — colonists load resources, player launches to HQ, credits at current rates. Force-launch option with return penalty. Auto-launch when full.
+- **Storage Silos**: Resource caps (50m/25i/10r base). Silos auto-built by engineers. Overflow discarded with warnings.
+- **Contracts**: Timed objectives ("Deliver 50 metals in 5 min" → bonus credits). Deferred to future drop.
+- **Corporate Sponsors**: Persistent supply chain upgrades. Deferred to future drop.
+- **Insurance**: Recurring credit cost to auto-repair one building per hazard. Deferred to future drop.
 
 ### Environmental Hazards
 
