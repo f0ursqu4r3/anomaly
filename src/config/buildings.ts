@@ -87,8 +87,8 @@ export const BUILDING_CONFIGS: BuildingConfig[] = [
     constructionTime: 90,
     costMetals: 30,
     costIce: 0,
-    shipmentCost: null,
-    shipmentWeight: null,
+    shipmentCost: 2000,
+    shipmentWeight: 60,
   },
 ]
 
