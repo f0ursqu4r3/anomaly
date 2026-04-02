@@ -391,6 +391,7 @@ export const COLONIST_NAMES = ['Kael', 'Mira', 'Tarn', 'Vex', 'Lira', 'Cade', 'N
 // ── Helpers ─────────────────────────────────────────────────────────
 
 let nextId = 1
+const announcedBonds = new Set<string>()
 export function uid(): string {
   return `${Date.now()}-${nextId++}`
 }
@@ -708,12 +709,15 @@ export const useGameStore = defineStore('game', {
       for (const c of alive) {
         if (!c.bonds) continue
         for (const [partnerId, affinity] of Object.entries(c.bonds)) {
-          if (affinity === 20) { // just crossed threshold
-            const partner = this.colonists.find(p => p.id === partnerId)
-            if (partner && partner.health > 0) {
-              this.pushMessage(`${c.name} and ${partner.name} seem to have each other's rhythm down.`, 'info')
-              // Only emit once — partner will have affinity 20 too, skip their message
-              break
+          // Announce when bond first crosses threshold (20-21 range, during the accrual tick)
+          if (affinity === 20) {
+            const pairKey = [c.id, partnerId].sort().join(':')
+            if (!announcedBonds.has(pairKey)) {
+              announcedBonds.add(pairKey)
+              const partner = this.colonists.find(p => p.id === partnerId)
+              if (partner && partner.health > 0) {
+                this.pushMessage(`${c.name} and ${partner.name} seem to have each other's rhythm down.`, 'info')
+              }
             }
           }
         }
