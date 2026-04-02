@@ -79,16 +79,19 @@
       <!-- Connector line from building to info overlay (45° elbow) -->
       <svg
         v-if="selectedBuilding"
+        :key="selectedBuilding.id"
         class="info-connector"
         viewBox="0 0 100 100"
       >
         <polyline
           :points="connectorPoints"
+          class="connector-line"
           fill="none"
           stroke="rgba(255, 255, 255, 0.25)"
-          stroke-width="0.3"
+          stroke-width="1.5"
           stroke-linecap="round"
           stroke-linejoin="round"
+          vector-effect="non-scaling-stroke"
         />
       </svg>
       <BuildingInfo
@@ -366,6 +369,19 @@ onUnmounted(() => cancelAnimationFrame(fpsRaf))
   height: 100%;
   pointer-events: none;
   z-index: 19;
+  overflow: visible;
+}
+
+.connector-line {
+  stroke-dasharray: 500;
+  stroke-dashoffset: 500;
+  animation: connector-draw 0.3s ease-out forwards;
+}
+
+@keyframes connector-draw {
+  to {
+    stroke-dashoffset: 0;
+  }
 }
 
 .habitat-ring {
