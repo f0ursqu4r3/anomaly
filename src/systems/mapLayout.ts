@@ -58,7 +58,8 @@ export function findPath(from: string, to: string): string[] {
 
 // ── Organic Building Placement ──
 
-const MIN_BUILDING_DISTANCE = 3.5 // minimum % between buildings (tight enough to fit many)
+const ANCHOR_OFFSET = 4.5 // distance from anchor building
+const MIN_BUILDING_DISTANCE = 3.5
 
 export function getBuildingPosition(
   type: BuildingType,
@@ -72,32 +73,43 @@ export function getBuildingPosition(
     b => ZONE_FOR_BUILDING[b.type] === zoneId
   )
 
+  // First building: near zone center with slight offset
   if (sameZone.length === 0) {
-    return { x: zone.x, y: zone.y, rotation: (Math.random() - 0.5) * 6 }
-  }
-
-  // Try random positions within zone radius
-  for (let attempt = 0; attempt < 40; attempt++) {
-    const angle = Math.random() * Math.PI * 2
-    const dist = Math.random() * zone.radius * 0.85
-    const x = zone.x + Math.cos(angle) * dist
-    const y = zone.y + Math.sin(angle) * dist
-
-    const tooClose = sameZone.some(b => {
-      const dx = b.x - x
-      const dy = b.y - y
-      return Math.sqrt(dx * dx + dy * dy) < MIN_BUILDING_DISTANCE
-    })
-
-    if (!tooClose) {
-      return { x, y, rotation: (Math.random() - 0.5) * 10 }
+    const jitter = 2
+    return {
+      x: zone.x + (Math.random() - 0.5) * jitter,
+      y: zone.y + (Math.random() - 0.5) * jitter,
+      rotation: (Math.random() - 0.5) * 6,
     }
   }
 
-  // Fallback: evenly space around zone center, CLAMPED to zone radius
+  // Cluster growth: anchor to a random existing building
+  for (let attempt = 0; attempt < 30; attempt++) {
+    const anchor = sameZone[Math.floor(Math.random() * sameZone.length)]
+    const angle = Math.random() * Math.PI * 2
+    const x = anchor.x + Math.cos(angle) * ANCHOR_OFFSET
+    const y = anchor.y + Math.sin(angle) * ANCHOR_OFFSET
+
+    // Check within zone radius
+    const dx = x - zone.x
+    const dy = y - zone.y
+    if (Math.sqrt(dx * dx + dy * dy) > zone.radius) continue
+
+    // Check minimum distance from all buildings
+    const tooClose = sameZone.some(b => {
+      const bx = b.x - x
+      const by = b.y - y
+      return Math.sqrt(bx * bx + by * by) < MIN_BUILDING_DISTANCE
+    })
+    if (tooClose) continue
+
+    return { x, y, rotation: (Math.random() - 0.5) * 10 }
+  }
+
+  // Fallback: golden angle spiral
   const count = sameZone.length
-  const angle = (count * 2.4) % (Math.PI * 2) // golden angle spread
-  const ring = Math.min(zone.radius * 0.7, 3 + count * 1.5) // grows slowly, capped at zone radius
+  const angle = (count * 2.4) % (Math.PI * 2)
+  const ring = Math.min(zone.radius * 0.7, 3 + count * 1.5)
   return {
     x: zone.x + Math.cos(angle) * ring,
     y: zone.y + Math.sin(angle) * ring,
