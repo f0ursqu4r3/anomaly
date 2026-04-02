@@ -386,7 +386,28 @@ export const BLUEPRINTS: BuildingBlueprint[] = [
   },
 ]
 
-export const COLONIST_NAMES = ['Kael', 'Mira', 'Tarn', 'Vex', 'Lira', 'Cade', 'Nyx', 'Orin', 'Zara', 'Pax']
+export const COLONIST_NAMES = [
+  // Wave 1
+  'Kael', 'Mira', 'Tarn', 'Vex', 'Lira', 'Cade', 'Nyx', 'Orin', 'Zara', 'Pax',
+  // Wave 2
+  'Juno', 'Fen', 'Rhea', 'Kova', 'Dex', 'Suri', 'Wren', 'Ash', 'Lyra', 'Thane',
+  // Wave 3
+  'Petra', 'Cruz', 'Yuki', 'Dax', 'Ember', 'Sol', 'Rune', 'Kai', 'Vera', 'Jin',
+  // Wave 4
+  'Haze', 'Cleo', 'Borin', 'Lux', 'Zia', 'Quinn', 'Io', 'Frost', 'Sable', 'Grit',
+  // Wave 5
+  'Hex', 'Reva', 'Pike', 'Nova', 'Koda', 'Flint', 'Astra', 'Moss', 'Vega', 'Drift',
+  // Wave 6
+  'Talon', 'Sage', 'Bolt', 'Maren', 'Jett', 'Cove', 'Rue', 'Torr', 'Iris', 'Bram',
+  // Wave 7
+  'Vesper', 'Arlo', 'Mica', 'Onyx', 'Calla', 'Pyre', 'Slate', 'Briar', 'Zeph', 'Quill',
+  // Wave 8
+  'Eira', 'Holt', 'Vale', 'Silas', 'Ora', 'Ridge', 'Lark', 'Gale', 'Tove', 'Spar',
+  // Wave 9
+  'Nixie', 'Rook', 'Desta', 'Forge', 'Alix', 'Crag', 'Halo', 'Dune', 'Kira', 'Bren',
+  // Wave 10
+  'Osric', 'Fable', 'Tyde', 'Elm', 'Senna', 'Vigil', 'Roan', 'Circe', 'Blaze', 'Pip',
+]
 
 // ── Helpers ─────────────────────────────────────────────────────────
 
