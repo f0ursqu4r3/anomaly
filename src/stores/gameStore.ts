@@ -38,7 +38,7 @@ export interface Colonist {
   currentZone: string
 }
 
-export type BuildingType = 'o2generator' | 'solar' | 'extractionrig' | 'medbay' | 'partsfactory'
+export type BuildingType = 'o2generator' | 'solar' | 'extractionrig' | 'medbay' | 'partsfactory' | 'storageSilo' | 'launchplatform'
 
 export interface Building {
   id: string
@@ -118,6 +118,7 @@ export interface ColonyState {
   powerMax: number
   metals: number
   ice: number
+  rareMinerals: number
 
   colonists: Colonist[]
   buildings: Building[]
@@ -195,6 +196,15 @@ const MAX_MESSAGES = 50
 const SHIPMENT_COOLDOWN_MS = 60_000
 const MANIFEST_MAX_SLOTS = 4
 const CARGO_CAPACITY = 100
+
+// Storage caps
+const BASE_STORAGE_METALS = 50
+const BASE_STORAGE_ICE = 25
+const BASE_STORAGE_RARE_MINERALS = 10
+const SILO_BONUS_METALS = 100
+const SILO_BONUS_ICE = 50
+const SILO_BONUS_RARE_MINERALS = 25
+const SILO_AUTO_BUILD_THRESHOLD = 0.8
 
 // Directive config
 export const DIRECTIVE_RATIOS: Record<Directive, { extractor: number; engineer: number }> = {
@@ -330,6 +340,20 @@ export const BLUEPRINTS: BuildingBlueprint[] = [
     costMetals: 15,
     costIce: 0,
   },
+  {
+    type: 'storageSilo',
+    label: 'Storage Silo',
+    description: 'Increases resource storage capacity',
+    costMetals: 20,
+    costIce: 0,
+  },
+  {
+    type: 'launchplatform',
+    label: 'Launch Platform',
+    description: 'Export resources to HQ for credits',
+    costMetals: 30,
+    costIce: 0,
+  },
 ]
 
 export const COLONIST_NAMES = ['Kael', 'Mira', 'Tarn', 'Vex', 'Lira', 'Cade', 'Nyx', 'Orin', 'Zara', 'Pax']
@@ -366,6 +390,7 @@ function freshState(): ColonyState {
     powerMax: STARTING_POWER_MAX,
     metals: STARTING_METALS,
     ice: STARTING_ICE,
+    rareMinerals: 0,
     colonists: makeStartingColonists(),
     buildings: makeStartingBuildings(),
     depth: 0,
@@ -529,6 +554,15 @@ export const useGameStore = defineStore('game', {
     shipmentCooldownRemaining(s): number {
       return Math.max(0, s.shipmentCooldownUntil - s.totalPlaytimeMs)
     },
+
+    storageCap(s): { metals: number; ice: number; rareMinerals: number } {
+      const siloCount = s.buildings.filter(b => b.type === 'storageSilo' && !b.damaged).length
+      return {
+        metals: BASE_STORAGE_METALS + siloCount * SILO_BONUS_METALS,
+        ice: BASE_STORAGE_ICE + siloCount * SILO_BONUS_ICE,
+        rareMinerals: BASE_STORAGE_RARE_MINERALS + siloCount * SILO_BONUS_RARE_MINERALS,
+      }
+    },
   },
 
   actions: {
@@ -682,6 +716,31 @@ export const useGameStore = defineStore('game', {
         dt
       this.credits += creditGain
       this.totalCreditsEarned += creditGain
+
+      // Clamp resources to storage caps
+      const caps = this.storageCap
+      if (this.metals > caps.metals) {
+        this.metals = caps.metals
+      }
+      if (this.ice > caps.ice) {
+        this.ice = caps.ice
+      }
+      if (this.rareMinerals > caps.rareMinerals) {
+        this.rareMinerals = caps.rareMinerals
+      }
+
+      // Auto-build storage silo when nearing capacity
+      const metalPct = caps.metals > 0 ? this.metals / caps.metals : 0
+      const icePct = caps.ice > 0 ? this.ice / caps.ice : 0
+      if ((metalPct > SILO_AUTO_BUILD_THRESHOLD || icePct > SILO_AUTO_BUILD_THRESHOLD) && this.metals >= 20) {
+        const hasEngineer = alive.some(c => c.currentAction?.type === 'engineer' || c.currentAction?.type === 'wander' || !c.currentAction)
+        if (hasEngineer) {
+          this.metals -= 20
+          const pos = getBuildingPosition('storageSilo', this.buildings)
+          this.buildings.push({ id: uid(), type: 'storageSilo', damaged: false, x: pos.x, y: pos.y, rotation: pos.rotation })
+          this.pushMessage('Engineers constructing additional storage.', 'event')
+        }
+      }
 
       // Med bay healing
       const medbays = this.buildings.filter((b) => b.type === 'medbay' && !b.damaged).length

@@ -7,10 +7,10 @@ export const ZONES: Zone[] = [
   { id: 'habitat',  x: 50, y: 40, radius: 10, label: 'SEC-A HABITAT', color: '#4af', buildingTypes: [] },
   { id: 'power',    x: 30, y: 25, radius: 9,  label: 'SEC-B POWER',   color: '#f80', buildingTypes: ['solar'] },
   { id: 'lifeSup',  x: 70, y: 25, radius: 9,  label: 'SEC-C LIFESUP', color: '#0ff', buildingTypes: ['o2generator'] },
-  { id: 'extraction', x: 50, y: 65, radius: 10, label: 'SEC-D EXTRACT', color: '#0f8', buildingTypes: ['extractionrig'] },
+  { id: 'extraction', x: 50, y: 65, radius: 10, label: 'SEC-D EXTRACT', color: '#0f8', buildingTypes: ['extractionrig', 'storageSilo'] },
   { id: 'medical',  x: 75, y: 48, radius: 7,  label: 'SEC-E MED',     color: '#f44', buildingTypes: ['medbay'] },
   { id: 'workshop', x: 25, y: 70, radius: 8,  label: 'SEC-F WORKSHOP', color: '#fa0', buildingTypes: ['partsfactory'] },
-  { id: 'landing',  x: 25, y: 50, radius: 7,  label: 'LZ-1',          color: '#f80', buildingTypes: [] },
+  { id: 'landing',  x: 25, y: 50, radius: 7,  label: 'LZ-1',          color: '#f80', buildingTypes: ['launchplatform'] },
 ]
 
 export const ZONE_MAP: Record<string, Zone> = Object.fromEntries(ZONES.map(z => [z.id, z]))
@@ -21,6 +21,8 @@ export const ZONE_FOR_BUILDING: Record<BuildingType, string> = {
   extractionrig: 'extraction',
   medbay: 'medical',
   partsfactory: 'workshop',
+  storageSilo: 'extraction',
+  launchplatform: 'landing',
 }
 
 // ── Path Graph ──
