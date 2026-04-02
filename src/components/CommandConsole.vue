@@ -792,16 +792,18 @@ function missionStatusLabel(mission: SurveyMission): string {
 }
 
 .crew-trait {
-  color: var(--cyan, #4ecdc4);
-  font-size: 0.7rem;
-  margin-left: 0.3rem;
+  color: var(--cyan);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  margin-left: 6px;
   opacity: 0.7;
 }
 
 .crew-expertise {
-  color: var(--amber, #f5a623);
-  font-size: 0.7rem;
-  margin-left: 0.3rem;
+  color: var(--amber);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  margin-left: 6px;
   opacity: 0.7;
 }
 

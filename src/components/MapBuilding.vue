@@ -180,11 +180,17 @@ const workerCount = computed(() => {
 .worker-pip.type-medbay { color: var(--red); }
 .worker-pip.type-partsfactory { color: var(--amber); }
 .worker-pip.type-launchplatform { color: var(--amber); }
-.worker-pip.type-storageSilo { color: var(--text-secondary, #888); }
+.worker-pip.type-storageSilo { color: var(--text-secondary); }
 
 .constructing .building-sprite {
   border-style: dashed !important;
-  opacity: 0.4;
+  opacity: 0.35;
+  animation: construct-pulse 2s ease-in-out infinite;
+}
+
+@keyframes construct-pulse {
+  0%, 100% { opacity: 0.35; }
+  50% { opacity: 0.5; }
 }
 
 .construction-bar {
@@ -201,8 +207,8 @@ const workerCount = computed(() => {
 
 .construction-fill {
   height: 100%;
-  background: var(--amber, #f5a623);
-  border-radius: 2px;
+  background: var(--amber);
+  border-radius: var(--radius-xs);
   transition: width 1s linear;
 }
 
