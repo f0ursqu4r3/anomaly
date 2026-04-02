@@ -27,7 +27,8 @@
       "Bash(wc -l /Users/kyle/git/anomaly/src/**/*.ts /Users/kyle/git/anomaly/src/**/*.vue)",
       "Bash(bunx vue-tsc:*)",
       "Bash(git -C /Users/kyle/git/anomaly add src/systems/colonistIdentity.ts)",
-      "Bash(git -C /Users/kyle/git/anomaly commit -m ':*)"
+      "Bash(git -C /Users/kyle/git/anomaly commit -m ':*)",
+      "Bash(node -e \"const {TaskUpdate} = require; console.log\\('done'\\)\")"
     ]
   }
 }

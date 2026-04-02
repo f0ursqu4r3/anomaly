@@ -8,9 +8,7 @@
       <span class="rate" :class="{ boosted: rates.metals !== 15 }">
         Metals {{ rates.metals }}cr
       </span>
-      <span class="rate" :class="{ boosted: rates.ice !== 40 }">
-        Ice {{ rates.ice }}cr
-      </span>
+      <span class="rate" :class="{ boosted: rates.ice !== 40 }"> Ice {{ rates.ice }}cr </span>
       <span class="rate" :class="{ boosted: rates.rareMinerals !== 100 }">
         Rare {{ rates.rareMinerals }}cr
       </span>
@@ -20,18 +18,22 @@
     <div v-for="platform in platforms" :key="platform.id" class="platform-card">
       <div class="platform-header">
         <span>{{ platformLabel(platform) }}</span>
-        <span class="platform-status" :class="statusClass(platform)">{{ statusLabel(platform) }}</span>
+        <span class="platform-status" :class="statusClass(platform)">{{
+          statusLabel(platform)
+        }}</span>
       </div>
 
       <!-- Platform away -->
-      <template v-if="getState(platform)?.status === 'in_transit' || getState(platform)?.status === 'returning'">
+      <template
+        v-if="
+          getState(platform)?.status === 'in_transit' || getState(platform)?.status === 'returning'
+        "
+      >
         <div class="transit-info">
           <span v-if="getState(platform)?.status === 'in_transit'">
             EN ROUTE — {{ transitEta(platform) }}
           </span>
-          <span v-else>
-            RETURNING — {{ returnEta(platform) }}
-          </span>
+          <span v-else> RETURNING — {{ returnEta(platform) }} </span>
         </div>
       </template>
 
@@ -40,7 +42,10 @@
         <div class="cargo-section">
           <div class="cargo-header">
             <span>CARGO</span>
-            <span class="cargo-count" :class="{ full: loaded(platform) >= (getState(platform)?.capacity ?? 100) }">
+            <span
+              class="cargo-count"
+              :class="{ full: loaded(platform) >= (getState(platform)?.capacity ?? 100) }"
+            >
               {{ loaded(platform) }}/{{ getState(platform)?.capacity ?? 100 }}
             </span>
           </div>
@@ -48,13 +53,21 @@
             <div
               class="capacity-bar-fill"
               :class="{ full: loaded(platform) >= (getState(platform)?.capacity ?? 100) }"
-              :style="{ width: (loaded(platform) / (getState(platform)?.capacity ?? 100) * 100) + '%' }"
+              :style="{
+                width: (loaded(platform) / (getState(platform)?.capacity ?? 100)) * 100 + '%',
+              }"
             />
           </div>
           <div v-if="loaded(platform) > 0" class="cargo-breakdown">
-            <span v-if="getState(platform)!.cargo.metals > 0" class="cargo-item">{{ getState(platform)!.cargo.metals }}m</span>
-            <span v-if="getState(platform)!.cargo.ice > 0" class="cargo-item">{{ getState(platform)!.cargo.ice }}i</span>
-            <span v-if="getState(platform)!.cargo.rareMinerals > 0" class="cargo-item">{{ getState(platform)!.cargo.rareMinerals }}r</span>
+            <span v-if="getState(platform)!.cargo.metals > 0" class="cargo-item"
+              >{{ getState(platform)!.cargo.metals }}m</span
+            >
+            <span v-if="getState(platform)!.cargo.ice > 0" class="cargo-item"
+              >{{ getState(platform)!.cargo.ice }}i</span
+            >
+            <span v-if="getState(platform)!.cargo.rareMinerals > 0" class="cargo-item"
+              >{{ getState(platform)!.cargo.rareMinerals }}r</span
+            >
             <span class="cargo-estimate">est. {{ estimate(platform) }}cr</span>
           </div>
         </div>
@@ -125,8 +138,8 @@ function estimate(platform: Building): number {
 
 function platformLabel(platform: Building): string {
   const index = game.buildings
-    .filter(b => b.type === 'launchplatform')
-    .findIndex(b => b.id === platform.id)
+    .filter((b) => b.type === 'launchplatform')
+    .findIndex((b) => b.id === platform.id)
   return `Platform #${index + 1}`
 }
 
@@ -165,6 +178,7 @@ function returnEta(platform: Building): string {
 .export-panel {
   padding: 8px 10px;
   overflow-y: auto;
+  width: 100%;
   overscroll-behavior: contain;
   -webkit-overflow-scrolling: touch;
 }
@@ -210,8 +224,13 @@ function returnEta(platform: Building): string {
 }
 
 @keyframes rate-pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.7; }
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
 }
 
 /* Platform cards — matches manifest-section pattern */
@@ -243,9 +262,15 @@ function returnEta(platform: Building): string {
   letter-spacing: 0.05em;
 }
 
-.status-docked { color: var(--green); }
-.status-transit { color: var(--cyan); }
-.status-returning { color: var(--text-muted); }
+.status-docked {
+  color: var(--green);
+}
+.status-transit {
+  color: var(--cyan);
+}
+.status-returning {
+  color: var(--text-muted);
+}
 
 /* Transit info — matches transit-item pattern */
 .transit-info {
@@ -280,7 +305,9 @@ function returnEta(platform: Building): string {
   color: var(--text-primary);
 }
 
-.cargo-count.full { color: var(--amber); }
+.cargo-count.full {
+  color: var(--amber);
+}
 
 .capacity-bar-bg {
   height: 4px;
@@ -297,7 +324,9 @@ function returnEta(platform: Building): string {
   transition: width 0.2s ease;
 }
 
-.capacity-bar-fill.full { background: var(--amber); }
+.capacity-bar-fill.full {
+  background: var(--amber);
+}
 
 .cargo-breakdown {
   display: flex;
@@ -332,11 +361,26 @@ function returnEta(platform: Building): string {
   transition: all 0.15s;
 }
 
-.action-btn.green { border-color: var(--green); color: var(--green); }
-.action-btn.amber { border-color: var(--amber); color: var(--amber); }
-.action-btn.active { background: var(--bg-elevated); border-color: var(--cyan); color: var(--cyan); }
-.action-btn:disabled { opacity: 0.4; cursor: not-allowed; }
-.action-btn:not(:disabled):hover { background: var(--bg-elevated); }
+.action-btn.green {
+  border-color: var(--green);
+  color: var(--green);
+}
+.action-btn.amber {
+  border-color: var(--amber);
+  color: var(--amber);
+}
+.action-btn.active {
+  background: var(--bg-elevated);
+  border-color: var(--cyan);
+  color: var(--cyan);
+}
+.action-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+.action-btn:not(:disabled):hover {
+  background: var(--bg-elevated);
+}
 
 /* Reserves */
 .reserves {
@@ -355,5 +399,7 @@ function returnEta(platform: Building): string {
   letter-spacing: 0.1em;
 }
 
-.reserve-val { color: var(--text-secondary); }
+.reserve-val {
+  color: var(--text-secondary);
+}
 </style>
