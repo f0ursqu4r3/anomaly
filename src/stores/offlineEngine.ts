@@ -342,6 +342,36 @@ export function simulateOffline(inputState: ColonyState, elapsedMs: number): Off
       }
     }
 
+    // Offline export — if platform was in transit, check arrival
+    if (state.exportPlatform?.built) {
+      const ep = state.exportPlatform
+      if (ep.status === 'in_transit' && ep.launchTime && state.totalPlaytimeMs >= ep.launchTime + 120_000) {
+        const payout = Math.round(ep.cargo.metals * 15 + ep.cargo.ice * 40 + ep.cargo.rareMinerals * 100)
+        state.credits += payout
+        state.totalCreditsEarned += payout
+        const returnMs = ep.forceLaunched ? 270_000 : 180_000
+        ep.status = 'returning'
+        ep.returnTime = state.totalPlaytimeMs + returnMs
+        ep.cargo = { metals: 0, ice: 0, rareMinerals: 0 }
+        events.push({ type: 'shipment', severity: 'info', offsetMs: elapsedSoFar, message: `HQ confirms receipt. ${payout}cr credited.` })
+      }
+      if (ep.status === 'returning' && ep.returnTime && state.totalPlaytimeMs >= ep.returnTime) {
+        ep.status = 'docked'
+        ep.launchTime = null
+        ep.returnTime = null
+        ep.forceLaunched = false
+      }
+    }
+
+    // Offline storage clamping
+    const siloCount = state.buildings.filter(b => b.type === 'storageSilo' && !b.damaged).length
+    const offlineCaps = {
+      metals: 50 + siloCount * 100,
+      ice: 25 + siloCount * 50,
+    }
+    state.metals = Math.min(state.metals, offlineCaps.metals)
+    state.ice = Math.min(state.ice, offlineCaps.ice)
+
     // Auto-relaunch (offline)
     if (state.autoRelaunch && state.lastManifest.length > 0 && state.totalPlaytimeMs >= state.shipmentCooldownUntil) {
       const cost = state.lastManifest.reduce((sum, o) => sum + o.cost, 0)
