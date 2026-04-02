@@ -17,6 +17,7 @@
         <MessageLog v-if="tab === 'log'" />
         <ShipmentPanel v-if="tab === 'shipments'" />
         <DirectivePanel v-if="tab === 'directives'" />
+        <ExportPanel v-if="tab === 'export'" />
       </div>
     </template>
 
@@ -264,6 +265,7 @@ import SvgIcon from './SvgIcon.vue'
 import MessageLog from './MessageLog.vue'
 import ShipmentPanel from './ShipmentPanel.vue'
 import DirectivePanel from './DirectivePanel.vue'
+import ExportPanel from './ExportPanel.vue'
 
 import type { Outpost, SurveyMission } from '@/types/moon'
 
@@ -271,11 +273,12 @@ const game = useGameStore()
 const moon = useMoonStore()
 const { lens } = useLensView()
 
-const tab = ref<'log' | 'shipments' | 'directives'>('log')
+const tab = ref<'log' | 'shipments' | 'directives' | 'export'>('log')
 
 const tabs = [
   { id: 'log' as const, label: 'COMMS' },
   { id: 'shipments' as const, label: 'SHIPMENTS' },
+  { id: 'export' as const, label: 'EXPORT' },
   { id: 'directives' as const, label: 'DIRECTIVES' },
 ]
 
