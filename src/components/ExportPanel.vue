@@ -168,6 +168,12 @@ const returnEta = computed(() => {
 .rate.boosted {
   color: var(--green);
   text-shadow: 0 0 6px var(--green-glow);
+  animation: rate-pulse 2s ease-in-out infinite;
+}
+
+@keyframes rate-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
 }
 
 /* Transit status */

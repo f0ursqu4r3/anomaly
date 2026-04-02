@@ -8,9 +8,11 @@
     @pointermove="onPointerMove"
     @pointerup="onPointerUp"
     @dblclick="resetView"
-    @click="selectedBuilding = null"
+    @click="clearSelection"
   >
     <div v-if="settings.scanlines" class="scanlines" />
+    <!-- Hazard flash vignette -->
+    <div v-if="hazardFlash" class="hazard-flash" />
 
     <div class="map-content" :style="transformStyle">
       <!-- Zone boundaries and paths (SVG) -->
@@ -145,7 +147,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import { useGameStore } from '@/stores/gameStore'
 import type { Building, SupplyDrop } from '@/stores/gameStore'
 import { useSettingsStore } from '@/stores/settingsStore'
@@ -260,6 +262,20 @@ const connectorPoints = computed(() => {
 })
 
 const selectedDrop = ref<SupplyDrop | null>(null)
+const hazardFlash = ref(false)
+
+// Watch for hazard events — flash the screen
+watch(() => game.lastHazardAt, () => {
+  if (game.lastHazardAt > 0) {
+    hazardFlash.value = true
+    setTimeout(() => { hazardFlash.value = false }, 400)
+  }
+})
+
+function clearSelection() {
+  selectedBuilding.value = null
+  selectedDrop.value = null
+}
 
 function selectBuilding(b: Building) {
   selectedDrop.value = null
@@ -385,6 +401,21 @@ onUnmounted(() => cancelAnimationFrame(fpsRaf))
     var(--accent-faint) 3px,
     var(--accent-faint) 4px
   );
+}
+
+.hazard-flash {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 9;
+  background: radial-gradient(ellipse at center, transparent 40%, rgba(233, 69, 96, 0.15) 100%);
+  animation: hazard-vignette 0.4s ease-out forwards;
+}
+
+@keyframes hazard-vignette {
+  0% { opacity: 1; }
+  30% { opacity: 1; }
+  100% { opacity: 0; }
 }
 
 .zone-marker {

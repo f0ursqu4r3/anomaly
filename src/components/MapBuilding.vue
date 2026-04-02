@@ -1,7 +1,7 @@
 <template>
   <div
     class="map-building"
-    :class="[typeClass, { damaged: building.damaged, constructing: isConstructing }]"
+    :class="[typeClass, { damaged: building.damaged, constructing: isConstructing, 'just-completed': justCompleted }]"
     :style="{ left: building.x + '%', top: building.y + '%', transform: `translate(-50%, -50%) scale(var(--marker-scale, 1)) rotate(${building.rotation || 0}deg)` }"
     @click.stop="emit('select', building)"
   >
@@ -21,7 +21,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref, watch } from 'vue'
 import type { Building } from '@/stores/gameStore'
 import { useGameStore } from '@/stores/gameStore'
 import { ZONE_FOR_BUILDING } from '@/systems/mapLayout'
@@ -49,6 +49,15 @@ const typeClass = computed(() => `type-${props.building.type}`)
 const isConstructing = computed(() =>
   props.building.constructionProgress !== null && props.building.constructionProgress < 1
 )
+
+// Flash when construction completes
+const justCompleted = ref(false)
+watch(isConstructing, (newVal, oldVal) => {
+  if (oldVal === true && newVal === false) {
+    justCompleted.value = true
+    setTimeout(() => { justCompleted.value = false }, 1200)
+  }
+})
 
 const workerCount = computed(() => {
   // Under construction: count constructors targeting this building
@@ -186,6 +195,24 @@ const workerCount = computed(() => {
   border-style: dashed !important;
   opacity: 0.35;
   animation: construct-pulse 2s ease-in-out infinite;
+}
+
+.just-completed .building-sprite {
+  animation: complete-burst 1.2s ease-out forwards;
+}
+
+@keyframes complete-burst {
+  0% {
+    box-shadow: 0 0 10px currentColor, 0 0 30px currentColor;
+    transform: scale(1.15);
+  }
+  40% {
+    box-shadow: 0 0 20px currentColor, 0 0 50px color-mix(in srgb, currentColor 30%, transparent);
+  }
+  100% {
+    box-shadow: 0 0 10px var(--ambient-glow, rgba(100, 160, 220, 0.1));
+    transform: scale(1);
+  }
 }
 
 @keyframes construct-pulse {
