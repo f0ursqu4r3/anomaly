@@ -30,6 +30,7 @@ const DURATION: Record<ActionType, [number, number]> = {
   socialize:    [10, 20],
   seek_medical: [20, 40],
   wander:       [8, 18],
+  load:         [8, 15],
 }
 
 interface TraitMod {
@@ -314,6 +315,33 @@ export function selectAction(
       targetId: drop.id,
       score: 70 * unpackDiscount,
     })
+  }
+
+  // LOAD — haul resources to export platform
+  if (colonist.energy > 20) {
+    const ep = state.exportPlatform
+    if (ep && ep.built && ep.status === 'docked') {
+      const loaded = ep.cargo.metals + ep.cargo.ice + ep.cargo.rareMinerals
+      if (loaded < ep.capacity) {
+        // Check if there are exportable resources above reserves
+        const reserves = ep.reserves
+        const autoMetals = 30 // rough auto-reserve default
+        const effectiveMetals = reserves.metals ?? autoMetals
+        const effectiveIce = reserves.ice ?? 0
+        const effectiveRare = reserves.rareMinerals ?? 0
+        const hasExportable = state.metals > effectiveMetals || state.ice > effectiveIce || state.rareMinerals > effectiveRare
+
+        if (hasExportable) {
+          const loaders = countWorkers(state, 'load')
+          const loaderDiscount = loaders === 0 ? 1.0 : loaders === 1 ? 0.5 : loaders === 2 ? 0.15 : 0.05
+          candidates.push({
+            type: 'load',
+            targetZone: 'landing',
+            score: 40 * mod.workUtilityMult * loaderDiscount,
+          })
+        }
+      }
+    }
   }
 
   // REST

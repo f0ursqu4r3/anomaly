@@ -23,6 +23,7 @@ export type ActionType =
   | 'socialize'
   | 'seek_medical'
   | 'wander'
+  | 'load'
 
 export interface Action {
   type: ActionType

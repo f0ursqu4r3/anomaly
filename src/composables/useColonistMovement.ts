@@ -42,6 +42,7 @@ function actionToVisualState(action: ActionType | null, colonist: Colonist): Vis
     case 'socialize': return 'socializing'
     case 'seek_medical': return colonist.health < 40 ? 'injured' : 'walking'
     case 'wander': return 'idle'
+    case 'load': return 'working'
     default: return 'working'
   }
 }
