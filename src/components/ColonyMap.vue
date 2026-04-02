@@ -76,6 +76,16 @@
       <div class="habitat-ring" />
 
       <MapBuilding v-for="b in game.buildings" :key="b.id" :building="b" @select="selectBuilding" />
+      <!-- Connector line from building to info overlay -->
+      <div
+        v-if="selectedBuilding"
+        class="info-connector"
+        :style="{
+          left: selectedBuilding.x + '%',
+          top: (selectedBuilding.y < 30 ? selectedBuilding.y : selectedBuilding.y - 6) + '%',
+          height: '6%',
+        }"
+      />
       <BuildingInfo
         v-if="selectedBuilding"
         :building="selectedBuilding"
@@ -314,6 +324,15 @@ onUnmounted(() => cancelAnimationFrame(fpsRaf))
   color: var(--text-secondary);
   pointer-events: none;
   z-index: 1;
+}
+
+.info-connector {
+  position: absolute;
+  width: 1px;
+  background: linear-gradient(to bottom, var(--accent-muted, rgba(255,255,255,0.2)), transparent);
+  transform: translateX(-50%);
+  pointer-events: none;
+  z-index: 19;
 }
 
 .habitat-ring {
