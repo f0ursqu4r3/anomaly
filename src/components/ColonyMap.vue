@@ -216,12 +216,14 @@ const connectorPoints = computed(() => {
     anchorX = overlayX - 3
   }
 
-  // Elbow: straight down from overlay anchor, then 45° diagonal to building
-  // The diagonal covers |anchorX - bx| horizontally and the same vertically
+  // Elbow: straight vertical from overlay anchor toward building, then 45° diagonal to building
+  // Vertical goes from overlay toward building. At the elbow, it turns 45° to reach building.
+  // The 45° diagonal covers elbowDx both horizontally and vertically.
   const elbowDx = Math.abs(anchorX - bx)
+  // Elbow is elbowDx away from the building (vertically), on the overlay's side
   const elbowY = below
-    ? by - elbowDx   // elbow sits above building, diagonal goes down-and-over to building
-    : by + elbowDx   // elbow sits below building, diagonal goes up-and-over to building
+    ? by + elbowDx   // overlay is below → elbow is below building, diagonal goes up to building
+    : by - elbowDx   // overlay is above → elbow is above building, diagonal goes down to building
   return `${anchorX},${overlayY} ${anchorX},${elbowY} ${bx},${by}`
 })
 
