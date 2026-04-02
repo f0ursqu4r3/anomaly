@@ -342,17 +342,11 @@ export function selectAction(
     if (ep && ep.built && ep.status === 'docked') {
       const loaded = ep.cargo.metals + ep.cargo.ice + ep.cargo.rareMinerals
       if (loaded < ep.capacity) {
-        // Check if there are exportable resources above reserves
-        const reserves = ep.reserves
-        const autoMetals = 30 // rough auto-reserve default
-        const effectiveMetals = reserves.metals ?? autoMetals
-        const effectiveIce = reserves.ice ?? 0
-        const effectiveRare = reserves.rareMinerals ?? 0
-        const hasExportable = state.metals > effectiveMetals || state.ice > effectiveIce || state.rareMinerals > effectiveRare
-
-        if (hasExportable) {
-          const platform = state.buildings.find(b => b.type === 'launchplatform' && b.constructionProgress === null)
-          if (platform) {
+        const platform = state.buildings.find(b => b.type === 'launchplatform' && !b.damaged && b.constructionProgress === null)
+        if (platform) {
+          // Check if there are any resources to load (reserves checked during actual loading, not here)
+          const hasResources = state.metals > 0 || state.ice > 0 || state.rareMinerals > 0
+          if (hasResources) {
             const loaders = countWorkers(state, 'load')
             const loaderDiscount = loaders === 0 ? 1.0 : loaders === 1 ? 0.5 : loaders === 2 ? 0.15 : 0.05
             candidates.push({
