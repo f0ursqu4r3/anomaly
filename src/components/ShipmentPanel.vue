@@ -38,10 +38,9 @@
         <div class="section-label">
           MANIFEST
           <span class="manifest-meta mono">
-            <span :class="{ 'slots-full': game.manifest.length >= maxSlots }"
-              >{{ game.manifest.length }}/{{ maxSlots }} slots</span
+            <span :class="{ 'weight-full': game.manifestWeight >= maxWeight }"
+              >{{ game.manifestWeight }}/{{ maxWeight }}kg</span
             >
-            · {{ game.manifestWeight }}/{{ maxWeight }}kg
           </span>
         </div>
 
@@ -127,7 +126,6 @@ import { computed, ref } from 'vue'
 import {
   useGameStore,
   SHIPMENT_OPTIONS,
-  MANIFEST_MAX_SLOTS,
   CARGO_CAPACITY,
   SHIPMENT_COOLDOWN_MS,
 } from '@/stores/gameStore'
@@ -136,7 +134,6 @@ import SvgIcon from './SvgIcon.vue'
 
 const game = useGameStore()
 const options = SHIPMENT_OPTIONS
-const maxSlots = MANIFEST_MAX_SLOTS
 const maxWeight = CARGO_CAPACITY
 
 const pulsingItem = ref<string | null>(null)
@@ -211,7 +208,6 @@ function removeOne(opt: ShipmentOption) {
 }
 
 function canAdd(opt: ShipmentOption): boolean {
-  if (game.manifest.length >= MANIFEST_MAX_SLOTS) return false
   if (game.manifestWeight + opt.weight > CARGO_CAPACITY) return false
   if (game.credits < game.manifestCost + opt.cost) return false
   return true
@@ -406,7 +402,7 @@ function formatEta(arrivalAt: number): string {
 }
 
 /* Slots full indicator */
-.slots-full {
+.weight-full {
   color: var(--amber);
 }
 

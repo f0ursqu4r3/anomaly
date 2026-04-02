@@ -539,7 +539,7 @@ export const useGameStore = defineStore('game', {
     },
 
     manifestFull(s): boolean {
-      return s.manifest.length >= MANIFEST_MAX_SLOTS
+      return s.manifest.reduce((sum, item) => sum + item.weight, 0) >= CARGO_CAPACITY
     },
 
     shipmentOnCooldown(s): boolean {
@@ -1100,7 +1100,6 @@ export const useGameStore = defineStore('game', {
 
     // ── Shipments ──
     addToManifest(option: ShipmentOption) {
-      if (this.manifest.length >= MANIFEST_MAX_SLOTS) return
       if (this.manifestWeight + option.weight > CARGO_CAPACITY) return
       if (this.credits < this.manifestCost + option.cost) return
       this.manifest.push(option)
