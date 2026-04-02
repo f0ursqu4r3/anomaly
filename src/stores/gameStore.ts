@@ -15,6 +15,13 @@ import {
   applyHazardMorale,
   checkBreakdown,
 } from '@/systems/colonistIdentity'
+import {
+  initEconomy,
+  tickEconomy,
+  getCurrentRates,
+  getEconomyState,
+  restoreEconomyState,
+} from '@/systems/economy'
 import { useSettingsStore } from '@/stores/settingsStore'
 import { useMoonStore } from '@/stores/moonStore'
 
@@ -722,6 +729,88 @@ export const useGameStore = defineStore('game', {
         }
       }
 
+      // Economy — HQ rate bulletins
+      tickEconomy(this.totalPlaytimeMs, (text, sev) => this.pushMessage(text, sev))
+
+      // Export platform tick
+      const ep = this.exportPlatform
+      if (ep.built) {
+        // Loading — colonists with 'load' action transfer resources
+        if (ep.status === 'docked') {
+          const loaders = alive.filter(
+            c => c.currentAction?.type === 'load' && !c.currentAction?.walkPath?.length
+          )
+          const reserves = this.effectiveReserves
+          for (const _loader of loaders) {
+            const loaded = ep.cargo.metals + ep.cargo.ice + ep.cargo.rareMinerals
+            if (loaded >= ep.capacity) break
+
+            const space = ep.capacity - loaded
+            const toLoad = Math.min(2, space)
+            let remaining = toLoad
+
+            // Load metals first (above reserve), then ice, then rare minerals
+            if (remaining > 0 && this.metals > reserves.metals) {
+              const take = Math.min(remaining, this.metals - reserves.metals)
+              this.metals -= take
+              ep.cargo.metals += take
+              remaining -= take
+            }
+            if (remaining > 0 && this.ice > reserves.ice) {
+              const take = Math.min(remaining, this.ice - reserves.ice)
+              this.ice -= take
+              ep.cargo.ice += take
+              remaining -= take
+            }
+            if (remaining > 0 && this.rareMinerals > reserves.rareMinerals) {
+              const take = Math.min(remaining, this.rareMinerals - reserves.rareMinerals)
+              this.rareMinerals -= take
+              ep.cargo.rareMinerals += take
+              remaining -= take
+            }
+          }
+
+          // Auto-launch when full
+          const totalLoaded = ep.cargo.metals + ep.cargo.ice + ep.cargo.rareMinerals
+          if (ep.autoLaunch && totalLoaded >= ep.capacity) {
+            this.launchExport(false)
+          }
+        }
+
+        // Transit — check if payload arrived at HQ
+        if (ep.status === 'in_transit' && ep.launchTime) {
+          const TRANSIT = 120_000
+          if (this.totalPlaytimeMs >= ep.launchTime + TRANSIT) {
+            const rates = getCurrentRates(this.totalPlaytimeMs)
+            const payout = Math.round(
+              ep.cargo.metals * rates.metals +
+              ep.cargo.ice * rates.ice +
+              ep.cargo.rareMinerals * rates.rareMinerals
+            )
+            this.credits += payout
+            this.totalCreditsEarned += payout
+            this.pushMessage(`HQ confirms receipt. ${payout}cr credited to account.`, 'event')
+
+            ep.status = 'returning'
+            const RETURN_NORMAL = 180_000
+            const RETURN_FORCE = 270_000
+            ep.returnTime = this.totalPlaytimeMs + (ep.forceLaunched ? RETURN_FORCE : RETURN_NORMAL)
+            ep.cargo = { metals: 0, ice: 0, rareMinerals: 0 }
+          }
+        }
+
+        // Returning — check if platform is back
+        if (ep.status === 'returning' && ep.returnTime) {
+          if (this.totalPlaytimeMs >= ep.returnTime) {
+            ep.status = 'docked'
+            ep.launchTime = null
+            ep.returnTime = null
+            ep.forceLaunched = false
+            this.pushMessage('Export platform has docked. Ready for loading.', 'event')
+          }
+        }
+      }
+
       // Count active workers by zone
       const workersAtPower = alive.filter(
         c => c.currentAction?.type === 'engineer' && c.currentAction?.targetZone === 'power' && !c.currentAction?.walkPath?.length
@@ -1270,9 +1359,11 @@ export const useGameStore = defineStore('game', {
     // ── Persistence ──
     async save() {
       const moon = useMoonStore()
+      const econState = getEconomyState()
       const saveData = {
         colony: this.$state,
         moon: moon.$state,
+        economy: econState,
       }
       try {
         await Preferences.set({ key: SAVE_KEY, value: JSON.stringify(saveData) })
@@ -1320,11 +1411,17 @@ export const useGameStore = defineStore('game', {
             moon.initialize(Date.now())
           }
           this.migrateState()
+          if (parsed.economy) {
+            restoreEconomyState(parsed.economy)
+          } else {
+            initEconomy(this.totalPlaytimeMs)
+          }
         } catch { /* corrupt save, use fresh state */ }
       } else {
         // No save found — new game
         const moon = useMoonStore()
         moon.initialize(Date.now())
+        initEconomy(0)
       }
     },
 
