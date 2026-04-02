@@ -76,16 +76,22 @@
       <div class="habitat-ring" />
 
       <MapBuilding v-for="b in game.buildings" :key="b.id" :building="b" @select="selectBuilding" />
-      <!-- Connector line from building to info overlay -->
-      <div
+      <!-- Connector line from building to info overlay (45° elbow) -->
+      <svg
         v-if="selectedBuilding"
         class="info-connector"
-        :style="{
-          left: selectedBuilding.x + '%',
-          top: (selectedBuilding.y < 30 ? selectedBuilding.y : selectedBuilding.y - 6) + '%',
-          height: '6%',
-        }"
-      />
+        viewBox="0 0 100 100"
+        preserveAspectRatio="none"
+      >
+        <polyline
+          :points="connectorPoints"
+          fill="none"
+          stroke="var(--accent-muted, rgba(255,255,255,0.2))"
+          stroke-width="0.4"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        />
+      </svg>
       <BuildingInfo
         v-if="selectedBuilding"
         :building="selectedBuilding"
@@ -194,6 +200,29 @@ const visibleColonists = computed(() =>
 )
 
 const selectedBuilding = ref<Building | null>(null)
+
+const connectorPoints = computed(() => {
+  const b = selectedBuilding.value
+  if (!b) return ''
+  const bx = b.x
+  const by = b.y
+  const below = by < 30
+  // Overlay position (mirrors BuildingInfo positioning logic)
+  const overlayX = Math.max(15, Math.min(85, bx))
+  const overlayY = below ? by + 6 : by - 6
+  const dx = overlayX - bx
+  const offsetY = below ? 1 : -1 // direction from building
+
+  if (Math.abs(dx) < 0.5) {
+    // Straight vertical — no elbow needed
+    return `${bx},${by} ${overlayX},${overlayY}`
+  }
+
+  // Elbow: vertical from building, then 45° diagonal to overlay
+  // The elbow point is where the diagonal meets the vertical line from the building
+  const elbowY = by + offsetY * Math.abs(dx) // travel diagonally the same distance as dx
+  return `${overlayX},${overlayY} ${bx},${elbowY} ${bx},${by}`
+})
 
 function selectBuilding(b: Building) {
   selectedBuilding.value = selectedBuilding.value?.id === b.id ? null : b
@@ -328,9 +357,10 @@ onUnmounted(() => cancelAnimationFrame(fpsRaf))
 
 .info-connector {
   position: absolute;
-  width: 1px;
-  background: linear-gradient(to bottom, var(--accent-muted, rgba(255,255,255,0.2)), transparent);
-  transform: translateX(-50%);
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
   pointer-events: none;
   z-index: 19;
 }
