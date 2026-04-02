@@ -292,3 +292,12 @@ button:active {
 [data-text-size="small"] { font-size: 13px; }
 [data-text-size="normal"] { font-size: 16px; }
 [data-text-size="large"] { font-size: 19px; }
+
+/* Respect reduced motion preference globally */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

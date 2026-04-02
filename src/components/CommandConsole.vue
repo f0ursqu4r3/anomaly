@@ -585,12 +585,13 @@ function missionStatusLabel(mission: SurveyMission): string {
   font-family: var(--font-mono);
   font-size: 10px;
   letter-spacing: 0.05em;
-  padding: 4px 10px;
+  padding: 6px 12px;
   border: 1px solid var(--cyan);
+  border-radius: var(--radius-sm);
   background: transparent;
   color: var(--cyan);
   cursor: pointer;
-  min-height: 28px;
+  min-height: 36px;
   min-width: 64px;
 }
 

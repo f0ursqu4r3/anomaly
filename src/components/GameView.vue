@@ -57,14 +57,17 @@ const { lens, isTransitioning, toggleLens } = useLensView()
   right: 60px;
   background: var(--bg-elevated);
   border: 1px solid var(--accent-muted);
+  border-radius: var(--radius-sm);
   color: var(--cyan);
   font-family: var(--font-mono);
-  font-size: 9px;
+  font-size: 10px;
   letter-spacing: 0.08em;
-  padding: 6px 10px;
+  padding: 8px 14px;
   cursor: pointer;
   z-index: 5;
-  min-height: 28px;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
 }
 
 .lens-switch:active {

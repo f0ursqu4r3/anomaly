@@ -263,9 +263,10 @@ function doReset() {
   color: var(--text-primary);
   border: 1px solid var(--accent-muted);
   border-radius: var(--radius-xs);
-  padding: 4px 8px;
+  padding: 6px 10px;
   font-family: var(--font-mono);
-  font-size: 11px;
+  font-size: 16px; /* prevents iOS auto-zoom on focus */
+  min-height: 36px;
 }
 
 .reset-btn {
