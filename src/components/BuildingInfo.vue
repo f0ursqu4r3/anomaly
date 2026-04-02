@@ -91,7 +91,8 @@ const workerCount = computed(() => {
 <style scoped>
 .building-info {
   position: absolute;
-  transform: translate(-50%, -100%);
+  transform: translate(-50%, -100%) scale(var(--marker-scale, 1));
+  transform-origin: bottom center;
   z-index: 20;
   background: var(--overlay-bg);
   border: 1px solid var(--accent-muted);
@@ -105,7 +106,8 @@ const workerCount = computed(() => {
 }
 
 .building-info.below {
-  transform: translate(-50%, 0);
+  transform: translate(-50%, 0) scale(var(--marker-scale, 1));
+  transform-origin: top center;
 }
 
 .info-header {
