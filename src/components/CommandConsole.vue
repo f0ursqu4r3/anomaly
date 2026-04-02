@@ -275,12 +275,17 @@ const { lens } = useLensView()
 
 const tab = ref<'log' | 'shipments' | 'directives' | 'export'>('log')
 
-const tabs = [
-  { id: 'log' as const, label: 'COMMS' },
-  { id: 'shipments' as const, label: 'SHIPMENTS' },
-  { id: 'export' as const, label: 'EXPORT' },
-  { id: 'directives' as const, label: 'DIRECTIVES' },
-]
+const tabs = computed(() => {
+  const t: { id: 'log' | 'shipments' | 'directives' | 'export'; label: string }[] = [
+    { id: 'log', label: 'COMMS' },
+    { id: 'shipments', label: 'SHIPMENTS' },
+  ]
+  if (game.exportPlatform.built) {
+    t.push({ id: 'export', label: 'EXPORT' })
+  }
+  t.push({ id: 'directives', label: 'DIRECTIVES' })
+  return t
+})
 
 const directiveShort = computed(() => {
   const map: Record<string, string> = {
