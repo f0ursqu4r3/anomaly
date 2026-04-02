@@ -186,9 +186,9 @@ const STARTING_METALS = 10
 const STARTING_ICE = 0
 
 // Credit economy
-export const BASE_CREDITS_PER_TICK = 1.0
-export const CREDITS_PER_METAL_MINED = 0.1
-export const CREDITS_PER_ICE_FOUND = 2.0
+export const BASE_CREDITS_PER_TICK = 2.0
+export const CREDITS_PER_METAL_MINED = 1.0
+export const CREDITS_PER_ICE_FOUND = 20.0
 const SHIPMENT_TRANSIT_MS = 10_000
 const EMERGENCY_TRANSIT_MS = 3_000
 const MAX_MESSAGES = 50
@@ -219,14 +219,14 @@ export const SHIPMENT_OPTIONS: ShipmentOption[] = [
     type: 'supplyCrate',
     label: 'Supply Crate',
     description: '+15 metals, +5 ice',
-    cost: 30,
+    cost: 600,
     weight: 20,
   },
   {
     type: 'equipment',
     label: 'Solar Panel',
     description: 'Generates power for the colony',
-    cost: 40,
+    cost: 800,
     weight: 18,
     buildingType: 'solar',
   },
@@ -234,7 +234,7 @@ export const SHIPMENT_OPTIONS: ShipmentOption[] = [
     type: 'equipment',
     label: 'O2 Generator',
     description: 'Produces breathable air',
-    cost: 50,
+    cost: 1000,
     weight: 32,
     buildingType: 'o2generator',
   },
@@ -242,7 +242,7 @@ export const SHIPMENT_OPTIONS: ShipmentOption[] = [
     type: 'equipment',
     label: 'Extraction Rig',
     description: 'Automated resource extraction',
-    cost: 65,
+    cost: 1300,
     weight: 55,
     buildingType: 'extractionrig',
   },
@@ -250,7 +250,7 @@ export const SHIPMENT_OPTIONS: ShipmentOption[] = [
     type: 'equipment',
     label: 'Med Bay',
     description: 'Heals injured crew over time',
-    cost: 80,
+    cost: 1500,
     weight: 40,
     buildingType: 'medbay',
   },
@@ -258,7 +258,7 @@ export const SHIPMENT_OPTIONS: ShipmentOption[] = [
     type: 'equipment',
     label: 'Parts Factory',
     description: 'Produces repair kits',
-    cost: 40,
+    cost: 800,
     weight: 30,
     buildingType: 'partsfactory',
   },
@@ -266,28 +266,28 @@ export const SHIPMENT_OPTIONS: ShipmentOption[] = [
     type: 'newColonist',
     label: 'New Colonist',
     description: 'Recruit crew member',
-    cost: 90,
+    cost: 1750,
     weight: 35,
   },
   {
     type: 'repairKit',
     label: 'Repair Kit',
     description: 'Fix one damaged building',
-    cost: 15,
+    cost: 250,
     weight: 5,
   },
   {
     type: 'emergencyO2',
     label: 'Emergency O2',
     description: '+30 air (fast delivery)',
-    cost: 20,
+    cost: 350,
     weight: 25,
   },
   {
     type: 'emergencyPower',
     label: 'Emergency Power',
     description: '+30 power (fast delivery)',
-    cost: 20,
+    cost: 350,
     weight: 15,
   },
 ]
@@ -373,8 +373,8 @@ function freshState(): ColonyState {
     lastHazard: null,
     lastHazardAt: 0,
     hazardCooldownUntil: 0,
-    credits: 50,
-    totalCreditsEarned: 50,
+    credits: 1000,
+    totalCreditsEarned: 1000,
     activeDirective: 'balanced',
     messages: [
       {
