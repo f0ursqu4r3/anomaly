@@ -45,6 +45,15 @@
           stroke-dasharray="1.5,1"
           opacity="0.15"
         />
+        <!-- Worn paths from colonist traffic -->
+        <line
+          v-for="(p, i) in wornPaths"
+          :key="'path-' + i"
+          :x1="p.x1" :y1="p.y1" :x2="p.x2" :y2="p.y2"
+          :stroke="`rgba(200, 200, 200, ${p.opacity})`"
+          :stroke-width="p.width"
+          stroke-linecap="round"
+        />
       </svg>
 
       <!-- Zone labels -->
@@ -136,6 +145,25 @@ const pathEdges = PATH_EDGES.map((e) => ({
   x2: ZONE_MAP[e.to].x,
   y2: ZONE_MAP[e.to].y,
 }))
+
+const wornPaths = computed(() => {
+  const paths: { x1: number; y1: number; x2: number; y2: number; opacity: number; width: number }[] = []
+  for (const [key, count] of Object.entries(game.zonePaths)) {
+    if (count < 10) continue
+    const [z1, z2] = key.split(':')
+    const zone1 = ZONE_MAP[z1]
+    const zone2 = ZONE_MAP[z2]
+    if (!zone1 || !zone2) continue
+
+    let opacity = 0.1
+    let width = 1
+    if (count >= 150) { opacity = 0.35; width = 2 }
+    else if (count >= 50) { opacity = 0.2; width = 1.5 }
+
+    paths.push({ x1: zone1.x, y1: zone1.y, x2: zone2.x, y2: zone2.y, opacity, width })
+  }
+  return paths
+})
 
 function getColonistState(id: string) {
   return positions.value.get(id) || getOrCreate(id)

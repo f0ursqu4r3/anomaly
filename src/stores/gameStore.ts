@@ -173,6 +173,7 @@ export interface ColonyState {
   lastSavedAt: number
   offlineEvents: OfflineEvent[]
   exportPlatform: ExportPlatform
+  zonePaths: Record<string, number>
 }
 
 // ── Constants ──────────────────────────────────────────────────────
@@ -341,6 +342,7 @@ export const COLONIST_NAMES = [
 
 let nextId = 1
 const announcedBonds = new Set<string>()
+const _prevZones = new Map<string, string>()
 export function uid(): string {
   return `${Date.now()}-${nextId++}`
 }
@@ -423,6 +425,7 @@ function freshState(): ColonyState {
       forceLaunched: false,
       reserves: { metals: null, ice: null, rareMinerals: null },
     },
+    zonePaths: {},
   }
 }
 
@@ -707,6 +710,26 @@ export const useGameStore = defineStore('game', {
               }
             }
           }
+        }
+      }
+
+      // Track zone transitions for worn paths
+      for (const c of alive) {
+        if (!c.currentAction?.walkPath?.length && c.currentZone) {
+          const prevZone = _prevZones.get(c.id)
+          if (prevZone && prevZone !== c.currentZone) {
+            const key = [prevZone, c.currentZone].sort().join(':')
+            this.zonePaths[key] = (this.zonePaths[key] ?? 0) + 1
+          }
+          _prevZones.set(c.id, c.currentZone)
+        }
+      }
+
+      // Decay worn paths
+      if (this.ticksSinceLastReport % 60 === 0) {
+        for (const key of Object.keys(this.zonePaths)) {
+          this.zonePaths[key]--
+          if (this.zonePaths[key] <= 0) delete this.zonePaths[key]
         }
       }
 
