@@ -52,6 +52,7 @@ export interface Building {
   id: string
   type: BuildingType
   damaged: boolean
+  constructionProgress: number | null // null = operational, 0-1 = under construction
   x: number
   y: number
   rotation?: number
@@ -356,7 +357,7 @@ function makeStartingBuildings(): Building[] {
   const types: BuildingType[] = ['solar', 'o2generator', 'extractionrig']
   for (const t of types) {
     const pos = getBuildingPosition(t, b)
-    b.push({ id: uid(), type: t, damaged: false, x: pos.x, y: pos.y, rotation: pos.rotation })
+    b.push({ id: uid(), type: t, damaged: false, constructionProgress: null, x: pos.x, y: pos.y, rotation: pos.rotation })
   }
   return b
 }
@@ -460,7 +461,7 @@ export const useGameStore = defineStore('game', {
     },
 
     airProduction(s): number {
-      const generators = s.buildings.filter((b) => b.type === 'o2generator' && !b.damaged).length
+      const generators = s.buildings.filter((b) => b.type === 'o2generator' && !b.damaged && b.constructionProgress === null).length
       const workersAtLifeSup = s.colonists.filter(
         c => c.health > 0 && c.currentAction?.type === 'engineer' && c.currentAction?.targetZone === 'lifeSup' && !c.currentAction?.walkPath?.length
       ).length
@@ -481,7 +482,7 @@ export const useGameStore = defineStore('game', {
     },
 
     powerProduction(s): number {
-      const solars = s.buildings.filter((b) => b.type === 'solar' && !b.damaged).length
+      const solars = s.buildings.filter((b) => b.type === 'solar' && !b.damaged && b.constructionProgress === null).length
       const workersAtPower = s.colonists.filter(
         c => c.health > 0 && c.currentAction?.type === 'engineer' && c.currentAction?.targetZone === 'power' && !c.currentAction?.walkPath?.length
       ).length
@@ -491,7 +492,7 @@ export const useGameStore = defineStore('game', {
     },
 
     powerConsumption(s): number {
-      const activeBuildings = s.buildings.filter((b) => !b.damaged).length
+      const activeBuildings = s.buildings.filter((b) => !b.damaged && b.constructionProgress === null).length
       return activeBuildings * POWER_CONSUMPTION_PER_BUILDING
     },
 
@@ -503,7 +504,7 @@ export const useGameStore = defineStore('game', {
       const extractorCount = s.colonists.filter(
         c => c.health > 0 && c.currentAction?.type === 'extract' && !c.currentAction?.walkPath?.length
       ).length
-      const rigCount = s.buildings.filter((b) => b.type === 'extractionrig' && !b.damaged).length
+      const rigCount = s.buildings.filter((b) => b.type === 'extractionrig' && !b.damaged && b.constructionProgress === null).length
       const totalEngineers = s.colonists.filter(
         c => c.health > 0 && c.currentAction?.type === 'engineer' && !c.currentAction?.walkPath?.length
       ).length
@@ -516,7 +517,7 @@ export const useGameStore = defineStore('game', {
       const extractorCount = s.colonists.filter(
         c => c.health > 0 && c.currentAction?.type === 'extract' && !c.currentAction?.walkPath?.length
       ).length
-      const rigCount = s.buildings.filter((b) => b.type === 'extractionrig' && !b.damaged).length
+      const rigCount = s.buildings.filter((b) => b.type === 'extractionrig' && !b.damaged && b.constructionProgress === null).length
       const totalEngineers = s.colonists.filter(
         c => c.health > 0 && c.currentAction?.type === 'engineer' && !c.currentAction?.walkPath?.length
       ).length
@@ -547,7 +548,7 @@ export const useGameStore = defineStore('game', {
     },
 
     storageCap(s): { metals: number; ice: number; rareMinerals: number } {
-      const siloCount = s.buildings.filter(b => b.type === 'storageSilo' && !b.damaged).length
+      const siloCount = s.buildings.filter(b => b.type === 'storageSilo' && !b.damaged && b.constructionProgress === null).length
       return {
         metals: BASE_STORAGE_METALS + siloCount * SILO_BONUS_METALS,
         ice: BASE_STORAGE_ICE + siloCount * SILO_BONUS_ICE,
@@ -561,7 +562,7 @@ export const useGameStore = defineStore('game', {
     },
 
     exportAutoReserves(s): { metals: number; ice: number; rareMinerals: number } {
-      const factoryCount = s.buildings.filter(b => b.type === 'partsfactory' && !b.damaged).length
+      const factoryCount = s.buildings.filter(b => b.type === 'partsfactory' && !b.damaged && b.constructionProgress === null).length
       const factoryReserve = factoryCount * 2 * 5 // PARTS_FACTORY_METAL_COST * 5 cycles
       const buildReserve = 20 // enough for a silo
       return {
@@ -777,22 +778,22 @@ export const useGameStore = defineStore('game', {
       const mod = DIRECTIVE_MODIFIERS[this.activeDirective]
 
       // Power
-      const solars = this.buildings.filter((b) => b.type === 'solar' && !b.damaged).length
-      const activeBuildings = this.buildings.filter((b) => !b.damaged).length
+      const solars = this.buildings.filter((b) => b.type === 'solar' && !b.damaged && b.constructionProgress === null).length
+      const activeBuildings = this.buildings.filter((b) => !b.damaged && b.constructionProgress === null).length
       const powerEngBonus = (1 + workersAtPower * ENGINEER_EFFICIENCY_BONUS) * mod.prodMult
       const powerProd = solars * POWER_PRODUCTION_PER_SOLAR * powerEngBonus
       const powerCons = activeBuildings * POWER_CONSUMPTION_PER_BUILDING
       this.power = Math.min(this.powerMax, Math.max(0, this.power + (powerProd - powerCons) * dt))
 
       // Air
-      const generators = this.buildings.filter((b) => b.type === 'o2generator' && !b.damaged).length
+      const generators = this.buildings.filter((b) => b.type === 'o2generator' && !b.damaged && b.constructionProgress === null).length
       const airEngBonus = (1 + workersAtLifeSup * ENGINEER_EFFICIENCY_BONUS) * mod.prodMult
       const airProd = this.power > 0 ? generators * O2_PRODUCTION_PER_GENERATOR * airEngBonus : 0
       const airCons = alive.length * AIR_CONSUMPTION_PER_COLONIST
       this.air = Math.min(this.airMax, Math.max(0, this.air + (airProd - airCons) * dt))
 
       // Extraction + credit income
-      const rigCount = this.buildings.filter((b) => b.type === 'extractionrig' && !b.damaged).length
+      const rigCount = this.buildings.filter((b) => b.type === 'extractionrig' && !b.damaged && b.constructionProgress === null).length
       const totalActiveEngineers = workersAtPower + workersAtLifeSup
       const extractEngBonus = 1 + totalActiveEngineers * ENGINEER_EFFICIENCY_BONUS
       const extractSpeed = (activeExtractors * EXTRACT_SPEED_PER_WORKER + rigCount * EXTRACT_SPEED_PER_RIG) * extractEngBonus * mod.extractMult
@@ -830,7 +831,7 @@ export const useGameStore = defineStore('game', {
       if ((metalsAtCap || iceAtCap) && overflowAmount > platformSpace && this.metals >= 20) {
         this.metals -= 20
         const pos = getBuildingPosition('storageSilo', this.buildings)
-        this.buildings.push({ id: uid(), type: 'storageSilo', damaged: false, x: pos.x, y: pos.y, rotation: pos.rotation })
+        this.buildings.push({ id: uid(), type: 'storageSilo', damaged: false, constructionProgress: null, x: pos.x, y: pos.y, rotation: pos.rotation })
         this.pushMessage('Storage full — engineers constructing additional silo.', 'event')
       }
 
@@ -862,7 +863,7 @@ export const useGameStore = defineStore('game', {
           if (hasEngineer) {
             this.metals -= 30
             const pos = getBuildingPosition('launchplatform', this.buildings)
-            this.buildings.push({ id: uid(), type: 'launchplatform', damaged: false, x: pos.x, y: pos.y, rotation: pos.rotation })
+            this.buildings.push({ id: uid(), type: 'launchplatform', damaged: false, constructionProgress: null, x: pos.x, y: pos.y, rotation: pos.rotation })
             this.exportPlatform.built = true
             this.pushMessage('Engineers have constructed a launch platform at the LZ.', 'event')
           }
@@ -870,7 +871,7 @@ export const useGameStore = defineStore('game', {
       }
 
       // Med bay healing
-      const medbays = this.buildings.filter((b) => b.type === 'medbay' && !b.damaged).length
+      const medbays = this.buildings.filter((b) => b.type === 'medbay' && !b.damaged && b.constructionProgress === null).length
       if (medbays > 0 && this.power > 0) {
         const healRate = medbays * MEDBAY_HEAL_PER_SEC * this.engineerBonus * dt
         for (const c of this.colonists) {
@@ -928,7 +929,7 @@ export const useGameStore = defineStore('game', {
       }
 
       // Parts Factory production — requires an engineer operating the workshop
-      const factoryCount = this.buildings.filter(b => b.type === 'partsfactory' && !b.damaged).length
+      const factoryCount = this.buildings.filter(b => b.type === 'partsfactory' && !b.damaged && b.constructionProgress === null).length
       const workshopOperators = alive.filter(
         c => c.currentAction?.type === 'engineer' && c.currentAction?.targetZone === 'workshop' && !c.currentAction?.walkPath?.length
       ).length
@@ -1023,7 +1024,7 @@ export const useGameStore = defineStore('game', {
 
       const roll = Math.random()
       if (roll < 0.4) {
-        const undamaged = this.buildings.filter((b) => !b.damaged)
+        const undamaged = this.buildings.filter((b) => !b.damaged && b.constructionProgress === null)
         if (undamaged.length > 0) {
           const target = undamaged[Math.floor(Math.random() * undamaged.length)]
           target.damaged = true
@@ -1197,6 +1198,7 @@ export const useGameStore = defineStore('game', {
                 id: uid(),
                 type: item.buildingType,
                 damaged: false,
+                constructionProgress: null,
                 x: pos.x,
                 y: pos.y,
                 rotation: pos.rotation,
@@ -1271,13 +1273,13 @@ export const useGameStore = defineStore('game', {
         )
       }
       // Suggestions
-      if (this.buildings.filter((b) => b.type === 'solar' && !b.damaged).length === 0) {
+      if (this.buildings.filter((b) => b.type === 'solar' && !b.damaged && b.constructionProgress === null).length === 0) {
         this.pushMessage(
           'Colony has no working solar panels. Power production critical.',
           'critical',
         )
       }
-      if (this.buildings.filter((b) => b.type === 'o2generator' && !b.damaged).length === 0) {
+      if (this.buildings.filter((b) => b.type === 'o2generator' && !b.damaged && b.constructionProgress === null).length === 0) {
         this.pushMessage('No working O2 generators. Air production halted.', 'critical')
       }
     },
@@ -1420,6 +1422,11 @@ export const useGameStore = defineStore('game', {
         if ((c as any).specialization === undefined) (c as any).specialization = null
         if ((c as any).bonds === undefined) (c as any).bonds = {}
         if ((c as any).lastBreakdownAt === undefined) (c as any).lastBreakdownAt = null
+      }
+
+      // Backfill constructionProgress for saves that predate this field
+      for (const b of this.buildings) {
+        if ((b as any).constructionProgress === undefined) b.constructionProgress = null
       }
 
       // Recalculate building positions with organic scatter

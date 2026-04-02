@@ -85,11 +85,11 @@ function computeRates(state: ColonyState): Rates {
   const mod = DIRECTIVE_MODIFIERS[state.activeDirective]
   const engBonus = (1 + engineers * ENGINEER_EFFICIENCY_BONUS) * mod.prodMult
 
-  const undamagedSolars = state.buildings.filter(b => b.type === 'solar' && !b.damaged).length
-  const undamagedGenerators = state.buildings.filter(b => b.type === 'o2generator' && !b.damaged).length
-  const undamagedMedbays = state.buildings.filter(b => b.type === 'medbay' && !b.damaged).length
-  const activeBuildings = state.buildings.filter(b => !b.damaged).length
-  const undamagedRigs = state.buildings.filter(b => b.type === 'extractionrig' && !b.damaged).length
+  const undamagedSolars = state.buildings.filter(b => b.type === 'solar' && !b.damaged && b.constructionProgress === null).length
+  const undamagedGenerators = state.buildings.filter(b => b.type === 'o2generator' && !b.damaged && b.constructionProgress === null).length
+  const undamagedMedbays = state.buildings.filter(b => b.type === 'medbay' && !b.damaged && b.constructionProgress === null).length
+  const activeBuildings = state.buildings.filter(b => !b.damaged && b.constructionProgress === null).length
+  const undamagedRigs = state.buildings.filter(b => b.type === 'extractionrig' && !b.damaged && b.constructionProgress === null).length
 
   const powerProd = undamagedSolars * POWER_PRODUCTION_PER_SOLAR * engBonus
   const powerCons = activeBuildings * POWER_CONSUMPTION_PER_BUILDING
@@ -125,7 +125,7 @@ function applyHazard(state: ColonyState, rand: () => number, events: OfflineEven
 
   const roll = rand()
   if (roll < 0.4) {
-    const undamaged = state.buildings.filter(b => !b.damaged)
+    const undamaged = state.buildings.filter(b => !b.damaged && b.constructionProgress === null)
     if (undamaged.length > 0) {
       const target = undamaged[Math.floor(rand() * undamaged.length)]
       target.damaged = true
@@ -163,7 +163,7 @@ function landShipments(state: ColonyState, rand: () => number, events: OfflineEv
         case 'equipment':
           if (item.buildingType) {
             const pos = getBuildingPosition(item.buildingType, state.buildings)
-            state.buildings.push({ id: uid(), type: item.buildingType, damaged: false, x: pos.x, y: pos.y })
+            state.buildings.push({ id: uid(), type: item.buildingType, damaged: false, constructionProgress: null, x: pos.x, y: pos.y })
             if (item.buildingType === 'o2generator') state.airMax += 25
             if (item.buildingType === 'solar') state.powerMax += 25
           }
@@ -330,7 +330,7 @@ export function simulateOffline(inputState: ColonyState, elapsedMs: number): Off
     }
 
     // Parts Factory production (offline) — only if engineers available to operate
-    const factoryCount = state.buildings.filter(b => b.type === 'partsfactory' && !b.damaged).length
+    const factoryCount = state.buildings.filter(b => b.type === 'partsfactory' && !b.damaged && b.constructionProgress === null).length
     const offlineAlive = state.colonists.filter(c => c.health > 0).length
     const offlineEngineers = Math.round(offlineAlive * DIRECTIVE_RATIOS[state.activeDirective].engineer)
     if (factoryCount > 0 && offlineEngineers > 0 && state.power > 0 && state.metals >= PARTS_FACTORY_METAL_COST) {
@@ -364,7 +364,7 @@ export function simulateOffline(inputState: ColonyState, elapsedMs: number): Off
     }
 
     // Offline storage clamping
-    const siloCount = state.buildings.filter(b => b.type === 'storageSilo' && !b.damaged).length
+    const siloCount = state.buildings.filter(b => b.type === 'storageSilo' && !b.damaged && b.constructionProgress === null).length
     const offlineCaps = {
       metals: 50 + siloCount * 100,
       ice: 25 + siloCount * 50,
@@ -408,8 +408,8 @@ export function simulateOffline(inputState: ColonyState, elapsedMs: number): Off
     }
   }
 
-  const generators = state.buildings.filter(b => b.type === 'o2generator' && !b.damaged).length
-  const solars = state.buildings.filter(b => b.type === 'solar' && !b.damaged).length
+  const generators = state.buildings.filter(b => b.type === 'o2generator' && !b.damaged && b.constructionProgress === null).length
+  const solars = state.buildings.filter(b => b.type === 'solar' && !b.damaged && b.constructionProgress === null).length
   state.airMax = STARTING_AIR_MAX + generators * 25
   state.powerMax = STARTING_POWER_MAX + solars * 25
   state.supplyDrops = []
