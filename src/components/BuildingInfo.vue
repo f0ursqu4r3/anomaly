@@ -3,7 +3,10 @@
     <div class="info-header">{{ label }}</div>
     <div class="info-row">
       <span class="info-label">Status</span>
-      <span :class="building.damaged ? 'status-bad' : 'status-ok'">
+      <span v-if="isConstructing" class="status-constructing">
+        BUILDING {{ Math.round(building.constructionProgress! * 100) }}%
+      </span>
+      <span v-else :class="building.damaged ? 'status-bad' : 'status-ok'">
         {{ building.damaged ? 'DAMAGED' : 'Operational' }}
       </span>
     </div>
@@ -40,6 +43,10 @@ const props = defineProps<{
 }>()
 
 const game = useGameStore()
+
+const isConstructing = computed(() =>
+  props.building.constructionProgress !== null && props.building.constructionProgress < 1
+)
 
 const label = computed(() => {
   const bp = BLUEPRINTS.find((b) => b.type === props.building.type)
@@ -133,6 +140,10 @@ const workerCount = computed(() => {
 }
 
 .rate-neg {
+  color: var(--amber);
+}
+
+.status-constructing {
   color: var(--amber);
 }
 </style>

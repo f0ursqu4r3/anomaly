@@ -1,7 +1,7 @@
 <template>
   <div
     class="map-building"
-    :class="[typeClass, { damaged: building.damaged }]"
+    :class="[typeClass, { damaged: building.damaged, constructing: isConstructing }]"
     :style="{ left: building.x + '%', top: building.y + '%', transform: `translate(-50%, -50%) scale(var(--marker-scale, 1)) rotate(${building.rotation || 0}deg)` }"
     @click.stop="emit('select', building)"
   >
@@ -10,6 +10,9 @@
     </div>
     <div v-if="building.damaged" class="dmg-badge">
       <SvgIcon name="repair" size="xs" />
+    </div>
+    <div v-if="isConstructing" class="construction-bar">
+      <div class="construction-fill" :style="{ width: (building.constructionProgress! * 100) + '%' }" />
     </div>
     <div v-if="workerCount > 0" class="worker-pips">
       <span v-for="n in workerCount" :key="n" class="worker-pip" :class="typeClass" />
@@ -43,19 +46,32 @@ const iconName = computed(() => {
 
 const typeClass = computed(() => `type-${props.building.type}`)
 
+const isConstructing = computed(() =>
+  props.building.constructionProgress !== null && props.building.constructionProgress < 1
+)
+
 const workerCount = computed(() => {
+  // Under construction: count constructors targeting this building
+  if (isConstructing.value) {
+    return game.colonists.filter(
+      c => c.health > 0 &&
+        c.currentAction?.type === 'construct' &&
+        c.currentAction?.targetId === props.building.id &&
+        !c.currentAction?.walkPath?.length
+    ).length
+  }
+
+  // Operational: count zone workers + repairers
   const zone = ZONE_FOR_BUILDING[props.building.type]
   if (!zone) return 0
 
   return game.colonists.filter(c => {
     if (c.health <= 0 || !c.currentAction || c.currentAction.walkPath?.length) return false
 
-    // Repairers count toward the building they're repairing
     if (c.currentAction.type === 'repair') {
       return c.currentAction.targetId === props.building.id
     }
 
-    // Zone-based workers
     if (c.currentAction.targetZone !== zone) return false
     const zoneActions: Record<string, string[]> = {
       extraction: ['extract'],
@@ -172,6 +188,30 @@ const workerCount = computed(() => {
 .worker-pip.type-partsfactory { color: var(--amber); }
 .worker-pip.type-launchplatform { color: var(--amber); }
 .worker-pip.type-storageSilo { color: var(--text-secondary, #888); }
+
+.constructing .building-sprite {
+  border-style: dashed !important;
+  opacity: 0.4;
+}
+
+.construction-bar {
+  position: absolute;
+  bottom: -8px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 24px;
+  height: 3px;
+  background: rgba(100, 100, 100, 0.3);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.construction-fill {
+  height: 100%;
+  background: var(--amber, #f5a623);
+  border-radius: 2px;
+  transition: width 1s linear;
+}
 
 .damaged .building-sprite {
   border-color: var(--red) !important;

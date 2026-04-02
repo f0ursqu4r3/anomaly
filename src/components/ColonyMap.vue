@@ -142,7 +142,7 @@ function getColonistState(id: string) {
 }
 
 // Colonists working inside buildings are shown as pips on the building, not as map markers
-const INSIDE_ACTIONS = new Set(['extract', 'engineer', 'repair', 'seek_medical', 'load'])
+const INSIDE_ACTIONS = new Set(['extract', 'engineer', 'repair', 'seek_medical', 'load', 'construct'])
 
 const visibleColonists = computed(() =>
   game.colonists.filter(c => {
