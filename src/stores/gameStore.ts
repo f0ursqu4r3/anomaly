@@ -899,6 +899,21 @@ export const useGameStore = defineStore('game', {
         }
       }
 
+      // Auto-build launch platform when metals available and none exists
+      if (!this.exportPlatform.built && this.metals >= 30) {
+        const hasLaunchPlatform = this.buildings.some(b => b.type === 'launchplatform')
+        if (!hasLaunchPlatform) {
+          const hasEngineer = alive.some(c => c.currentAction?.type === 'engineer' || c.currentAction?.type === 'wander' || !c.currentAction)
+          if (hasEngineer) {
+            this.metals -= 30
+            const pos = getBuildingPosition('launchplatform', this.buildings)
+            this.buildings.push({ id: uid(), type: 'launchplatform', damaged: false, x: pos.x, y: pos.y, rotation: pos.rotation })
+            this.exportPlatform.built = true
+            this.pushMessage('Engineers have constructed a launch platform at the LZ.', 'event')
+          }
+        }
+      }
+
       // Med bay healing
       const medbays = this.buildings.filter((b) => b.type === 'medbay' && !b.damaged).length
       if (medbays > 0 && this.power > 0) {
