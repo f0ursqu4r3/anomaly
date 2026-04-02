@@ -339,23 +339,27 @@ export function selectAction(
   // LOAD — haul resources to export platform
   if (colonist.energy > 20) {
     const ep = state.exportPlatform
-    if (ep && ep.built && ep.status === 'docked') {
+    const platform = state.buildings.find(b => b.type === 'launchplatform' && !b.damaged && b.constructionProgress === null)
+    if (ep && platform && ep.status === 'docked') {
       const loaded = ep.cargo.metals + ep.cargo.ice + ep.cargo.rareMinerals
       if (loaded < ep.capacity) {
-        const platform = state.buildings.find(b => b.type === 'launchplatform' && !b.damaged && b.constructionProgress === null)
-        if (platform) {
-          // Check if there are any resources to load (reserves checked during actual loading, not here)
-          const hasResources = state.metals > 0 || state.ice > 0 || state.rareMinerals > 0
-          if (hasResources) {
-            const loaders = countWorkers(state, 'load')
-            const loaderDiscount = loaders === 0 ? 1.0 : loaders === 1 ? 0.5 : loaders === 2 ? 0.15 : 0.05
-            candidates.push({
-              type: 'load',
-              targetZone: 'landing',
-              targetId: platform.id,
-              score: 40 * mod.workUtilityMult * loaderDiscount,
-            })
-          }
+        const hasResources = state.metals > 0 || state.ice > 0 || state.rareMinerals > 0
+        if (hasResources) {
+          const loaders = countWorkers(state, 'load')
+          const loaderDiscount = loaders === 0 ? 1.0 : loaders === 1 ? 0.5 : loaders === 2 ? 0.15 : 0.05
+
+          // Urgency: score increases when storage is near capacity
+          const siloCount = state.buildings.filter(b => b.type === 'storageSilo' && !b.damaged && b.constructionProgress === null).length
+          const metalCap = 50 + siloCount * 100
+          const storagePct = metalCap > 0 ? state.metals / metalCap : 0
+          const urgency = storagePct > 0.8 ? 2.0 : storagePct > 0.5 ? 1.3 : 1.0
+
+          candidates.push({
+            type: 'load',
+            targetZone: 'landing',
+            targetId: platform.id,
+            score: 45 * mod.workUtilityMult * loaderDiscount * urgency,
+          })
         }
       }
     }
