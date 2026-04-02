@@ -31,6 +31,7 @@ const DURATION: Record<ActionType, [number, number]> = {
   seek_medical: [20, 40],
   wander:       [8, 18],
   load:         [8, 15],
+  construct:    [20, 40],
 }
 
 interface TraitMod {
@@ -300,6 +301,24 @@ export function selectAction(
       targetId: target.id,
       score: 80 * dirMod.repair * mod.repairUtilityMult * workerDiscount,
     })
+  }
+
+  // CONSTRUCT — build under-construction buildings
+  if (colonist.energy > 20) {
+    const sites = state.buildings.filter(b => b.constructionProgress !== null && b.constructionProgress < 1)
+    if (sites.length > 0) {
+      const site = sites[0]
+      const targetZone = ZONE_FOR_BUILDING[site.type]
+      const constructors = countWorkers(state, 'construct', site.id)
+      // First constructor gets full score, second gets 30%, third+ negligible
+      const workerDiscount = constructors === 0 ? 1.0 : constructors === 1 ? 0.3 : 0.05
+      candidates.push({
+        type: 'construct',
+        targetZone,
+        targetId: site.id,
+        score: 75 * dirMod.engineer * mod.workUtilityMult * workerDiscount,
+      })
+    }
   }
 
   // UNPACK — diminishes as more colonists are already unpacking

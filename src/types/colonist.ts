@@ -24,6 +24,7 @@ export type ActionType =
   | 'seek_medical'
   | 'wander'
   | 'load'
+  | 'construct'
 
 export interface Action {
   type: ActionType
