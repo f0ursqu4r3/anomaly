@@ -3,7 +3,7 @@
     <!-- Cooldown bar -->
     <div v-if="game.shipmentOnCooldown" class="cooldown-bar">
       <div class="cooldown-fill" :style="{ width: cooldownPct + '%' }" />
-      <span class="cooldown-text mono">NEXT WINDOW {{ cooldownText }}</span>
+      <span class="cooldown-text mono">REFUELING {{ cooldownText }}</span>
     </div>
 
     <!-- In-transit -->

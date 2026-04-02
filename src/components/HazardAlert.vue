@@ -35,7 +35,7 @@ watch(
 <style scoped>
 .hazard-alert {
   position: absolute;
-  top: 32px;
+  top: calc(var(--safe-top) + 40px);
   left: 12px;
   right: 12px;
   z-index: 10;
