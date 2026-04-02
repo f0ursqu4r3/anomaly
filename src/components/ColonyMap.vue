@@ -81,13 +81,12 @@
         v-if="selectedBuilding"
         class="info-connector"
         viewBox="0 0 100 100"
-        preserveAspectRatio="none"
       >
         <polyline
           :points="connectorPoints"
           fill="none"
-          stroke="var(--accent-muted, rgba(255,255,255,0.2))"
-          stroke-width="0.4"
+          stroke="rgba(255, 255, 255, 0.25)"
+          stroke-width="0.3"
           stroke-linecap="round"
           stroke-linejoin="round"
         />
@@ -211,17 +210,18 @@ const connectorPoints = computed(() => {
   const overlayX = Math.max(15, Math.min(85, bx))
   const overlayY = below ? by + 6 : by - 6
   const dx = overlayX - bx
-  const offsetY = below ? 1 : -1 // direction from building
 
   if (Math.abs(dx) < 0.5) {
     // Straight vertical — no elbow needed
     return `${bx},${by} ${overlayX},${overlayY}`
   }
 
-  // Elbow: vertical from building, then 45° diagonal to overlay
-  // The elbow point is where the diagonal meets the vertical line from the building
-  const elbowY = by + offsetY * Math.abs(dx) // travel diagonally the same distance as dx
-  return `${overlayX},${overlayY} ${bx},${elbowY} ${bx},${by}`
+  // Elbow: start at building, go vertical, then 45° diagonal to overlay
+  // The diagonal covers |dx| horizontally, so it also covers |dx| vertically (45°)
+  const elbowY = below
+    ? overlayY - Math.abs(dx)  // diagonal goes down-and-over from elbow to overlay
+    : overlayY + Math.abs(dx)  // diagonal goes up-and-over from elbow to overlay
+  return `${bx},${by} ${bx},${elbowY} ${overlayX},${overlayY}`
 })
 
 function selectBuilding(b: Building) {
