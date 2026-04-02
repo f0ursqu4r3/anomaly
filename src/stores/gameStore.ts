@@ -869,9 +869,17 @@ export const useGameStore = defineStore('game', {
       // Clamp resources to storage caps
       const caps = this.storageCap
       if (this.metals > caps.metals) {
+        if (this.ticksSinceLastReport % 60 === 0) {
+          const overflowColonist = alive.find(c => c.currentAction?.type === 'extract')
+          const name = overflowColonist?.name ?? 'Colony'
+          this.pushMessage(`${name}: Storage full — we're losing metals out here.`, 'warning')
+        }
         this.metals = caps.metals
       }
       if (this.ice > caps.ice) {
+        if (this.ticksSinceLastReport % 60 === 0) {
+          this.pushMessage('Ice storage at capacity. Excess discarded.', 'warning')
+        }
         this.ice = caps.ice
       }
       if (this.rareMinerals > caps.rareMinerals) {
