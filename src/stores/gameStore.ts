@@ -108,6 +108,19 @@ export interface SupplyDrop {
   landedAt: number
 }
 
+export interface ExportPlatform {
+  built: boolean
+  status: 'docked' | 'in_transit' | 'returning'
+  cargo: { metals: number; ice: number; rareMinerals: number }
+  capacity: number
+  launchTime: number | null
+  returnTime: number | null
+  estimatedCredits: number | null
+  autoLaunch: boolean
+  forceLaunched: boolean
+  reserves: { metals: number | null; ice: number | null; rareMinerals: number | null }
+}
+
 const UNPACK_MS_PER_KG = 150 // 150ms per kg with 1 colonist (e.g. 45kg = 6.75s)
 const DONE_LINGER_MS = 1500
 
@@ -150,6 +163,7 @@ export interface ColonyState {
   lastTickAt: number
   lastSavedAt: number
   offlineEvents: OfflineEvent[]
+  exportPlatform: ExportPlatform
 }
 
 // ── Constants ──────────────────────────────────────────────────────
@@ -205,6 +219,15 @@ const SILO_BONUS_METALS = 100
 const SILO_BONUS_ICE = 50
 const SILO_BONUS_RARE_MINERALS = 25
 const SILO_AUTO_BUILD_THRESHOLD = 0.8
+
+// Export platform
+const EXPORT_PLATFORM_BASE_CAPACITY = 100
+const EXPORT_TRANSIT_MS = 120_000
+const EXPORT_RETURN_MS = 180_000
+const EXPORT_FORCE_RETURN_MS = 270_000
+const LOAD_UNITS_PER_TRIP = 2
+
+export { EXPORT_TRANSIT_MS, EXPORT_RETURN_MS, EXPORT_FORCE_RETURN_MS }
 
 // Directive config
 export const DIRECTIVE_RATIOS: Record<Directive, { extractor: number; engineer: number }> = {
@@ -431,6 +454,18 @@ function freshState(): ColonyState {
     lastTickAt: Date.now(),
     lastSavedAt: Date.now(),
     offlineEvents: [],
+    exportPlatform: {
+      built: false,
+      status: 'docked',
+      cargo: { metals: 0, ice: 0, rareMinerals: 0 },
+      capacity: EXPORT_PLATFORM_BASE_CAPACITY,
+      launchTime: null,
+      returnTime: null,
+      estimatedCredits: null,
+      autoLaunch: false,
+      forceLaunched: false,
+      reserves: { metals: null, ice: null, rareMinerals: null },
+    },
   }
 }
 
@@ -561,6 +596,31 @@ export const useGameStore = defineStore('game', {
         metals: BASE_STORAGE_METALS + siloCount * SILO_BONUS_METALS,
         ice: BASE_STORAGE_ICE + siloCount * SILO_BONUS_ICE,
         rareMinerals: BASE_STORAGE_RARE_MINERALS + siloCount * SILO_BONUS_RARE_MINERALS,
+      }
+    },
+
+    exportPlatformLoaded(s): number {
+      const c = s.exportPlatform.cargo
+      return c.metals + c.ice + c.rareMinerals
+    },
+
+    exportAutoReserves(s): { metals: number; ice: number; rareMinerals: number } {
+      const factoryCount = s.buildings.filter(b => b.type === 'partsfactory' && !b.damaged).length
+      const factoryReserve = factoryCount * 2 * 5 // PARTS_FACTORY_METAL_COST * 5 cycles
+      const buildReserve = 20 // enough for a silo
+      return {
+        metals: factoryReserve + buildReserve,
+        ice: 0,
+        rareMinerals: 0,
+      }
+    },
+
+    effectiveReserves(s): { metals: number; ice: number; rareMinerals: number } {
+      const auto = (this as any).exportAutoReserves
+      return {
+        metals: s.exportPlatform.reserves.metals ?? auto.metals,
+        ice: s.exportPlatform.reserves.ice ?? auto.ice,
+        rareMinerals: s.exportPlatform.reserves.rareMinerals ?? auto.rareMinerals,
       }
     },
   },
@@ -1313,6 +1373,44 @@ export const useGameStore = defineStore('game', {
 
     toggleAutoRelaunch() {
       this.autoRelaunch = !this.autoRelaunch
+    },
+
+    launchExport(force: boolean = false) {
+      const ep = this.exportPlatform
+      if (ep.status !== 'docked') return
+      if (ep.cargo.metals + ep.cargo.ice + ep.cargo.rareMinerals === 0) return
+
+      ep.status = 'in_transit'
+      ep.launchTime = this.totalPlaytimeMs
+      ep.forceLaunched = force
+      ep.estimatedCredits = null
+
+      const loaded = ep.cargo.metals + ep.cargo.ice + ep.cargo.rareMinerals
+      if (force) {
+        this.pushMessage(
+          `Emergency export — platform launching at ${loaded}/${ep.capacity} capacity. Extended return time.`,
+          'event',
+        )
+      } else {
+        const est = this.estimateExportCredits()
+        this.pushMessage(
+          `Payload en route to HQ — ${ep.cargo.metals} metals, ${ep.cargo.ice} ice. Estimated ${est}cr at current rates.`,
+          'event',
+        )
+      }
+    },
+
+    estimateExportCredits(): number {
+      const c = this.exportPlatform.cargo
+      return Math.round(c.metals * 15 + c.ice * 40 + c.rareMinerals * 100)
+    },
+
+    setExportReserve(resource: 'metals' | 'ice' | 'rareMinerals', value: number | null) {
+      this.exportPlatform.reserves[resource] = value
+    },
+
+    toggleAutoLaunch() {
+      this.exportPlatform.autoLaunch = !this.exportPlatform.autoLaunch
     },
   },
 })
