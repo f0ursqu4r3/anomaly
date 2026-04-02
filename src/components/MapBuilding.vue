@@ -11,16 +11,22 @@
     <div v-if="building.damaged" class="dmg-badge">
       <SvgIcon name="repair" size="xs" />
     </div>
+    <div v-if="workerCount > 0" class="worker-pips">
+      <span v-for="n in workerCount" :key="n" class="worker-pip" />
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { computed } from 'vue'
 import type { Building } from '@/stores/gameStore'
+import { useGameStore } from '@/stores/gameStore'
+import { ZONE_FOR_BUILDING } from '@/systems/mapLayout'
 import SvgIcon from './SvgIcon.vue'
 
 const props = defineProps<{ building: Building }>()
 const emit = defineEmits<{ select: [building: Building] }>()
+const game = useGameStore()
 
 const iconName = computed(() => {
   const map: Record<string, string> = {
@@ -28,11 +34,32 @@ const iconName = computed(() => {
     solar: 'solar',
     extractionrig: 'extractionrig',
     medbay: 'medbay',
+    partsfactory: 'partsfactory',
+    storageSilo: 'storageSilo',
+    launchplatform: 'launchplatform',
   }
   return map[props.building.type] || 'shipment'
 })
 
 const typeClass = computed(() => `type-${props.building.type}`)
+
+// Buildings that have colonists working inside them
+const WORKER_BUILDINGS = new Set(['extractionrig', 'partsfactory', 'medbay', 'launchplatform'])
+
+const workerCount = computed(() => {
+  if (!WORKER_BUILDINGS.has(props.building.type)) return 0
+  const zone = ZONE_FOR_BUILDING[props.building.type]
+  if (!zone) return 0
+  // Count colonists actively working (not walking) in this building's zone
+  const workActions = props.building.type === 'launchplatform' ? ['load'] : ['extract', 'engineer', 'repair', 'seek_medical']
+  return game.colonists.filter(
+    c => c.health > 0 &&
+      c.currentAction &&
+      workActions.includes(c.currentAction.type) &&
+      c.currentAction.targetZone === zone &&
+      !c.currentAction.walkPath?.length
+  ).length
+})
 </script>
 
 <style scoped>
@@ -88,6 +115,45 @@ const typeClass = computed(() => `type-${props.building.type}`)
   box-shadow:
     0 0 10px var(--red-glow),
     0 0 20px rgba(233, 69, 96, 0.1);
+}
+
+.type-partsfactory .building-sprite {
+  color: var(--amber);
+  border-color: var(--amber-glow);
+  box-shadow:
+    0 0 10px var(--amber-glow),
+    0 0 20px rgba(245, 158, 11, 0.1);
+}
+
+.type-storageSilo .building-sprite {
+  color: var(--text-secondary, #888);
+  border-color: rgba(136, 136, 136, 0.3);
+  box-shadow: 0 0 6px rgba(136, 136, 136, 0.1);
+}
+
+.type-launchplatform .building-sprite {
+  color: var(--amber);
+  border-color: var(--amber-glow);
+  box-shadow:
+    0 0 10px var(--amber-glow),
+    0 0 20px rgba(245, 158, 11, 0.1);
+}
+
+.worker-pips {
+  position: absolute;
+  bottom: -6px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 2px;
+}
+
+.worker-pip {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--cyan, #7ecfff);
+  box-shadow: 0 0 4px var(--cyan-glow, rgba(126, 207, 255, 0.5));
 }
 
 .damaged .building-sprite {

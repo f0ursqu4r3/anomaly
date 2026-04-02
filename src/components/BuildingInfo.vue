@@ -15,7 +15,7 @@
       <span class="info-label">Draw</span>
       <span class="rate-neg">-{{ consumption }}/s</span>
     </div>
-    <div class="info-row">
+    <div v-if="showWorkers" class="info-row">
       <span class="info-label">Workers</span>
       <span>{{ workerCount }}</span>
     </div>
@@ -61,11 +61,18 @@ const consumption = computed(() => {
   return POWER_CONSUMPTION_PER_BUILDING.toFixed(1)
 })
 
+// Buildings that have workers inside
+const WORKER_BUILDINGS = new Set(['extractionrig', 'partsfactory', 'medbay', 'launchplatform', 'solar', 'o2generator'])
+
+const showWorkers = computed(() => WORKER_BUILDINGS.has(props.building.type))
+
 const workerCount = computed(() => {
   const zone = props.building.type === 'solar' ? 'power'
     : props.building.type === 'o2generator' ? 'lifeSup'
     : props.building.type === 'extractionrig' ? 'extraction'
     : props.building.type === 'medbay' ? 'medical'
+    : props.building.type === 'partsfactory' ? 'workshop'
+    : props.building.type === 'launchplatform' ? 'landing'
     : null
   if (!zone) return 0
   return game.colonists.filter(

@@ -81,8 +81,23 @@ const ICONS: Record<string, IconDef> = {
   },
   partsfactory: {
     viewBox: '0 0 16 16',
-    path: `<circle cx="8" cy="8" r="2" stroke="currentColor" stroke-width="1.2"/>
-           <path d="M8 1.5v2M8 12.5v2M1.5 8h2M12.5 8h2M3.3 3.3l1.4 1.4M11.3 11.3l1.4 1.4M3.3 12.7l1.4-1.4M11.3 4.7l1.4-1.4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>`,
+    path: `<circle cx="8" cy="8" r="3" stroke="currentColor" stroke-width="1.2"/>
+           <circle cx="8" cy="8" r="1" fill="currentColor" opacity="0.6"/>
+           <path d="M5 5l6 6M11 5l-6 6" stroke="currentColor" stroke-width="0.8" opacity="0.4"/>
+           <path d="M8 3v-1M8 14v-1M3 8h-1M14 8h-1" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>`,
+  },
+  storageSilo: {
+    viewBox: '0 0 16 16',
+    path: `<rect x="4" y="3" width="8" height="10" rx="1.5" stroke="currentColor" stroke-width="1.2"/>
+           <path d="M4 6h8M4 9h8" stroke="currentColor" stroke-width="0.8" opacity="0.4"/>
+           <path d="M6.5 11.5h3" stroke="currentColor" stroke-width="1" stroke-linecap="round" opacity="0.6"/>`,
+  },
+  launchplatform: {
+    viewBox: '0 0 16 16',
+    path: `<path d="M8 2l3 5H5z" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/>
+           <path d="M8 7v5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
+           <path d="M4 14h8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+           <path d="M5.5 12h5" stroke="currentColor" stroke-width="1" stroke-linecap="round" opacity="0.5"/>`,
   },
 
   // ── Directives ──

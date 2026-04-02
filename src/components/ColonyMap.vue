@@ -1,5 +1,8 @@
 <template>
-  <div class="colony-map" :class="{ 'reduce-animations': settings.reduceAnimations }" ref="mapContainer"
+  <div
+    class="colony-map"
+    :class="{ 'reduce-animations': settings.reduceAnimations }"
+    ref="mapContainer"
     @wheel.prevent="onWheel"
     @pointerdown="onPointerDown"
     @pointermove="onPointerMove"
@@ -11,28 +14,54 @@
 
     <div class="map-content" :style="transformStyle">
       <!-- Zone boundaries and paths (SVG) -->
-      <svg class="zone-overlay" :class="{ 'high-contrast': settings.highContrast }" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid meet">
+      <svg
+        class="zone-overlay"
+        :class="{ 'high-contrast': settings.highContrast }"
+        viewBox="0 0 100 100"
+        preserveAspectRatio="xMidYMid meet"
+      >
         <template v-if="settings.pathLines">
-        <line v-for="(edge, i) in pathEdges" :key="'p'+i"
-          :x1="edge.x1" :y1="edge.y1" :x2="edge.x2" :y2="edge.y2"
-          stroke="var(--accent-dim)" stroke-width="0.3" opacity="0.12"
-        />
+          <line
+            v-for="(edge, i) in pathEdges"
+            :key="'p' + i"
+            :x1="edge.x1"
+            :y1="edge.y1"
+            :x2="edge.x2"
+            :y2="edge.y2"
+            stroke="var(--accent-dim)"
+            stroke-width="0.3"
+            opacity="0.12"
+          />
         </template>
-        <circle v-for="zone in zones" :key="zone.id"
-          :cx="zone.x" :cy="zone.y" :r="zone.radius"
-          fill="none" :stroke="zone.color" stroke-width="0.2"
-          stroke-dasharray="1.5,1" opacity="0.15"
+        <circle
+          v-for="zone in zones"
+          :key="zone.id"
+          :cx="zone.x"
+          :cy="zone.y"
+          :r="zone.radius"
+          fill="none"
+          :stroke="zone.color"
+          stroke-width="0.2"
+          stroke-dasharray="1.5,1"
+          opacity="0.15"
         />
       </svg>
 
       <!-- Zone labels -->
       <template v-if="settings.zoneLabels">
-      <div v-for="zone in zones" :key="'label-'+zone.id"
-        class="zone-marker"
-        :style="{ left: zone.x + '%', top: (zone.y - zone.radius - 2) + '%', color: zone.color, transform: `translate(-50%, -50%) scale(var(--marker-scale, 1))` }"
-      >
-        {{ zone.label }}
-      </div>
+        <div
+          v-for="zone in zones"
+          :key="'label-' + zone.id"
+          class="zone-marker"
+          :style="{
+            left: zone.x + '%',
+            top: zone.y - zone.radius - 2 + '%',
+            color: zone.color,
+            transform: `translate(-50%, -50%) scale(var(--marker-scale, 1))`,
+          }"
+        >
+          {{ zone.label }}
+        </div>
       </template>
 
       <div class="habitat-ring" />
@@ -47,7 +76,7 @@
       <MapSupplyDrop v-for="d in game.supplyDrops" :key="d.id" :drop="d" />
 
       <MapColonist
-        v-for="c in game.colonists"
+        v-for="c in visibleColonists"
         :key="c.id"
         :colonist="c"
         :x="getColonistState(c.id).targetX"
@@ -101,7 +130,7 @@ const moon = useMoonStore()
 const { positions, getOrCreate } = useColonistMovement()
 
 const zones = ZONES
-const pathEdges = PATH_EDGES.map(e => ({
+const pathEdges = PATH_EDGES.map((e) => ({
   x1: ZONE_MAP[e.from].x,
   y1: ZONE_MAP[e.from].y,
   x2: ZONE_MAP[e.to].x,
@@ -111,6 +140,20 @@ const pathEdges = PATH_EDGES.map(e => ({
 function getColonistState(id: string) {
   return positions.value.get(id) || getOrCreate(id)
 }
+
+// Colonists working inside buildings are shown as pips on the building, not as map markers
+const INSIDE_ACTIONS = new Set(['extract', 'engineer', 'repair', 'seek_medical', 'load'])
+
+const visibleColonists = computed(() =>
+  game.colonists.filter(c => {
+    if (c.health <= 0) return true // show dead colonists (faded)
+    const action = c.currentAction
+    if (!action) return true // idle/no action — show on map
+    if (action.walkPath?.length) return true // walking — show on map
+    if (INSIDE_ACTIONS.has(action.type)) return false // working inside building — hide
+    return true
+  })
+)
 
 const selectedBuilding = ref<Building | null>(null)
 
@@ -177,7 +220,9 @@ function updateFps() {
   fpsRaf = requestAnimationFrame(updateFps)
 }
 
-onMounted(() => { fpsRaf = requestAnimationFrame(updateFps) })
+onMounted(() => {
+  fpsRaf = requestAnimationFrame(updateFps)
+})
 onUnmounted(() => cancelAnimationFrame(fpsRaf))
 </script>
 
@@ -243,7 +288,6 @@ onUnmounted(() => cancelAnimationFrame(fpsRaf))
   z-index: 1;
 }
 
-
 .habitat-ring {
   position: absolute;
   left: 50%;
@@ -260,7 +304,7 @@ onUnmounted(() => cancelAnimationFrame(fpsRaf))
 
 .feed-indicator {
   position: absolute;
-  top: calc(var(--safe-top) + 32px);
+  top: calc(var(--safe-top) + 40px);
   right: 8px;
   display: flex;
   align-items: center;
@@ -314,8 +358,13 @@ onUnmounted(() => cancelAnimationFrame(fpsRaf))
   z-index: 1;
 }
 
-.zone-overlay.high-contrast line { opacity: 0.3; }
-.zone-overlay.high-contrast circle { opacity: 0.35; stroke-width: 0.4; }
+.zone-overlay.high-contrast line {
+  opacity: 0.3;
+}
+.zone-overlay.high-contrast circle {
+  opacity: 0.35;
+  stroke-width: 0.4;
+}
 
 .reduce-animations .colonist-dot,
 .reduce-animations .colonist-trail,
