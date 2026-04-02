@@ -1,124 +1,164 @@
 <template>
   <div class="export-panel">
-    <!-- Not built yet -->
-    <div v-if="!game.exportPlatform.built" class="not-built">
-      <div class="section-label">LAUNCH PLATFORM</div>
-      <p class="info-text">No launch platform constructed.</p>
-      <p class="info-text">Order one from HQ via SHIPMENTS.</p>
+    <div class="section-label">EXPORT PLATFORMS</div>
+
+    <!-- HQ Rates -->
+    <div class="rates-row">
+      <span class="rate-label">HQ RATES</span>
+      <span class="rate" :class="{ boosted: rates.metals !== 15 }">
+        Metals {{ rates.metals }}cr
+      </span>
+      <span class="rate" :class="{ boosted: rates.ice !== 40 }">
+        Ice {{ rates.ice }}cr
+      </span>
+      <span class="rate" :class="{ boosted: rates.rareMinerals !== 100 }">
+        Rare {{ rates.rareMinerals }}cr
+      </span>
     </div>
 
-    <!-- Platform status -->
-    <template v-else>
-      <div class="section-label">LAUNCH PLATFORM</div>
-
-      <!-- HQ Rates -->
-      <div class="rates-row">
-        <span class="rate-label">HQ RATES</span>
-        <span class="rate" :class="{ boosted: rates.metals !== 15 }">
-          Metals {{ rates.metals }}cr
-        </span>
-        <span class="rate" :class="{ boosted: rates.ice !== 40 }">
-          Ice {{ rates.ice }}cr
-        </span>
-        <span class="rate" :class="{ boosted: rates.rareMinerals !== 100 }">
-          Rare {{ rates.rareMinerals }}cr
-        </span>
+    <!-- Per-platform cards -->
+    <div v-for="platform in platforms" :key="platform.id" class="platform-card">
+      <div class="platform-header">
+        <span>{{ platformLabel(platform) }}</span>
+        <span class="platform-status" :class="statusClass(platform)">{{ statusLabel(platform) }}</span>
       </div>
 
       <!-- Platform away -->
-      <div v-if="game.exportPlatform.status !== 'docked'" class="transit-status">
-        <span v-if="game.exportPlatform.status === 'in_transit'" class="status-transit">
-          EN ROUTE TO HQ — {{ transitEta }}
-        </span>
-        <span v-else class="status-returning">
-          RETURNING — {{ returnEta }}
-        </span>
-      </div>
+      <template v-if="getState(platform)?.status === 'in_transit' || getState(platform)?.status === 'returning'">
+        <div class="transit-info">
+          <span v-if="getState(platform)?.status === 'in_transit'">
+            EN ROUTE — {{ transitEta(platform) }}
+          </span>
+          <span v-else>
+            RETURNING — {{ returnEta(platform) }}
+          </span>
+        </div>
+      </template>
 
-      <!-- Docked — show cargo and controls -->
-      <template v-if="game.exportPlatform.status === 'docked'">
+      <!-- Docked -->
+      <template v-if="getState(platform)?.status === 'docked'">
         <div class="cargo-section">
           <div class="cargo-header">
             <span>CARGO</span>
-            <span class="cargo-count" :class="{ full: loaded >= game.exportPlatform.capacity }">
-              {{ loaded }}/{{ game.exportPlatform.capacity }}
+            <span class="cargo-count" :class="{ full: loaded(platform) >= (getState(platform)?.capacity ?? 100) }">
+              {{ loaded(platform) }}/{{ getState(platform)?.capacity ?? 100 }}
             </span>
           </div>
           <div class="capacity-bar-bg">
             <div
               class="capacity-bar-fill"
-              :class="{ full: loaded >= game.exportPlatform.capacity }"
-              :style="{ width: (loaded / game.exportPlatform.capacity * 100) + '%' }"
+              :class="{ full: loaded(platform) >= (getState(platform)?.capacity ?? 100) }"
+              :style="{ width: (loaded(platform) / (getState(platform)?.capacity ?? 100) * 100) + '%' }"
             />
           </div>
-          <div v-if="loaded > 0" class="cargo-breakdown">
-            <span v-if="game.exportPlatform.cargo.metals > 0" class="cargo-item">{{ game.exportPlatform.cargo.metals }}m</span>
-            <span v-if="game.exportPlatform.cargo.ice > 0" class="cargo-item">{{ game.exportPlatform.cargo.ice }}i</span>
-            <span v-if="game.exportPlatform.cargo.rareMinerals > 0" class="cargo-item">{{ game.exportPlatform.cargo.rareMinerals }}r</span>
-            <span class="cargo-estimate">est. {{ estimate }}cr</span>
+          <div v-if="loaded(platform) > 0" class="cargo-breakdown">
+            <span v-if="getState(platform)!.cargo.metals > 0" class="cargo-item">{{ getState(platform)!.cargo.metals }}m</span>
+            <span v-if="getState(platform)!.cargo.ice > 0" class="cargo-item">{{ getState(platform)!.cargo.ice }}i</span>
+            <span v-if="getState(platform)!.cargo.rareMinerals > 0" class="cargo-item">{{ getState(platform)!.cargo.rareMinerals }}r</span>
+            <span class="cargo-estimate">est. {{ estimate(platform) }}cr</span>
           </div>
         </div>
 
         <div class="controls">
           <button
             class="action-btn green"
-            :disabled="loaded === 0"
-            @click="game.launchExport(false)"
+            :disabled="loaded(platform) === 0"
+            @click="game.launchExport(platform.id, false)"
           >
             LAUNCH
           </button>
           <button
             class="action-btn amber"
-            :disabled="loaded === 0"
-            @click="game.launchExport(true)"
+            :disabled="loaded(platform) === 0"
+            @click="game.launchExport(platform.id, true)"
           >
             FORCE
           </button>
           <button
             class="action-btn"
-            :class="{ active: game.exportPlatform.autoLaunch }"
-            @click="game.toggleAutoLaunch()"
+            :class="{ active: getState(platform)?.autoLaunch }"
+            @click="game.toggleAutoLaunch(platform.id)"
           >
-            {{ game.exportPlatform.autoLaunch ? 'AUTO ON' : 'AUTO' }}
+            {{ getState(platform)?.autoLaunch ? 'AUTO ON' : 'AUTO' }}
           </button>
         </div>
-
-        <!-- Reserves -->
-        <div class="reserves">
-          <span class="reserve-label">RESERVES</span>
-          <span class="reserve-val">M:{{ effectiveReserves.metals }}</span>
-          <span class="reserve-val">I:{{ effectiveReserves.ice }}</span>
-          <span class="reserve-val">R:{{ effectiveReserves.rareMinerals }}</span>
-        </div>
       </template>
-    </template>
+    </div>
+
+    <!-- Global reserves -->
+    <div v-if="platforms.length > 0" class="reserves">
+      <span class="reserve-label">RESERVES</span>
+      <span class="reserve-val">M:{{ autoReserves.metals }}</span>
+      <span class="reserve-val">I:{{ autoReserves.ice }}</span>
+      <span class="reserve-val">R:{{ autoReserves.rareMinerals }}</span>
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { computed } from 'vue'
+import type { Building } from '@/stores/gameStore'
 import { useGameStore } from '@/stores/gameStore'
 import { getCurrentRates, calculatePayoutEstimate } from '@/systems/economy'
 
 const game = useGameStore()
 
 const rates = computed(() => getCurrentRates(game.totalPlaytimeMs))
-const loaded = computed(() => game.exportPlatformLoaded)
-const estimate = computed(() => calculatePayoutEstimate(game.exportPlatform.cargo, game.totalPlaytimeMs))
-const effectiveReserves = computed(() => game.effectiveReserves)
+const platforms = computed(() => game.operationalPlatforms)
+const autoReserves = computed(() => game.exportAutoReserves)
 
-const transitEta = computed(() => {
-  if (!game.exportPlatform.launchTime) return '--'
-  const arrival = game.exportPlatform.launchTime + 120_000
-  const remaining = Math.max(0, arrival - game.totalPlaytimeMs)
-  return `${Math.ceil(remaining / 1000)}s`
-})
+function getState(platform: Building) {
+  return game.exportPlatforms[platform.id]
+}
 
-const returnEta = computed(() => {
-  if (!game.exportPlatform.returnTime) return '--'
-  const remaining = Math.max(0, game.exportPlatform.returnTime - game.totalPlaytimeMs)
+function loaded(platform: Building): number {
+  const ep = getState(platform)
+  if (!ep) return 0
+  return ep.cargo.metals + ep.cargo.ice + ep.cargo.rareMinerals
+}
+
+function estimate(platform: Building): number {
+  const ep = getState(platform)
+  if (!ep) return 0
+  return calculatePayoutEstimate(ep.cargo, game.totalPlaytimeMs)
+}
+
+function platformLabel(platform: Building): string {
+  const index = game.buildings
+    .filter(b => b.type === 'launchplatform')
+    .findIndex(b => b.id === platform.id)
+  return `Platform #${index + 1}`
+}
+
+function statusLabel(platform: Building): string {
+  const ep = getState(platform)
+  if (!ep) return 'INIT'
+  if (ep.status === 'in_transit') return 'EN ROUTE'
+  if (ep.status === 'returning') return 'RETURNING'
+  return 'DOCKED'
+}
+
+function statusClass(platform: Building): string {
+  const ep = getState(platform)
+  if (!ep) return ''
+  if (ep.status === 'in_transit') return 'status-transit'
+  if (ep.status === 'returning') return 'status-returning'
+  return 'status-docked'
+}
+
+function transitEta(platform: Building): string {
+  const ep = getState(platform)
+  if (!ep?.launchTime) return '--'
+  const remaining = Math.max(0, ep.launchTime + 120_000 - game.totalPlaytimeMs)
   return `${Math.ceil(remaining / 1000)}s`
-})
+}
+
+function returnEta(platform: Building): string {
+  const ep = getState(platform)
+  if (!ep?.returnTime) return '--'
+  const remaining = Math.max(0, ep.returnTime - game.totalPlaytimeMs)
+  return `${Math.ceil(remaining / 1000)}s`
+}
 </script>
 
 <style scoped>
@@ -135,13 +175,6 @@ const returnEta = computed(() => {
   letter-spacing: 0.12em;
   color: var(--text-secondary);
   margin-bottom: 8px;
-}
-
-.not-built .info-text {
-  font-family: var(--font-mono);
-  font-size: 11px;
-  color: var(--text-muted);
-  margin: 4px 0;
 }
 
 /* HQ Rates */
@@ -176,24 +209,43 @@ const returnEta = computed(() => {
   50% { opacity: 0.7; }
 }
 
-/* Transit status */
-.transit-status {
+/* Platform cards */
+.platform-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--accent-dim);
+  border-radius: var(--radius-sm);
+  padding: 6px 8px;
+  margin-bottom: 8px;
+}
+
+.platform-header {
+  display: flex;
+  justify-content: space-between;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  color: var(--text-primary);
+  margin-bottom: 6px;
+}
+
+.platform-status {
+  font-size: 10px;
+}
+
+.status-docked { color: var(--green); }
+.status-transit { color: var(--amber); }
+.status-returning { color: var(--text-muted); }
+
+.transit-info {
   font-family: var(--font-mono);
   font-size: 11px;
-  padding: 6px 0;
-}
-
-.status-transit {
-  color: var(--amber);
-}
-
-.status-returning {
-  color: var(--text-muted);
+  color: var(--text-secondary);
+  padding: 2px 0;
 }
 
 /* Cargo */
 .cargo-section {
-  margin-bottom: 8px;
+  margin-bottom: 6px;
 }
 
 .cargo-header {
@@ -206,13 +258,8 @@ const returnEta = computed(() => {
   margin-bottom: 4px;
 }
 
-.cargo-count {
-  color: var(--text-primary);
-}
-
-.cargo-count.full {
-  color: var(--amber);
-}
+.cargo-count { color: var(--text-primary); }
+.cargo-count.full { color: var(--amber); }
 
 .capacity-bar-bg {
   height: 4px;
@@ -229,9 +276,7 @@ const returnEta = computed(() => {
   transition: width 0.3s ease;
 }
 
-.capacity-bar-fill.full {
-  background: var(--amber);
-}
+.capacity-bar-fill.full { background: var(--amber); }
 
 .cargo-breakdown {
   display: flex;
@@ -250,7 +295,7 @@ const returnEta = computed(() => {
 .controls {
   display: flex;
   gap: 6px;
-  margin-bottom: 8px;
+  margin-bottom: 4px;
 }
 
 .action-btn {
@@ -266,30 +311,11 @@ const returnEta = computed(() => {
   transition: all 0.15s;
 }
 
-.action-btn.green {
-  border-color: var(--green);
-  color: var(--green);
-}
-
-.action-btn.amber {
-  border-color: var(--amber);
-  color: var(--amber);
-}
-
-.action-btn.active {
-  background: var(--bg-elevated);
-  border-color: var(--cyan);
-  color: var(--cyan);
-}
-
-.action-btn:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
-}
-
-.action-btn:not(:disabled):hover {
-  background: var(--bg-elevated);
-}
+.action-btn.green { border-color: var(--green); color: var(--green); }
+.action-btn.amber { border-color: var(--amber); color: var(--amber); }
+.action-btn.active { background: var(--bg-elevated); border-color: var(--cyan); color: var(--cyan); }
+.action-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.action-btn:not(:disabled):hover { background: var(--bg-elevated); }
 
 /* Reserves */
 .reserves {
@@ -298,6 +324,8 @@ const returnEta = computed(() => {
   font-family: var(--font-mono);
   font-size: 10px;
   align-items: baseline;
+  padding-top: 4px;
+  border-top: 1px solid var(--accent-dim);
 }
 
 .reserve-label {
@@ -305,7 +333,5 @@ const returnEta = computed(() => {
   letter-spacing: 0.1em;
 }
 
-.reserve-val {
-  color: var(--text-secondary);
-}
+.reserve-val { color: var(--text-secondary); }
 </style>

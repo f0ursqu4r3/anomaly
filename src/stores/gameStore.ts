@@ -117,17 +117,28 @@ export interface SupplyDrop {
   landedAt: number
 }
 
-export interface ExportPlatform {
-  built: boolean
+export interface ExportPlatformState {
   status: 'docked' | 'in_transit' | 'returning'
   cargo: { metals: number; ice: number; rareMinerals: number }
   capacity: number
   launchTime: number | null
   returnTime: number | null
-  estimatedCredits: number | null
   autoLaunch: boolean
   forceLaunched: boolean
   reserves: { metals: number | null; ice: number | null; rareMinerals: number | null }
+}
+
+export function freshPlatformState(): ExportPlatformState {
+  return {
+    status: 'docked',
+    cargo: { metals: 0, ice: 0, rareMinerals: 0 },
+    capacity: 100,
+    launchTime: null,
+    returnTime: null,
+    autoLaunch: false,
+    forceLaunched: false,
+    reserves: { metals: null, ice: null, rareMinerals: null },
+  }
 }
 
 const UNPACK_MS_PER_KG = 150 // 150ms per kg with 1 colonist (e.g. 45kg = 6.75s)
@@ -172,7 +183,7 @@ export interface ColonyState {
   lastTickAt: number
   lastSavedAt: number
   offlineEvents: OfflineEvent[]
-  exportPlatform: ExportPlatform
+  exportPlatforms: Record<string, ExportPlatformState>
   zonePaths: Record<string, number>
 }
 
@@ -423,18 +434,7 @@ function freshState(): ColonyState {
     lastTickAt: Date.now(),
     lastSavedAt: Date.now(),
     offlineEvents: [],
-    exportPlatform: {
-      built: false,
-      status: 'docked',
-      cargo: { metals: 0, ice: 0, rareMinerals: 0 },
-      capacity: EXPORT_PLATFORM_BASE_CAPACITY,
-      launchTime: null,
-      returnTime: null,
-      estimatedCredits: null,
-      autoLaunch: false,
-      forceLaunched: false,
-      reserves: { metals: null, ice: null, rareMinerals: null },
-    },
+    exportPlatforms: {},
     zonePaths: {},
   }
 }
@@ -569,29 +569,16 @@ export const useGameStore = defineStore('game', {
       }
     },
 
-    exportPlatformLoaded(s): number {
-      const c = s.exportPlatform.cargo
-      return c.metals + c.ice + c.rareMinerals
+    // Per-platform helpers — consumers call these with a building ID
+    operationalPlatforms(s): Building[] {
+      return s.buildings.filter(b => b.type === 'launchplatform' && !b.damaged && b.constructionProgress === null)
     },
 
     exportAutoReserves(s): { metals: number; ice: number; rareMinerals: number } {
       const factoryCount = s.buildings.filter(b => b.type === 'partsfactory' && !b.damaged && b.constructionProgress === null).length
-      const factoryReserve = factoryCount * 2 * 5 // PARTS_FACTORY_METAL_COST * 5 cycles
-      const buildReserve = 20 // enough for a silo
-      return {
-        metals: factoryReserve + buildReserve,
-        ice: 0,
-        rareMinerals: 0,
-      }
-    },
-
-    effectiveReserves(s): { metals: number; ice: number; rareMinerals: number } {
-      const auto = (this as any).exportAutoReserves
-      return {
-        metals: s.exportPlatform.reserves.metals ?? auto.metals,
-        ice: s.exportPlatform.reserves.ice ?? auto.ice,
-        rareMinerals: s.exportPlatform.reserves.rareMinerals ?? auto.rareMinerals,
-      }
+      const factoryReserve = factoryCount * 2 * 5
+      const buildReserve = 20
+      return { metals: factoryReserve + buildReserve, ice: 0, rareMinerals: 0 }
     },
   },
 
@@ -681,9 +668,9 @@ export const useGameStore = defineStore('game', {
             }
           }
 
-          // Special: launch platform marks export system as ready
+          // Initialize export state for new launch platforms
           if (building.type === 'launchplatform') {
-            this.exportPlatform.built = true
+            this.exportPlatforms[building.id] = freshPlatformState()
           }
         }
       }
@@ -757,17 +744,22 @@ export const useGameStore = defineStore('game', {
       tickEconomy(this.totalPlaytimeMs, (text, sev) => this.pushMessage(text, sev))
 
       // Export platform tick
-      const ep = this.exportPlatform
-      const hasOperationalPlatform = this.buildings.some(b => b.type === 'launchplatform' && !b.damaged && b.constructionProgress === null)
-      if (hasOperationalPlatform) {
-        // Sync built flag
-        if (!ep.built) ep.built = true
-        // Loading — colonists with 'load' action transfer resources
+      // Export platforms tick — process each platform independently
+      const autoReserves = this.exportAutoReserves
+      for (const platform of this.operationalPlatforms) {
+        // Ensure platform has state
+        if (!this.exportPlatforms[platform.id]) {
+          this.exportPlatforms[platform.id] = freshPlatformState()
+        }
+        const ep = this.exportPlatforms[platform.id]
+
+        // Loading — colonists with 'load' action targeting this platform transfer resources
         if (ep.status === 'docked') {
           const loaders = alive.filter(
-            c => c.currentAction?.type === 'load' && !c.currentAction?.walkPath?.length
+            c => c.currentAction?.type === 'load' &&
+                 c.currentAction?.targetId === platform.id &&
+                 !c.currentAction?.walkPath?.length
           )
-          const reserves = this.effectiveReserves
           for (const _loader of loaders) {
             const loaded = ep.cargo.metals + ep.cargo.ice + ep.cargo.rareMinerals
             if (loaded >= ep.capacity) break
@@ -776,21 +768,24 @@ export const useGameStore = defineStore('game', {
             const toLoad = Math.min(2, space)
             let remaining = toLoad
 
-            // Load metals first (above reserve), then ice, then rare minerals
-            if (remaining > 0 && this.metals > reserves.metals) {
-              const take = Math.min(remaining, this.metals - reserves.metals)
+            const effectiveMetalReserve = ep.reserves.metals ?? autoReserves.metals
+            const effectiveIceReserve = ep.reserves.ice ?? autoReserves.ice
+            const effectiveRareReserve = ep.reserves.rareMinerals ?? autoReserves.rareMinerals
+
+            if (remaining > 0 && this.metals > effectiveMetalReserve) {
+              const take = Math.min(remaining, this.metals - effectiveMetalReserve)
               this.metals -= take
               ep.cargo.metals += take
               remaining -= take
             }
-            if (remaining > 0 && this.ice > reserves.ice) {
-              const take = Math.min(remaining, this.ice - reserves.ice)
+            if (remaining > 0 && this.ice > effectiveIceReserve) {
+              const take = Math.min(remaining, this.ice - effectiveIceReserve)
               this.ice -= take
               ep.cargo.ice += take
               remaining -= take
             }
-            if (remaining > 0 && this.rareMinerals > reserves.rareMinerals) {
-              const take = Math.min(remaining, this.rareMinerals - reserves.rareMinerals)
+            if (remaining > 0 && this.rareMinerals > effectiveRareReserve) {
+              const take = Math.min(remaining, this.rareMinerals - effectiveRareReserve)
               this.rareMinerals -= take
               ep.cargo.rareMinerals += take
               remaining -= take
@@ -800,14 +795,13 @@ export const useGameStore = defineStore('game', {
           // Auto-launch when full
           const totalLoaded = ep.cargo.metals + ep.cargo.ice + ep.cargo.rareMinerals
           if (ep.autoLaunch && totalLoaded >= ep.capacity) {
-            this.launchExport(false)
+            this.launchExport(platform.id, false)
           }
         }
 
         // Transit — check if payload arrived at HQ
         if (ep.status === 'in_transit' && ep.launchTime) {
-          const TRANSIT = 120_000
-          if (this.totalPlaytimeMs >= ep.launchTime + TRANSIT) {
+          if (this.totalPlaytimeMs >= ep.launchTime + 120_000) {
             const rates = getCurrentRates(this.totalPlaytimeMs)
             const payout = Math.round(
               ep.cargo.metals * rates.metals +
@@ -819,9 +813,7 @@ export const useGameStore = defineStore('game', {
             this.pushMessage(`HQ confirms receipt. ${payout}cr credited to account.`, 'event')
 
             ep.status = 'returning'
-            const RETURN_NORMAL = 180_000
-            const RETURN_FORCE = 270_000
-            ep.returnTime = this.totalPlaytimeMs + (ep.forceLaunched ? RETURN_FORCE : RETURN_NORMAL)
+            ep.returnTime = this.totalPlaytimeMs + (ep.forceLaunched ? 270_000 : 180_000)
             ep.cargo = { metals: 0, ice: 0, rareMinerals: 0 }
           }
         }
@@ -1507,19 +1499,21 @@ export const useGameStore = defineStore('game', {
 
       if ((this as any).rareMinerals === undefined) (this as any).rareMinerals = 0
 
-      if (!this.exportPlatform) {
-        (this as any).exportPlatform = {
-          built: false,
-          status: 'docked',
-          cargo: { metals: 0, ice: 0, rareMinerals: 0 },
-          capacity: 100,
-          launchTime: null,
-          returnTime: null,
-          estimatedCredits: null,
-          autoLaunch: false,
-          forceLaunched: false,
-          reserves: { metals: null, ice: null, rareMinerals: null },
+      // Migrate old singleton exportPlatform → exportPlatforms map
+      if ((this as any).exportPlatform && !(this as any).exportPlatforms) {
+        const old = (this as any).exportPlatform
+        const platforms: Record<string, ExportPlatformState> = {}
+        // Find existing launch platform building to key the state
+        const platformBuilding = this.buildings.find(b => b.type === 'launchplatform')
+        if (platformBuilding && old.built) {
+          const { built, estimatedCredits, ...state } = old
+          platforms[platformBuilding.id] = state
         }
+        ;(this as any).exportPlatforms = platforms
+        delete (this as any).exportPlatform
+      }
+      if (!(this as any).exportPlatforms) {
+        ;(this as any).exportPlatforms = {}
       }
 
       if (this.lastManifest?.length > 0 && this.lastManifest[0].cost < 100) {
@@ -1538,24 +1532,23 @@ export const useGameStore = defineStore('game', {
       this.autoRelaunch = !this.autoRelaunch
     },
 
-    launchExport(force: boolean = false) {
-      const ep = this.exportPlatform
-      if (ep.status !== 'docked') return
+    launchExport(platformId: string, force: boolean = false) {
+      const ep = this.exportPlatforms[platformId]
+      if (!ep || ep.status !== 'docked') return
       if (ep.cargo.metals + ep.cargo.ice + ep.cargo.rareMinerals === 0) return
 
       ep.status = 'in_transit'
       ep.launchTime = this.totalPlaytimeMs
       ep.forceLaunched = force
-      ep.estimatedCredits = null
 
       const loaded = ep.cargo.metals + ep.cargo.ice + ep.cargo.rareMinerals
+      const est = Math.round(ep.cargo.metals * 15 + ep.cargo.ice * 40 + ep.cargo.rareMinerals * 100)
       if (force) {
         this.pushMessage(
           `Emergency export — platform launching at ${loaded}/${ep.capacity} capacity. Extended return time.`,
           'event',
         )
       } else {
-        const est = this.estimateExportCredits()
         this.pushMessage(
           `Payload en route to HQ — ${ep.cargo.metals} metals, ${ep.cargo.ice} ice. Estimated ${est}cr at current rates.`,
           'event',
@@ -1563,17 +1556,14 @@ export const useGameStore = defineStore('game', {
       }
     },
 
-    estimateExportCredits(): number {
-      const c = this.exportPlatform.cargo
-      return Math.round(c.metals * 15 + c.ice * 40 + c.rareMinerals * 100)
+    setExportReserve(platformId: string, resource: 'metals' | 'ice' | 'rareMinerals', value: number | null) {
+      const ep = this.exportPlatforms[platformId]
+      if (ep) ep.reserves[resource] = value
     },
 
-    setExportReserve(resource: 'metals' | 'ice' | 'rareMinerals', value: number | null) {
-      this.exportPlatform.reserves[resource] = value
-    },
-
-    toggleAutoLaunch() {
-      this.exportPlatform.autoLaunch = !this.exportPlatform.autoLaunch
+    toggleAutoLaunch(platformId: string) {
+      const ep = this.exportPlatforms[platformId]
+      if (ep) ep.autoLaunch = !ep.autoLaunch
     },
   },
 })

@@ -280,7 +280,7 @@ const tabs = computed(() => {
     { id: 'log', label: 'COMMS' },
     { id: 'shipments', label: 'SHIPMENTS' },
   ]
-  if (game.exportPlatform.built) {
+  if (game.operationalPlatforms.length > 0) {
     t.push({ id: 'export', label: 'EXPORT' })
   }
   t.push({ id: 'directives', label: 'DIRECTIVES' })

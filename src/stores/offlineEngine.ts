@@ -354,31 +354,33 @@ export function simulateOffline(inputState: ColonyState, elapsedMs: number): Off
         if (site.constructionProgress >= 1) {
           site.constructionProgress = null
           events.push({ type: 'milestone', severity: 'info', offsetMs: elapsedSoFar, message: `${config.label} construction complete.` })
-          if (site.type === 'launchplatform' && state.exportPlatform) {
-            state.exportPlatform.built = true
+          if (site.type === 'launchplatform') {
+            if (!state.exportPlatforms) state.exportPlatforms = {}
+            state.exportPlatforms[site.id] = { status: 'docked', cargo: { metals: 0, ice: 0, rareMinerals: 0 }, capacity: 100, launchTime: null, returnTime: null, autoLaunch: false, forceLaunched: false, reserves: { metals: null, ice: null, rareMinerals: null } }
           }
         }
       }
     }
 
-    // Offline export — if platform was in transit, check arrival
-    if (state.exportPlatform?.built) {
-      const ep = state.exportPlatform
-      if (ep.status === 'in_transit' && ep.launchTime && state.totalPlaytimeMs >= ep.launchTime + 120_000) {
-        const payout = Math.round(ep.cargo.metals * 15 + ep.cargo.ice * 40 + ep.cargo.rareMinerals * 100)
-        state.credits += payout
-        state.totalCreditsEarned += payout
-        const returnMs = ep.forceLaunched ? 270_000 : 180_000
-        ep.status = 'returning'
-        ep.returnTime = state.totalPlaytimeMs + returnMs
-        ep.cargo = { metals: 0, ice: 0, rareMinerals: 0 }
-        events.push({ type: 'shipment', severity: 'info', offsetMs: elapsedSoFar, message: `HQ confirms receipt. ${payout}cr credited.` })
-      }
-      if (ep.status === 'returning' && ep.returnTime && state.totalPlaytimeMs >= ep.returnTime) {
-        ep.status = 'docked'
-        ep.launchTime = null
-        ep.returnTime = null
-        ep.forceLaunched = false
+    // Offline export — process all platforms
+    if (state.exportPlatforms) {
+      for (const [id, ep] of Object.entries(state.exportPlatforms)) {
+        if (ep.status === 'in_transit' && ep.launchTime && state.totalPlaytimeMs >= ep.launchTime + 120_000) {
+          const payout = Math.round(ep.cargo.metals * 15 + ep.cargo.ice * 40 + ep.cargo.rareMinerals * 100)
+          state.credits += payout
+          state.totalCreditsEarned += payout
+          const returnMs = ep.forceLaunched ? 270_000 : 180_000
+          ep.status = 'returning'
+          ep.returnTime = state.totalPlaytimeMs + returnMs
+          ep.cargo = { metals: 0, ice: 0, rareMinerals: 0 }
+          events.push({ type: 'shipment', severity: 'info', offsetMs: elapsedSoFar, message: `HQ confirms receipt. ${payout}cr credited.` })
+        }
+        if (ep.status === 'returning' && ep.returnTime && state.totalPlaytimeMs >= ep.returnTime) {
+          ep.status = 'docked'
+          ep.launchTime = null
+          ep.returnTime = null
+          ep.forceLaunched = false
+        }
       }
     }
 

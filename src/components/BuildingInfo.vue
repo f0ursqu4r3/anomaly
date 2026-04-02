@@ -26,14 +26,14 @@
     <template v-if="building.type === 'launchplatform' && !isConstructing">
       <div class="info-row">
         <span class="info-label">Cargo</span>
-        <span :class="{ 'status-ok': platformLoaded > 0 }">{{ platformLoaded }}/{{ game.exportPlatform.capacity }}</span>
+        <span :class="{ 'status-ok': platformLoaded > 0 }">{{ platformLoaded }}/{{ platState?.capacity ?? 100 }}</span>
       </div>
-      <div v-if="platformLoaded > 0" class="info-row">
+      <div v-if="platformLoaded > 0 && platState" class="info-row">
         <span class="info-label">Contents</span>
         <span class="cargo-detail">
-          <span v-if="game.exportPlatform.cargo.metals > 0">{{ game.exportPlatform.cargo.metals }}m </span>
-          <span v-if="game.exportPlatform.cargo.ice > 0">{{ game.exportPlatform.cargo.ice }}i </span>
-          <span v-if="game.exportPlatform.cargo.rareMinerals > 0">{{ game.exportPlatform.cargo.rareMinerals }}r</span>
+          <span v-if="platState.cargo.metals > 0">{{ platState.cargo.metals }}m </span>
+          <span v-if="platState.cargo.ice > 0">{{ platState.cargo.ice }}i </span>
+          <span v-if="platState.cargo.rareMinerals > 0">{{ platState.cargo.rareMinerals }}r</span>
         </span>
       </div>
       <div class="info-row">
@@ -100,21 +100,24 @@ const workerCount = computed(() => {
   }).length
 })
 
-// Launch platform specifics
+// Launch platform specifics — keyed by building ID
+const platState = computed(() => game.exportPlatforms[props.building.id])
+
 const platformLoaded = computed(() => {
-  const c = game.exportPlatform.cargo
+  const c = platState.value?.cargo
+  if (!c) return 0
   return c.metals + c.ice + c.rareMinerals
 })
 
 const platformStatus = computed(() => {
-  const s = game.exportPlatform.status
+  const s = platState.value?.status
   if (s === 'in_transit') return 'EN ROUTE'
   if (s === 'returning') return 'RETURNING'
   return 'DOCKED'
 })
 
 const platformStatusClass = computed(() => {
-  const s = game.exportPlatform.status
+  const s = platState.value?.status
   if (s === 'in_transit') return 'status-constructing' // amber
   if (s === 'returning') return '' // default
   return 'status-ok' // green

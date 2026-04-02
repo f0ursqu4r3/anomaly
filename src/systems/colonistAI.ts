@@ -336,31 +336,32 @@ export function selectAction(
     })
   }
 
-  // LOAD — haul resources to export platform
+  // LOAD — haul resources to export platform (pick the best docked platform with space)
   if (colonist.energy > 20) {
-    const ep = state.exportPlatform
-    const platform = state.buildings.find(b => b.type === 'launchplatform' && !b.damaged && b.constructionProgress === null)
-    if (ep && platform && ep.status === 'docked') {
-      const loaded = ep.cargo.metals + ep.cargo.ice + ep.cargo.rareMinerals
-      if (loaded < ep.capacity) {
-        const hasResources = state.metals > 0 || state.ice > 0 || state.rareMinerals > 0
-        if (hasResources) {
-          const loaders = countWorkers(state, 'load')
-          const loaderDiscount = loaders === 0 ? 1.0 : loaders === 1 ? 0.5 : loaders === 2 ? 0.15 : 0.05
+    const platforms = state.buildings.filter(b => b.type === 'launchplatform' && !b.damaged && b.constructionProgress === null)
+    const hasResources = state.metals > 0 || state.ice > 0 || state.rareMinerals > 0
+    if (hasResources) {
+      for (const platform of platforms) {
+        const ep = state.exportPlatforms?.[platform.id]
+        if (!ep || ep.status !== 'docked') continue
+        const loaded = ep.cargo.metals + ep.cargo.ice + ep.cargo.rareMinerals
+        if (loaded >= ep.capacity) continue
 
-          // Urgency: score increases when storage is near capacity
-          const siloCount = state.buildings.filter(b => b.type === 'storageSilo' && !b.damaged && b.constructionProgress === null).length
-          const metalCap = 50 + siloCount * 100
-          const storagePct = metalCap > 0 ? state.metals / metalCap : 0
-          const urgency = storagePct > 0.8 ? 2.0 : storagePct > 0.5 ? 1.3 : 1.0
+        const loaders = countWorkers(state, 'load', platform.id)
+        const loaderDiscount = loaders === 0 ? 1.0 : loaders === 1 ? 0.5 : loaders === 2 ? 0.15 : 0.05
 
-          candidates.push({
-            type: 'load',
-            targetZone: 'landing',
-            targetId: platform.id,
-            score: 45 * mod.workUtilityMult * loaderDiscount * urgency,
-          })
-        }
+        const siloCount = state.buildings.filter(b => b.type === 'storageSilo' && !b.damaged && b.constructionProgress === null).length
+        const metalCap = 50 + siloCount * 100
+        const storagePct = metalCap > 0 ? state.metals / metalCap : 0
+        const urgency = storagePct > 0.8 ? 2.0 : storagePct > 0.5 ? 1.3 : 1.0
+
+        candidates.push({
+          type: 'load',
+          targetZone: 'landing',
+          targetId: platform.id,
+          score: 45 * mod.workUtilityMult * loaderDiscount * urgency,
+        })
+        break // only consider one platform per colonist decision
       }
     }
   }
