@@ -351,13 +351,17 @@ export function selectAction(
         const hasExportable = state.metals > effectiveMetals || state.ice > effectiveIce || state.rareMinerals > effectiveRare
 
         if (hasExportable) {
-          const loaders = countWorkers(state, 'load')
-          const loaderDiscount = loaders === 0 ? 1.0 : loaders === 1 ? 0.5 : loaders === 2 ? 0.15 : 0.05
-          candidates.push({
-            type: 'load',
-            targetZone: 'landing',
-            score: 40 * mod.workUtilityMult * loaderDiscount,
-          })
+          const platform = state.buildings.find(b => b.type === 'launchplatform' && b.constructionProgress === null)
+          if (platform) {
+            const loaders = countWorkers(state, 'load')
+            const loaderDiscount = loaders === 0 ? 1.0 : loaders === 1 ? 0.5 : loaders === 2 ? 0.15 : 0.05
+            candidates.push({
+              type: 'load',
+              targetZone: 'landing',
+              targetId: platform.id,
+              score: 40 * mod.workUtilityMult * loaderDiscount,
+            })
+          }
         }
       }
     }
@@ -390,12 +394,13 @@ export function selectAction(
 
   // SEEK_MEDICAL
   const medThreshold = HEALTH_SEEK_MEDICAL + mod.medicalThresholdBonus
-  if (colonist.health < medThreshold && state.buildings.some(b => b.type === 'medbay' && !b.damaged)) {
+  const medbay = state.buildings.find(b => b.type === 'medbay' && !b.damaged && b.constructionProgress === null)
+  if (colonist.health < medThreshold && medbay) {
     let medScore = 20
     if (colonist.health < HEALTH_SEEK_MEDICAL_URGENT) {
       medScore = 60 + (HEALTH_SEEK_MEDICAL_URGENT - colonist.health) * 3
     }
-    candidates.push({ type: 'seek_medical', targetZone: 'medical', score: medScore })
+    candidates.push({ type: 'seek_medical', targetZone: 'medical', targetId: medbay.id, score: medScore })
   }
 
   // WANDER — gives colonists natural downtime between tasks

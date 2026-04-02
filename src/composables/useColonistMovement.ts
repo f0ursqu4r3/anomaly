@@ -212,8 +212,9 @@ export function useColonistMovement() {
           }
         }
 
-        // Walk to the work spot (jittered)
-        startWalk(ms, jitter(targetX, 4), jitter(targetY, 4))
+        // Walk to the work spot — tight jitter for buildings, wider for zones
+        const jitterRange = action.targetId ? 1.5 : 4
+        startWalk(ms, jitter(targetX, jitterRange), jitter(targetY, jitterRange))
         ms.visualState = 'walking'
         ms._settledAction = currentKey
 
