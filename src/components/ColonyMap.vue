@@ -210,21 +210,19 @@ const connectorPoints = computed(() => {
   const overlayX = Math.max(15, Math.min(85, bx))
   const overlayY = below ? by + 6 : by - 6
 
-  // Always draw an elbow: anchor point is offset from overlay center
-  // When overlay is centered above building, offset left to force a diagonal
+  // Anchor point on overlay — offset left when centered to force a diagonal
   let anchorX = overlayX
-  const dx = overlayX - bx
-  if (Math.abs(dx) < 1.5) {
-    // No natural horizontal offset — shift anchor left of overlay center
+  if (Math.abs(overlayX - bx) < 1.5) {
     anchorX = overlayX - 3
   }
 
-  // Elbow: building → vertical → 45° diagonal to anchor
+  // Elbow: straight down from overlay anchor, then 45° diagonal to building
+  // The diagonal covers |anchorX - bx| horizontally and the same vertically
   const elbowDx = Math.abs(anchorX - bx)
   const elbowY = below
-    ? overlayY - elbowDx
-    : overlayY + elbowDx
-  return `${bx},${by} ${bx},${elbowY} ${anchorX},${overlayY}`
+    ? by - elbowDx   // elbow sits above building, diagonal goes down-and-over to building
+    : by + elbowDx   // elbow sits below building, diagonal goes up-and-over to building
+  return `${anchorX},${overlayY} ${anchorX},${elbowY} ${bx},${by}`
 })
 
 function selectBuilding(b: Building) {
