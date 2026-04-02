@@ -225,8 +225,6 @@ const BASE_STORAGE_RARE_MINERALS = 10
 const SILO_BONUS_METALS = 100
 const SILO_BONUS_ICE = 50
 const SILO_BONUS_RARE_MINERALS = 25
-const SILO_AUTO_BUILD_THRESHOLD = 0.8
-
 // Export platform
 const EXPORT_PLATFORM_BASE_CAPACITY = 100
 const EXPORT_TRANSIT_MS = 120_000
@@ -891,37 +889,36 @@ export const useGameStore = defineStore('game', {
       this.credits += creditGain
       this.totalCreditsEarned += creditGain
 
-      // Clamp resources to storage caps
+      // Storage — auto-build one silo when at capacity, then clamp overflow
       const caps = this.storageCap
-      if (this.metals > caps.metals) {
+      const metalsAtCap = this.metals >= caps.metals
+      const iceAtCap = this.ice >= caps.ice
+
+      if ((metalsAtCap || iceAtCap) && this.metals >= 20) {
+        this.metals -= 20
+        const pos = getBuildingPosition('storageSilo', this.buildings)
+        this.buildings.push({ id: uid(), type: 'storageSilo', damaged: false, x: pos.x, y: pos.y, rotation: pos.rotation })
+        this.pushMessage('Storage full — engineers constructing additional silo.', 'event')
+      }
+
+      // Re-check caps after possible silo build, then clamp
+      const finalCaps = this.storageCap
+      if (this.metals > finalCaps.metals) {
         if (this.ticksSinceLastReport % 60 === 0) {
           const overflowColonist = alive.find(c => c.currentAction?.type === 'extract')
           const name = overflowColonist?.name ?? 'Colony'
           this.pushMessage(`${name}: Storage full — we're losing metals out here.`, 'warning')
         }
-        this.metals = caps.metals
+        this.metals = finalCaps.metals
       }
-      if (this.ice > caps.ice) {
+      if (this.ice > finalCaps.ice) {
         if (this.ticksSinceLastReport % 60 === 0) {
           this.pushMessage('Ice storage at capacity. Excess discarded.', 'warning')
         }
-        this.ice = caps.ice
+        this.ice = finalCaps.ice
       }
-      if (this.rareMinerals > caps.rareMinerals) {
-        this.rareMinerals = caps.rareMinerals
-      }
-
-      // Auto-build storage silo when nearing capacity
-      const metalPct = caps.metals > 0 ? this.metals / caps.metals : 0
-      const icePct = caps.ice > 0 ? this.ice / caps.ice : 0
-      if ((metalPct > SILO_AUTO_BUILD_THRESHOLD || icePct > SILO_AUTO_BUILD_THRESHOLD) && this.metals >= 20) {
-        const hasEngineer = alive.some(c => c.currentAction?.type === 'engineer' || c.currentAction?.type === 'wander' || !c.currentAction)
-        if (hasEngineer) {
-          this.metals -= 20
-          const pos = getBuildingPosition('storageSilo', this.buildings)
-          this.buildings.push({ id: uid(), type: 'storageSilo', damaged: false, x: pos.x, y: pos.y, rotation: pos.rotation })
-          this.pushMessage('Engineers constructing additional storage.', 'event')
-        }
+      if (this.rareMinerals > finalCaps.rareMinerals) {
+        this.rareMinerals = finalCaps.rareMinerals
       }
 
       // Auto-build launch platform when metals available and none exists
