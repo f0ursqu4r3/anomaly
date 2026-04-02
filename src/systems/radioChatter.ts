@@ -156,6 +156,12 @@ const STORAGE_FULL: string[] = [
   '{name}: Overflow — materials going to waste.',
 ]
 
+const CONSTRUCT_START: string[] = [
+  '{name}: Starting work on the new structure.',
+  '{name}: Got the blueprints. Let\'s build.',
+  '{name}: Assembling the prefab. This\'ll take a bit.',
+]
+
 export { BREAKDOWN, DEATH_GRIEF, DEATH_BOND_GRIEF, BOND_FORMED, SPECIALIZATION_UNLOCK, STORAGE_FULL }
 
 // ── Helpers ──
@@ -255,6 +261,8 @@ export function generateChatter(
         emitMessage(c.id, now, emit, fill(pick(MEDICAL_START), { name: c.name }))
       } else if (currType === 'load') {
         emitMessage(c.id, now, emit, fill(pick(LOADING_START), { name: c.name }))
+      } else if (currType === 'construct') {
+        emitMessage(c.id, now, emit, fill(pick(CONSTRUCT_START), { name: c.name }))
       }
 
       // ── Completion messages ──
