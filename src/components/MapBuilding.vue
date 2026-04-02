@@ -12,7 +12,7 @@
       <SvgIcon name="repair" size="xs" />
     </div>
     <div v-if="workerCount > 0" class="worker-pips">
-      <span v-for="n in workerCount" :key="n" class="worker-pip" />
+      <span v-for="n in workerCount" :key="n" class="worker-pip" :class="typeClass" />
     </div>
   </div>
 </template>
@@ -43,22 +43,31 @@ const iconName = computed(() => {
 
 const typeClass = computed(() => `type-${props.building.type}`)
 
-// Buildings that have colonists working inside them
-const WORKER_BUILDINGS = new Set(['extractionrig', 'partsfactory', 'medbay', 'launchplatform'])
-
 const workerCount = computed(() => {
-  if (!WORKER_BUILDINGS.has(props.building.type)) return 0
   const zone = ZONE_FOR_BUILDING[props.building.type]
   if (!zone) return 0
-  // Count colonists actively working (not walking) in this building's zone
-  const workActions = props.building.type === 'launchplatform' ? ['load'] : ['extract', 'engineer', 'repair', 'seek_medical']
-  return game.colonists.filter(
-    c => c.health > 0 &&
-      c.currentAction &&
-      workActions.includes(c.currentAction.type) &&
-      c.currentAction.targetZone === zone &&
-      !c.currentAction.walkPath?.length
-  ).length
+
+  return game.colonists.filter(c => {
+    if (c.health <= 0 || !c.currentAction || c.currentAction.walkPath?.length) return false
+
+    // Repairers count toward the building they're repairing
+    if (c.currentAction.type === 'repair') {
+      return c.currentAction.targetId === props.building.id
+    }
+
+    // Zone-based workers
+    if (c.currentAction.targetZone !== zone) return false
+    const zoneActions: Record<string, string[]> = {
+      extraction: ['extract'],
+      workshop: ['engineer'],
+      medical: ['seek_medical'],
+      landing: ['load'],
+      power: ['engineer'],
+      lifeSup: ['engineer'],
+    }
+    const validActions = zoneActions[zone]
+    return validActions ? validActions.includes(c.currentAction.type) : false
+  }).length
 })
 </script>
 
@@ -152,9 +161,17 @@ const workerCount = computed(() => {
   width: 4px;
   height: 4px;
   border-radius: 50%;
-  background: var(--cyan, #7ecfff);
-  box-shadow: 0 0 4px var(--cyan-glow, rgba(126, 207, 255, 0.5));
+  background: currentColor;
+  box-shadow: 0 0 4px currentColor;
 }
+
+.worker-pip.type-solar { color: var(--amber); }
+.worker-pip.type-o2generator { color: var(--cyan); }
+.worker-pip.type-extractionrig { color: var(--green); }
+.worker-pip.type-medbay { color: var(--red); }
+.worker-pip.type-partsfactory { color: var(--amber); }
+.worker-pip.type-launchplatform { color: var(--amber); }
+.worker-pip.type-storageSilo { color: var(--text-secondary, #888); }
 
 .damaged .building-sprite {
   border-color: var(--red) !important;
