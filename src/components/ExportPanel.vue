@@ -165,6 +165,7 @@ function returnEta(platform: Building): string {
 .export-panel {
   padding: 8px 10px;
   overflow-y: auto;
+  overscroll-behavior: contain;
   -webkit-overflow-scrolling: touch;
 }
 
@@ -172,18 +173,22 @@ function returnEta(platform: Building): string {
   font-family: var(--font-mono);
   font-size: 10px;
   font-weight: 700;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.15em;
   color: var(--text-secondary);
-  margin-bottom: 8px;
+  margin-bottom: 6px;
 }
 
-/* HQ Rates */
+/* HQ Rates — styled like transit-item pattern */
 .rates-row {
   display: flex;
   gap: 8px;
   font-family: var(--font-mono);
   font-size: 11px;
-  margin-bottom: 10px;
+  padding: 5px 10px;
+  background: var(--accent-dim);
+  border: 1px solid var(--accent-muted);
+  border-radius: var(--radius-sm);
+  margin-bottom: 8px;
   flex-wrap: wrap;
   align-items: baseline;
 }
@@ -209,41 +214,51 @@ function returnEta(platform: Building): string {
   50% { opacity: 0.7; }
 }
 
-/* Platform cards */
+/* Platform cards — matches manifest-section pattern */
 .platform-card {
+  position: relative;
+  overflow: hidden;
   background: var(--bg-surface);
-  border: 1px solid var(--accent-dim);
-  border-radius: var(--radius-sm);
-  padding: 6px 8px;
-  margin-bottom: 8px;
+  border: 1px solid var(--accent-muted);
+  border-radius: var(--radius-md);
+  padding: 8px 10px;
+  margin-bottom: 6px;
 }
 
 .platform-header {
   display: flex;
   justify-content: space-between;
+  align-items: center;
   font-family: var(--font-mono);
   font-size: 10px;
-  letter-spacing: 0.1em;
+  font-weight: 700;
+  letter-spacing: 0.15em;
   color: var(--text-primary);
   margin-bottom: 6px;
 }
 
 .platform-status {
   font-size: 10px;
+  font-weight: 400;
+  letter-spacing: 0.05em;
 }
 
 .status-docked { color: var(--green); }
-.status-transit { color: var(--amber); }
+.status-transit { color: var(--cyan); }
 .status-returning { color: var(--text-muted); }
 
+/* Transit info — matches transit-item pattern */
 .transit-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
   font-family: var(--font-mono);
   font-size: 11px;
-  color: var(--text-secondary);
-  padding: 2px 0;
+  color: var(--cyan);
+  padding: 5px 0;
 }
 
-/* Cargo */
+/* Cargo — matches capacity-bar pattern from ShipmentPanel */
 .cargo-section {
   margin-bottom: 6px;
 }
@@ -253,12 +268,18 @@ function returnEta(platform: Building): string {
   justify-content: space-between;
   font-family: var(--font-mono);
   font-size: 10px;
-  letter-spacing: 0.1em;
+  font-weight: 700;
+  letter-spacing: 0.15em;
   color: var(--text-secondary);
   margin-bottom: 4px;
 }
 
-.cargo-count { color: var(--text-primary); }
+.cargo-count {
+  font-weight: 400;
+  letter-spacing: 0.05em;
+  color: var(--text-primary);
+}
+
 .cargo-count.full { color: var(--amber); }
 
 .capacity-bar-bg {
@@ -273,7 +294,7 @@ function returnEta(platform: Building): string {
   height: 100%;
   background: var(--cyan);
   border-radius: var(--radius-xs);
-  transition: width 0.3s ease;
+  transition: width 0.2s ease;
 }
 
 .capacity-bar-fill.full { background: var(--amber); }
@@ -324,8 +345,9 @@ function returnEta(platform: Building): string {
   font-family: var(--font-mono);
   font-size: 10px;
   align-items: baseline;
-  padding-top: 4px;
-  border-top: 1px solid var(--accent-dim);
+  padding-top: 6px;
+  margin-top: 2px;
+  border-top: 1px solid var(--accent-muted);
 }
 
 .reserve-label {
