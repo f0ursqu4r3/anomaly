@@ -74,17 +74,11 @@ const WORKER_BUILDINGS = new Set(['extractionrig', 'partsfactory', 'medbay', 'la
 const showWorkers = computed(() => WORKER_BUILDINGS.has(props.building.type))
 
 const workerCount = computed(() => {
-  const zone = props.building.type === 'solar' ? 'power'
-    : props.building.type === 'o2generator' ? 'lifeSup'
-    : props.building.type === 'extractionrig' ? 'extraction'
-    : props.building.type === 'medbay' ? 'medical'
-    : props.building.type === 'partsfactory' ? 'workshop'
-    : props.building.type === 'launchplatform' ? 'landing'
-    : null
-  if (!zone) return 0
-  return game.colonists.filter(
-    (c) => c.health > 0 && c.currentAction?.targetZone === zone && !c.currentAction?.walkPath?.length
-  ).length
+  return game.colonists.filter(c => {
+    if (c.health <= 0 || !c.currentAction || c.currentAction.walkPath?.length) return false
+    if (c.currentAction.targetId) return c.currentAction.targetId === props.building.id
+    return false
+  }).length
 })
 </script>
 
