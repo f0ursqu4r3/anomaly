@@ -272,17 +272,21 @@ export function selectAction(
     }
 
     // WORKSHOP — Parts Factory needs an operator to produce repair kits
-    const factories = state.buildings.filter(b => b.type === 'partsfactory' && !b.damaged)
+    const factories = state.buildings.filter(b => b.type === 'partsfactory' && !b.damaged && b.constructionProgress === null)
     if (factories.length > 0) {
       const factory = factories[Math.floor(Math.random() * factories.length)]
       const workshopEngineers = countWorkers(state, 'engineer', factory.id)
-      // One operator per factory is enough — strong diminishing returns
       const workerDiscount = workshopEngineers === 0 ? 1.0 : workshopEngineers === 1 ? 0.1 : 0.02
+
+      // Urgency: if buildings are damaged and no repair kits, prioritize kit production
+      const damagedCount = state.buildings.filter(b => b.damaged).length
+      const kitUrgency = damagedCount > 0 && state.repairKits === 0 ? 2.5 : 1.0
+
       candidates.push({
         type: 'engineer',
         targetZone: 'workshop',
         targetId: factory.id,
-        score: 35 * dirMod.engineer * mod.workUtilityMult * workerDiscount,
+        score: 35 * dirMod.engineer * mod.workUtilityMult * workerDiscount * kitUrgency,
       })
     }
   }
