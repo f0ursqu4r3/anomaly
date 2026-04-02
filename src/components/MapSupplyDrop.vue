@@ -3,6 +3,7 @@
     class="map-supply-drop"
     :class="[drop.state]"
     :style="{ left: drop.x + '%', top: drop.y + '%' }"
+    @click.stop="emit('select', drop)"
   >
     <!-- Crate icon + progress ring wrapper -->
     <div class="drop-sprite">
@@ -30,6 +31,7 @@ import type { SupplyDrop } from '@/stores/gameStore'
 import SvgIcon from './SvgIcon.vue'
 
 defineProps<{ drop: SupplyDrop }>()
+const emit = defineEmits<{ select: [drop: SupplyDrop] }>()
 
 const circumference = 2 * Math.PI * 15 // ~94.25
 </script>
@@ -41,7 +43,8 @@ const circumference = 2 * Math.PI * 15 // ~94.25
   display: flex;
   flex-direction: column;
   align-items: center;
-  pointer-events: none;
+  pointer-events: auto;
+  cursor: pointer;
   z-index: 2;
 }
 

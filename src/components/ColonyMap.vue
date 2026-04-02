@@ -49,7 +49,10 @@
         <line
           v-for="(p, i) in wornPaths"
           :key="'path-' + i"
-          :x1="p.x1" :y1="p.y1" :x2="p.x2" :y2="p.y2"
+          :x1="p.x1"
+          :y1="p.y1"
+          :x2="p.x2"
+          :y2="p.y2"
           :stroke="`rgba(200, 200, 200, ${p.opacity})`"
           :stroke-width="p.width"
           stroke-linecap="round"
@@ -87,7 +90,7 @@
           :points="connectorPoints"
           class="connector-line"
           fill="none"
-          stroke="rgba(255, 255, 255, 0.25)"
+          stroke="rgba(255, 255, 255, 0.15)"
           stroke-width="1.5"
           stroke-linecap="round"
           stroke-linejoin="round"
@@ -100,7 +103,13 @@
         :x="selectedBuilding.x"
         :y="selectedBuilding.y"
       />
-      <MapSupplyDrop v-for="d in game.supplyDrops" :key="d.id" :drop="d" />
+      <MapSupplyDrop v-for="d in game.supplyDrops" :key="d.id" :drop="d" @select="selectDrop" />
+      <DropInfo
+        v-if="selectedDrop"
+        :drop="selectedDrop"
+        :x="selectedDrop.x"
+        :y="selectedDrop.y"
+      />
 
       <MapColonist
         v-for="c in visibleColonists"
@@ -138,7 +147,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useGameStore } from '@/stores/gameStore'
-import type { Building } from '@/stores/gameStore'
+import type { Building, SupplyDrop } from '@/stores/gameStore'
 import { useSettingsStore } from '@/stores/settingsStore'
 import { useMoonStore } from '@/stores/moonStore'
 import { useColonistMovement } from '@/composables/useColonistMovement'
@@ -150,6 +159,7 @@ import MapBuilding from './MapBuilding.vue'
 import MapColonist from './MapColonist.vue'
 import MapSupplyDrop from './MapSupplyDrop.vue'
 import BuildingInfo from './BuildingInfo.vue'
+import DropInfo from './DropInfo.vue'
 
 const game = useGameStore()
 const settings = useSettingsStore()
@@ -165,7 +175,14 @@ const pathEdges = PATH_EDGES.map((e) => ({
 }))
 
 const wornPaths = computed(() => {
-  const paths: { x1: number; y1: number; x2: number; y2: number; opacity: number; width: number }[] = []
+  const paths: {
+    x1: number
+    y1: number
+    x2: number
+    y2: number
+    opacity: number
+    width: number
+  }[] = []
   for (const [key, count] of Object.entries(game.zonePaths)) {
     if (count < 10) continue
     const [z1, z2] = key.split(':')
@@ -175,8 +192,13 @@ const wornPaths = computed(() => {
 
     let opacity = 0.1
     let width = 1
-    if (count >= 150) { opacity = 0.35; width = 2 }
-    else if (count >= 50) { opacity = 0.2; width = 1.5 }
+    if (count >= 150) {
+      opacity = 0.35
+      width = 2
+    } else if (count >= 50) {
+      opacity = 0.2
+      width = 1.5
+    }
 
     paths.push({ x1: zone1.x, y1: zone1.y, x2: zone2.x, y2: zone2.y, opacity, width })
   }
@@ -188,17 +210,24 @@ function getColonistState(id: string) {
 }
 
 // Colonists working inside buildings are shown as pips on the building, not as map markers
-const INSIDE_ACTIONS = new Set(['extract', 'engineer', 'repair', 'seek_medical', 'load', 'construct'])
+const INSIDE_ACTIONS = new Set([
+  'extract',
+  'engineer',
+  'repair',
+  'seek_medical',
+  'load',
+  'construct',
+])
 
 const visibleColonists = computed(() =>
-  game.colonists.filter(c => {
+  game.colonists.filter((c) => {
     if (c.health <= 0) return true // show dead colonists (faded)
     const action = c.currentAction
     if (!action) return true // idle/no action — show on map
     if (action.walkPath?.length) return true // walking — show on map
     if (INSIDE_ACTIONS.has(action.type)) return false // working inside building — hide
     return true
-  })
+  }),
 )
 
 const selectedBuilding = ref<Building | null>(null)
@@ -225,13 +254,21 @@ const connectorPoints = computed(() => {
   const elbowDx = Math.abs(anchorX - bx)
   // Elbow is elbowDx away from the building (vertically), on the overlay's side
   const elbowY = below
-    ? by + elbowDx   // overlay is below → elbow is below building, diagonal goes up to building
-    : by - elbowDx   // overlay is above → elbow is above building, diagonal goes down to building
+    ? by + elbowDx // overlay is below → elbow is below building, diagonal goes up to building
+    : by - elbowDx // overlay is above → elbow is above building, diagonal goes down to building
   return `${anchorX},${overlayY} ${anchorX},${elbowY} ${bx},${by}`
 })
 
+const selectedDrop = ref<SupplyDrop | null>(null)
+
 function selectBuilding(b: Building) {
+  selectedDrop.value = null
   selectedBuilding.value = selectedBuilding.value?.id === b.id ? null : b
+}
+
+function selectDrop(d: SupplyDrop) {
+  selectedBuilding.value = null
+  selectedDrop.value = selectedDrop.value?.id === d.id ? null : d
 }
 
 // Pan & Zoom
@@ -374,8 +411,8 @@ onUnmounted(() => cancelAnimationFrame(fpsRaf))
 
 .connector-line {
   stroke-dasharray: 500;
-  stroke-dashoffset: 500;
-  animation: connector-draw 0.3s ease-out forwards;
+  stroke-dashoffset: 100;
+  animation: connector-draw 1s ease-in forwards;
 }
 
 @keyframes connector-draw {

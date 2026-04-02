@@ -22,6 +22,25 @@
       <span class="info-label">Workers</span>
       <span>{{ workerCount }}</span>
     </div>
+    <!-- Launch platform cargo -->
+    <template v-if="building.type === 'launchplatform' && !isConstructing">
+      <div class="info-row">
+        <span class="info-label">Cargo</span>
+        <span :class="{ 'status-ok': platformLoaded > 0 }">{{ platformLoaded }}/{{ game.exportPlatform.capacity }}</span>
+      </div>
+      <div v-if="platformLoaded > 0" class="info-row">
+        <span class="info-label">Contents</span>
+        <span class="cargo-detail">
+          <span v-if="game.exportPlatform.cargo.metals > 0">{{ game.exportPlatform.cargo.metals }}m </span>
+          <span v-if="game.exportPlatform.cargo.ice > 0">{{ game.exportPlatform.cargo.ice }}i </span>
+          <span v-if="game.exportPlatform.cargo.rareMinerals > 0">{{ game.exportPlatform.cargo.rareMinerals }}r</span>
+        </span>
+      </div>
+      <div class="info-row">
+        <span class="info-label">Status</span>
+        <span :class="platformStatusClass">{{ platformStatus }}</span>
+      </div>
+    </template>
   </div>
 </template>
 
@@ -79,6 +98,26 @@ const workerCount = computed(() => {
     if (c.currentAction.targetId) return c.currentAction.targetId === props.building.id
     return false
   }).length
+})
+
+// Launch platform specifics
+const platformLoaded = computed(() => {
+  const c = game.exportPlatform.cargo
+  return c.metals + c.ice + c.rareMinerals
+})
+
+const platformStatus = computed(() => {
+  const s = game.exportPlatform.status
+  if (s === 'in_transit') return 'EN ROUTE'
+  if (s === 'returning') return 'RETURNING'
+  return 'DOCKED'
+})
+
+const platformStatusClass = computed(() => {
+  const s = game.exportPlatform.status
+  if (s === 'in_transit') return 'status-constructing' // amber
+  if (s === 'returning') return '' // default
+  return 'status-ok' // green
 })
 </script>
 
@@ -141,5 +180,9 @@ const workerCount = computed(() => {
 
 .status-constructing {
   color: var(--amber);
+}
+
+.cargo-detail {
+  color: var(--text-primary);
 }
 </style>
