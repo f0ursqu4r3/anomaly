@@ -1474,6 +1474,40 @@ export const useGameStore = defineStore('game', {
       if (this.shipmentCooldownUntil === undefined) this.shipmentCooldownUntil = 0
       if (this.ticksSinceLastReport === undefined) this.ticksSinceLastReport = 0
       if (!this.offlineEvents) this.offlineEvents = []
+
+      // v5→v6: Economy rework
+      if (this.credits < 500 && this.totalCreditsEarned < 500) {
+        this.credits = Math.round(this.credits * 10)
+        this.totalCreditsEarned = Math.round(this.totalCreditsEarned * 10)
+      }
+
+      if ((this as any).rareMinerals === undefined) (this as any).rareMinerals = 0
+
+      if (!this.exportPlatform) {
+        (this as any).exportPlatform = {
+          built: false,
+          status: 'docked',
+          cargo: { metals: 0, ice: 0, rareMinerals: 0 },
+          capacity: 100,
+          launchTime: null,
+          returnTime: null,
+          estimatedCredits: null,
+          autoLaunch: false,
+          forceLaunched: false,
+          reserves: { metals: null, ice: null, rareMinerals: null },
+        }
+      }
+
+      if (this.lastManifest?.length > 0 && this.lastManifest[0].cost < 100) {
+        for (const item of this.lastManifest) {
+          item.cost = Math.round(item.cost * 10)
+        }
+      }
+      if (this.manifest?.length > 0 && this.manifest[0].cost < 100) {
+        for (const item of this.manifest) {
+          item.cost = Math.round(item.cost * 10)
+        }
+      }
     },
 
     toggleAutoRelaunch() {
