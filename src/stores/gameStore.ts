@@ -24,6 +24,7 @@ import {
 } from '@/systems/economy'
 import { useSettingsStore } from '@/stores/settingsStore'
 import { useMoonStore } from '@/stores/moonStore'
+import { BUILDING_CONFIGS } from '@/config/buildings'
 
 // ── Types ──────────────────────────────────────────────────────────
 
@@ -252,6 +253,17 @@ export const DIRECTIVE_MODIFIERS: Record<
   emergency: { extractMult: 0.5, hazardResist: 0.1, prodMult: 1.5 },
 }
 
+const EQUIPMENT_SHIPMENTS: ShipmentOption[] = BUILDING_CONFIGS
+  .filter(c => c.shipmentCost !== null)
+  .map(c => ({
+    type: 'equipment' as ShipmentType,
+    label: c.label,
+    description: c.description,
+    cost: c.shipmentCost!,
+    weight: c.shipmentWeight!,
+    buildingType: c.type,
+  }))
+
 export const SHIPMENT_OPTIONS: ShipmentOption[] = [
   {
     type: 'supplyCrate',
@@ -260,46 +272,7 @@ export const SHIPMENT_OPTIONS: ShipmentOption[] = [
     cost: 600,
     weight: 20,
   },
-  {
-    type: 'equipment',
-    label: 'Solar Panel',
-    description: 'Generates power for the colony',
-    cost: 800,
-    weight: 18,
-    buildingType: 'solar',
-  },
-  {
-    type: 'equipment',
-    label: 'O2 Generator',
-    description: 'Produces breathable air',
-    cost: 1000,
-    weight: 32,
-    buildingType: 'o2generator',
-  },
-  {
-    type: 'equipment',
-    label: 'Extraction Rig',
-    description: 'Automated resource extraction',
-    cost: 1300,
-    weight: 55,
-    buildingType: 'extractionrig',
-  },
-  {
-    type: 'equipment',
-    label: 'Med Bay',
-    description: 'Heals injured crew over time',
-    cost: 1500,
-    weight: 40,
-    buildingType: 'medbay',
-  },
-  {
-    type: 'equipment',
-    label: 'Parts Factory',
-    description: 'Produces repair kits',
-    cost: 800,
-    weight: 30,
-    buildingType: 'partsfactory',
-  },
+  ...EQUIPMENT_SHIPMENTS,
   {
     type: 'newColonist',
     label: 'New Colonist',
@@ -332,57 +305,13 @@ export const SHIPMENT_OPTIONS: ShipmentOption[] = [
 
 export { MANIFEST_MAX_SLOTS, CARGO_CAPACITY, SHIPMENT_COOLDOWN_MS, SHIPMENT_TRANSIT_MS, EMERGENCY_TRANSIT_MS }
 
-export const BLUEPRINTS: BuildingBlueprint[] = [
-  {
-    type: 'o2generator',
-    label: 'O2 Generator',
-    description: 'Produces air (uses power)',
-    costMetals: 20,
-    costIce: 5,
-  },
-  {
-    type: 'solar',
-    label: 'Solar Panel',
-    description: 'Generates power',
-    costMetals: 15,
-    costIce: 0,
-  },
-  {
-    type: 'extractionrig',
-    label: 'Extraction Rig',
-    description: 'Extracts metals and ice from deposits',
-    costMetals: 25,
-    costIce: 0,
-  },
-  {
-    type: 'medbay',
-    label: 'Med Bay',
-    description: 'Heals injured colonists',
-    costMetals: 30,
-    costIce: 10,
-  },
-  {
-    type: 'partsfactory',
-    label: 'Parts Factory',
-    description: 'Produces repair kits from metals (requires operator)',
-    costMetals: 15,
-    costIce: 0,
-  },
-  {
-    type: 'storageSilo',
-    label: 'Storage Silo',
-    description: 'Increases resource storage capacity',
-    costMetals: 20,
-    costIce: 0,
-  },
-  {
-    type: 'launchplatform',
-    label: 'Launch Platform',
-    description: 'Export resources to HQ for credits',
-    costMetals: 30,
-    costIce: 0,
-  },
-]
+export const BLUEPRINTS: BuildingBlueprint[] = BUILDING_CONFIGS.map(c => ({
+  type: c.type,
+  label: c.label,
+  description: c.description,
+  costMetals: c.costMetals,
+  costIce: c.costIce,
+}))
 
 export const COLONIST_NAMES = [
   // Wave 1

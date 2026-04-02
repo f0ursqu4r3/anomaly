@@ -1,5 +1,6 @@
 import type { Zone, PathEdge } from '@/types/map'
 import type { Building, BuildingType } from '@/stores/gameStore'
+import { BUILDING_CONFIGS } from '@/config/buildings'
 
 // ── Zone Definitions ──
 
@@ -15,15 +16,9 @@ export const ZONES: Zone[] = [
 
 export const ZONE_MAP: Record<string, Zone> = Object.fromEntries(ZONES.map(z => [z.id, z]))
 
-export const ZONE_FOR_BUILDING: Record<BuildingType, string> = {
-  solar: 'power',
-  o2generator: 'lifeSup',
-  extractionrig: 'extraction',
-  medbay: 'medical',
-  partsfactory: 'workshop',
-  storageSilo: 'extraction',
-  launchplatform: 'landing',
-}
+export const ZONE_FOR_BUILDING: Record<string, string> = Object.fromEntries(
+  BUILDING_CONFIGS.map(c => [c.type, c.zone])
+)
 
 // ── Path Graph ──
 
