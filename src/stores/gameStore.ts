@@ -1482,6 +1482,11 @@ export const useGameStore = defineStore('game', {
       if (this.ticksSinceLastReport === undefined) this.ticksSinceLastReport = 0
       if (!this.offlineEvents) this.offlineEvents = []
 
+      // Backfill zonePaths
+      if (!(this as any).zonePaths) {
+        (this as any).zonePaths = {}
+      }
+
       // v5→v6: Economy rework
       if (this.credits < 500 && this.totalCreditsEarned < 500) {
         this.credits = Math.round(this.credits * 10)

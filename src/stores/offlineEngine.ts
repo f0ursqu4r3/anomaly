@@ -1,5 +1,6 @@
 import type { ColonyState } from './gameStore'
 import { randomSkillTrait } from '@/types/colonist'
+import { BUILDING_CONFIGS } from '@/config/buildings'
 import {
   AIR_CONSUMPTION_PER_COLONIST,
   O2_PRODUCTION_PER_GENERATOR,
@@ -339,6 +340,24 @@ export function simulateOffline(inputState: ColonyState, elapsedMs: number): Off
         state.metals -= PARTS_FACTORY_METAL_COST
         state.repairKits++
         state.lastPartsProducedAt = state.totalPlaytimeMs
+      }
+    }
+
+    // Offline construction progress
+    const constructionSites = state.buildings.filter(b => b.constructionProgress !== null && b.constructionProgress < 1)
+    if (constructionSites.length > 0) {
+      for (const site of constructionSites) {
+        const config = BUILDING_CONFIGS.find(c => c.type === site.type)
+        if (!config) continue
+        const progressPerSec = 1 / config.constructionTime
+        site.constructionProgress = Math.min(1, (site.constructionProgress ?? 0) + progressPerSec * phaseDt)
+        if (site.constructionProgress >= 1) {
+          site.constructionProgress = null
+          events.push({ type: 'milestone', severity: 'info', offsetMs: elapsedSoFar, message: `${config.label} construction complete.` })
+          if (site.type === 'launchplatform' && state.exportPlatform) {
+            state.exportPlatform.built = true
+          }
+        }
       }
     }
 
