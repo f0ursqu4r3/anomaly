@@ -347,6 +347,16 @@ export function uid(): string {
   return `${Date.now()}-${nextId++}`
 }
 
+function summarizeItems(labels: string[]): string {
+  const counts = new Map<string, number>()
+  for (const label of labels) {
+    counts.set(label, (counts.get(label) ?? 0) + 1)
+  }
+  return Array.from(counts.entries())
+    .map(([name, count]) => count > 1 ? `${name} x${count}` : name)
+    .join(', ')
+}
+
 function makeStartingColonists(): Colonist[] {
   return [
     { id: uid(), name: 'Riko', health: 100, energy: 80, morale: 70, trait: randomTrait(), skillTrait: randomSkillTrait(), extractionXP: 0, engineeringXP: 0, medicalXP: 0, specialization: null, bonds: {}, lastBreakdownAt: null, currentAction: null, currentZone: 'habitat' },
@@ -1133,10 +1143,10 @@ export const useGameStore = defineStore('game', {
         arrivalAt: this.totalPlaytimeMs + transit,
       })
 
-      const itemCount = this.manifest.length
       const totalWeight = this.manifestWeight
+      const launchSummary = summarizeItems(this.manifest.map(o => o.label))
       this.pushMessage(
-        `Shipment launched: ${itemCount} ${itemCount === 1 ? 'item' : 'items'}, ${totalWeight}kg. ETA ${transit / 1000}s.`,
+        `Shipment launched (${totalWeight}kg): ${launchSummary}. ETA ${transit / 1000}s.`,
         'event',
       )
       this.lastManifest = [...this.manifest]
@@ -1185,9 +1195,9 @@ export const useGameStore = defineStore('game', {
             unpackDuration: crateWeight * UNPACK_MS_PER_KG,
             landedAt: this.totalPlaytimeMs,
           })
-          const itemNames = crateItems.map((o) => o.label).join(', ')
+          const itemSummary = summarizeItems(crateItems.map(o => o.label))
           this.pushMessage(
-            `Shipment landed (${crateWeight}kg): ${itemNames}. Send crew to unpack.`,
+            `Shipment landed (${crateWeight}kg): ${itemSummary}. Send crew to unpack.`,
             'event',
           )
 
