@@ -758,7 +758,10 @@ export const useGameStore = defineStore('game', {
 
       // Export platform tick
       const ep = this.exportPlatform
-      if (ep.built) {
+      const hasOperationalPlatform = this.buildings.some(b => b.type === 'launchplatform' && !b.damaged && b.constructionProgress === null)
+      if (hasOperationalPlatform) {
+        // Sync built flag
+        if (!ep.built) ep.built = true
         // Loading — colonists with 'load' action transfer resources
         if (ep.status === 'docked') {
           const loaders = alive.filter(
