@@ -144,7 +144,19 @@ const SPECIALIZATION_UNLOCK: string[] = [
   '{name} has earned the rank of {spec}.',
 ]
 
-export { BREAKDOWN, DEATH_GRIEF, DEATH_BOND_GRIEF, BOND_FORMED, SPECIALIZATION_UNLOCK }
+const LOADING_START: string[] = [
+  '{name}: Hauling cargo to the platform.',
+  '{name}: Loading up the export platform.',
+  '{name}: Moving materials to the LZ.',
+]
+
+const STORAGE_FULL: string[] = [
+  '{name}: Storage full — we\'re losing metals out here.',
+  '{name}: No room for more. We need another silo.',
+  '{name}: Overflow — materials going to waste.',
+]
+
+export { BREAKDOWN, DEATH_GRIEF, DEATH_BOND_GRIEF, BOND_FORMED, SPECIALIZATION_UNLOCK, STORAGE_FULL }
 
 // ── Helpers ──
 
@@ -241,6 +253,8 @@ export function generateChatter(
         emitMessage(c.id, now, emit, fill(pick(SOCIAL_START), { name: c.name }))
       } else if (currType === 'seek_medical') {
         emitMessage(c.id, now, emit, fill(pick(MEDICAL_START), { name: c.name }))
+      } else if (currType === 'load') {
+        emitMessage(c.id, now, emit, fill(pick(LOADING_START), { name: c.name }))
       }
 
       // ── Completion messages ──
