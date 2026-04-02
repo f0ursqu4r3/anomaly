@@ -150,7 +150,7 @@ Beyond Parts Factory (P0), these add strategic depth. Some now serve the outpost
 - **Comms Relay**: Increases credit income rate. Reduces comms blackout duration. Tier 2 unlocks market trading
 - **Crew Quarters**: Increases colonist cap. Passive morale boost
 - **Research Station**: Engineers generate research points (gates tech tree)
-- **Storage Silo**: Metal/ice capacity (requires adding caps first)
+- ~~**Storage Silo**~~: ✓ Implemented — resource caps (50m/25i/10r base), orderable from HQ (600cr), +100m/+50i/+25r per silo
 - **Parts Depot**: Stores repair kits, enables auto-repair if insurance purchased
 - **Drone Bay**: Repair drones fix damaged buildings faster during hazards (power + credits)
 - **Emergency Shelter**: Colonists auto-shelter during hazards, reduced health damage

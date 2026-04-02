@@ -52,8 +52,8 @@ Efficiency bonuses are additive: `1.0 + xpLevel*0.05 + skillTrait + specializati
 Credits earned primarily through resource exports to HQ, not passive income. The colony exists to produce value for HQ.
 
 - **`systems/economy.ts`**: HQ rate bulletin system. Base rates (metals 15cr, ice 40cr, rare minerals 100cr). Event-driven rate shifts every 10-15 min lasting 90-120s. Weighted random events: metal demand, ice shortage, rare mineral rush, supply glut, quarterly push.
-- **Export platform**: Colony-built building (30 metals, auto-constructed). Colonists `load` resources to platform (AI-scored action). 100-unit capacity. Launch → 120s transit → HQ credits at current rates → 180s return (270s if force-launched). Auto-launch toggle. Auto-reserves (parts factory + silo cost, player overridable).
-- **Storage caps**: Base 50 metals / 25 ice / 10 rare minerals. Storage Silos auto-built by engineers when >80% full (+100m/+50i/+25r per silo). Overflow clamped with radio warnings.
+- **Export platform**: Colony-built building (30 metals). Colonists `load` resources to platform (AI-scored action). 100-unit capacity. Launch → 120s transit → HQ credits at current rates → 180s return (270s if force-launched). Auto-launch toggle. Auto-reserves (parts factory + silo cost, player overridable).
+- **Storage caps**: Base 50 metals / 25 ice / 10 rare minerals. Storage Silos ordered from HQ (600cr) (+100m/+50i/+25r per silo). Overflow clamped with radio warnings.
 - **Pricing (10x scale)**: All credit values use 10x scale for readability. Passive stipend 2cr/sec. Shipments 600-1,750cr. Starting credits 1,000.
 
 ### Visual Layer (Separate from Simulation)
@@ -73,25 +73,38 @@ The interface supports two zoom levels, toggled from the HUD:
 
 Far lens (multi-colony overview) is planned but not yet implemented.
 
+### Building Construction & Placement
+
+All building data lives in `src/config/buildings.ts` — single source of truth for labels, zones, construction times, costs, and shipment prices. `BLUEPRINTS`, `SHIPMENT_OPTIONS`, and `ZONE_FOR_BUILDING` are derived from it.
+
+**Construction flow**: Shipment arrives → supply drop lands → colonists unpack crate → building placed as ghost/wireframe (`constructionProgress: 0`) → engineers `construct` over time → building becomes operational (`constructionProgress: null`). Construction times are per-type (20-90s). Multiple engineers speed it up (1=100%, 2=160%, 3=200%).
+
+**Cluster placement**: New buildings anchor adjacent to existing ones in the same zone (~4.5 unit offset), forming organic settlement-like clusters. First building places near zone center. Zone radius constrains spread.
+
+**Worn paths**: Colonist zone transitions tracked in `zonePaths` (sorted pair key → traffic count). Rendered as SVG lines between zone centers. Intensity tiers: faint (10+), light (50+), worn (150+). Decays -1 per 60 ticks.
+
 ### Map Zones
 
-Buildings snap to named zones with slot offsets (up to 6 per zone):
+Buildings cluster organically within circular zones:
 
-- habitat: 50,45 — colonist home base
-- extraction: 50,65 — extraction rigs
-- powerField: 28,28 — solar panels
-- lifeSup: 72,28 — O2 generators
-- medical: 72,58 — med bays
+- habitat: 50,40 — colonist home base
+- extraction: 50,65 — extraction rigs, storage silos
+- power: 30,25 — solar panels
+- lifeSup: 70,25 — O2 generators
+- medical: 75,48 — med bays
+- workshop: 25,70 — parts factory
+- landing: 25,50 — supply drops, launch platform
 
 ### Shipment Flow
 
-Manifest builder (max 4 items, 100kg) → launch (60s cooldown, deducts credits) → in-transit (10s normal, 3s emergency) → arrival: emergency items apply instantly, equipment/crates spawn supply drops → colonists auto-path to unpack collaboratively.
+Manifest builder (max 4 items, 100kg) → launch (60s cooldown, deducts credits) → in-transit (10s normal, 3s emergency) → arrival: emergency items apply instantly, equipment/crates spawn supply drops → colonists unpack → engineers construct building (20-90s).
 
 ## Key Conventions
 
 - Path alias: `@/*` → `./src/*`
 - TypeScript strict mode, ES2020 target
-- All game constants are defined at top of `gameStore.ts` (rates, costs, thresholds) and `colonistIdentity.ts` (bond/morale/XP constants)
+- Building config centralized in `src/config/buildings.ts` (construction times, costs, zones, shipment prices)
+- Other game constants at top of `gameStore.ts` (rates, thresholds) and `colonistIdentity.ts` (bond/morale/XP)
 - Capacitor plugins for native features (preferences, admob, IAP, notifications)
 - Retro CRT/terminal visual aesthetic (dark palette, monospace, scanlines)
 
