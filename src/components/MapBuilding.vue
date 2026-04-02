@@ -61,28 +61,21 @@ const workerCount = computed(() => {
     ).length
   }
 
-  // Operational: count zone workers + repairers
-  const zone = ZONE_FOR_BUILDING[props.building.type]
-  if (!zone) return 0
-
+  // Operational: count workers targeting this specific building
   return game.colonists.filter(c => {
     if (c.health <= 0 || !c.currentAction || c.currentAction.walkPath?.length) return false
 
+    // Repairers match by targetId
     if (c.currentAction.type === 'repair') {
       return c.currentAction.targetId === props.building.id
     }
 
-    if (c.currentAction.targetZone !== zone) return false
-    const zoneActions: Record<string, string[]> = {
-      extraction: ['extract'],
-      workshop: ['engineer'],
-      medical: ['seek_medical'],
-      landing: ['load'],
-      power: ['engineer'],
-      lifeSup: ['engineer'],
+    // Workers with a targetId match their specific building
+    if (c.currentAction.targetId) {
+      return c.currentAction.targetId === props.building.id
     }
-    const validActions = zoneActions[zone]
-    return validActions ? validActions.includes(c.currentAction.type) : false
+
+    return false
   }).length
 })
 </script>
