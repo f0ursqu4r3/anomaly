@@ -24,7 +24,7 @@ import {
 } from '@/systems/economy'
 import { useSettingsStore } from '@/stores/settingsStore'
 import { useMoonStore } from '@/stores/moonStore'
-import { BUILDING_CONFIGS } from '@/config/buildings'
+import { BUILDING_CONFIGS, BUILDING_CONFIG_MAP } from '@/config/buildings'
 
 // ── Types ──────────────────────────────────────────────────────────
 
@@ -637,6 +637,44 @@ export const useGameStore = defineStore('game', {
         }
       }
 
+      // Construction progress — engineers at construction sites advance progress
+      for (const building of this.buildings) {
+        if (building.constructionProgress === null || building.constructionProgress >= 1) continue
+        const config = BUILDING_CONFIG_MAP[building.type]
+        if (!config) continue
+
+        const constructors = alive.filter(
+          c => c.currentAction?.type === 'construct' &&
+               c.currentAction?.targetId === building.id &&
+               !c.currentAction?.walkPath?.length
+        ).length
+
+        if (constructors === 0) continue
+
+        // Speed scales with workers: 1 = 100%, 2 = 160%, 3 = 200%
+        const speedMult = 1 + Math.min(constructors - 1, 2) * 0.6
+        const progressPerTick = (1 / config.constructionTime) * speedMult
+
+        building.constructionProgress = Math.min(1, building.constructionProgress + progressPerTick)
+
+        if (building.constructionProgress >= 1) {
+          building.constructionProgress = null // now operational
+          this.pushMessage(`${config.label} construction complete. Systems online.`, 'event')
+
+          // Award engineering XP to constructors
+          for (const c of alive) {
+            if (c.currentAction?.type === 'construct' && c.currentAction?.targetId === building.id) {
+              awardXP(c, 'engineer')
+            }
+          }
+
+          // Special: launch platform marks export system as ready
+          if (building.type === 'launchplatform') {
+            this.exportPlatform.built = true
+          }
+        }
+      }
+
       // Radio chatter — colonists communicate organically
       const settingsState = useSettingsStore()
       generateChatter(
@@ -819,23 +857,7 @@ export const useGameStore = defineStore('game', {
       this.credits += creditGain
       this.totalCreditsEarned += creditGain
 
-      // Storage — auto-build one silo when at capacity, then clamp overflow
-      const caps = this.storageCap
-      // Platform capacity counts as available storage — no need for a silo if the platform can absorb overflow
-      const plat = this.exportPlatform
-      const platformSpace = (plat.built && plat.status === 'docked') ? plat.capacity - (plat.cargo.metals + plat.cargo.ice + plat.cargo.rareMinerals) : 0
-      const metalsAtCap = this.metals >= caps.metals
-      const iceAtCap = this.ice >= caps.ice
-      const overflowAmount = Math.max(0, this.metals - caps.metals) + Math.max(0, this.ice - caps.ice)
-
-      if ((metalsAtCap || iceAtCap) && overflowAmount > platformSpace && this.metals >= 20) {
-        this.metals -= 20
-        const pos = getBuildingPosition('storageSilo', this.buildings)
-        this.buildings.push({ id: uid(), type: 'storageSilo', damaged: false, constructionProgress: null, x: pos.x, y: pos.y, rotation: pos.rotation })
-        this.pushMessage('Storage full — engineers constructing additional silo.', 'event')
-      }
-
-      // Re-check caps after possible silo build, then clamp
+      // Clamp overflow
       const finalCaps = this.storageCap
       if (this.metals > finalCaps.metals) {
         if (this.ticksSinceLastReport % 60 === 0) {
@@ -853,21 +875,6 @@ export const useGameStore = defineStore('game', {
       }
       if (this.rareMinerals > finalCaps.rareMinerals) {
         this.rareMinerals = finalCaps.rareMinerals
-      }
-
-      // Auto-build launch platform when metals available and none exists
-      if (!this.exportPlatform.built && this.metals >= 30) {
-        const hasLaunchPlatform = this.buildings.some(b => b.type === 'launchplatform')
-        if (!hasLaunchPlatform) {
-          const hasEngineer = alive.some(c => c.currentAction?.type === 'engineer' || c.currentAction?.type === 'wander' || !c.currentAction)
-          if (hasEngineer) {
-            this.metals -= 30
-            const pos = getBuildingPosition('launchplatform', this.buildings)
-            this.buildings.push({ id: uid(), type: 'launchplatform', damaged: false, constructionProgress: null, x: pos.x, y: pos.y, rotation: pos.rotation })
-            this.exportPlatform.built = true
-            this.pushMessage('Engineers have constructed a launch platform at the LZ.', 'event')
-          }
-        }
       }
 
       // Med bay healing
@@ -1198,14 +1205,14 @@ export const useGameStore = defineStore('game', {
                 id: uid(),
                 type: item.buildingType,
                 damaged: false,
-                constructionProgress: null,
+                constructionProgress: 0,
                 x: pos.x,
                 y: pos.y,
                 rotation: pos.rotation,
               })
               const label =
                 BLUEPRINTS.find((b) => b.type === item.buildingType)?.label || item.buildingType
-              this.pushMessage(`${label} assembled and operational.`, 'event')
+              this.pushMessage(`${label} prefab delivered. Construction starting.`, 'event')
             }
             break
           case 'newColonist': {
