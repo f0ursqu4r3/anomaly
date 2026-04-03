@@ -20,7 +20,7 @@
       <span class="res-icon"><SvgIcon name="ice" size="xs" /></span>
       <span class="res-val mono">{{ fmt(game.ice) }}</span>
     </div>
-    <div class="res-item">
+    <div v-if="game.rareMinerals > 0" class="res-item">
       <span class="res-icon"><SvgIcon name="rare" size="xs" /></span>
       <span class="res-val mono">{{ fmt(game.rareMinerals) }}</span>
     </div>

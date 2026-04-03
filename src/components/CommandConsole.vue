@@ -246,7 +246,7 @@
           </span>
           <span class="status-item">
             <span class="status-label">DEPTH</span>
-            <span class="status-val mono">{{ game.depth }}m</span>
+            <span class="status-val mono">{{ Math.floor(game.depth) }}m</span>
           </span>
         </template>
         <template v-else-if="tab === 'shipments'">

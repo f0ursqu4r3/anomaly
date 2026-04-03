@@ -132,7 +132,7 @@
     <!-- Edge stats -->
     <div class="edge-stats">
       <span class="edge-stat mono">CREW {{ game.aliveColonists.length }}</span>
-      <span class="edge-stat mono">DEPTH {{ game.depth }}m</span>
+      <span class="edge-stat mono">DEPTH {{ Math.floor(game.depth) }}m</span>
     </div>
 
     <div v-if="moon.awayCount > 0" class="away-indicator mono">
@@ -485,8 +485,9 @@ onUnmounted(() => cancelAnimationFrame(fpsRaf))
 
 .feed-indicator {
   position: absolute;
-  top: calc(var(--safe-top) + 40px);
-  right: 8px;
+  top: calc(var(--safe-top) + 8px);
+  left: 50%;
+  transform: translateX(-50%);
   display: flex;
   align-items: center;
   gap: 4px;

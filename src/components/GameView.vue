@@ -54,7 +54,7 @@ const { lens, isTransitioning, toggleLens } = useLensView()
 .lens-switch {
   position: absolute;
   bottom: 12px;
-  right: 60px;
+  left: 12px;
   background: var(--bg-elevated);
   border: 1px solid var(--accent-muted);
   border-radius: var(--radius-sm);
