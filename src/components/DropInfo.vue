@@ -63,7 +63,7 @@ const groupedContents = computed(() => {
   border-radius: var(--radius-sm);
   padding: 6px 8px;
   font-family: var(--font-mono);
-  font-size: 11px;
+  font-size: 0.6875rem;
   color: var(--text-secondary);
   pointer-events: none;
   min-width: 100px;
@@ -75,7 +75,7 @@ const groupedContents = computed(() => {
 }
 
 .info-header {
-  font-size: 10px;
+  font-size: 0.625rem;
   color: var(--purple);
   margin-bottom: 4px;
   border-bottom: 1px solid var(--accent-dim);
@@ -94,7 +94,7 @@ const groupedContents = computed(() => {
 }
 
 .contents-label {
-  font-size: 10px;
+  font-size: 0.625rem;
   color: var(--text-muted);
   margin-top: 4px;
   border-top: 1px solid var(--accent-dim);

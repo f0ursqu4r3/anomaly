@@ -76,7 +76,7 @@ const directives: {
 
 .section-label {
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: 0.625rem;
   font-weight: 700;
   letter-spacing: 0.15em;
   color: var(--text-secondary);
@@ -120,18 +120,18 @@ const directives: {
 }
 
 .dir-name {
-  font-size: 13px;
+  font-size: 0.8125rem;
   font-weight: 700;
   color: var(--text-primary);
 }
 
 .dir-desc {
-  font-size: 11px;
+  font-size: 0.6875rem;
   color: var(--text-secondary);
 }
 
 .dir-ratio {
-  font-size: 10px;
+  font-size: 0.625rem;
   color: var(--text-secondary);
 }
 </style>

@@ -65,7 +65,7 @@ body {
   background: var(--bg-deep);
   color: var(--text-primary);
   font-family: var(--font-sans);
-  font-size: 14px;
+  font-size: 16px;
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
   -webkit-tap-highlight-color: transparent;
@@ -289,9 +289,9 @@ button:active {
   }
 }
 
-[data-text-size="small"] { font-size: 13px; }
-[data-text-size="normal"] { font-size: 16px; }
-[data-text-size="large"] { font-size: 19px; }
+html[data-text-size="small"] { font-size: 13px; }
+html[data-text-size="normal"] { font-size: 16px; }
+html[data-text-size="large"] { font-size: 19px; }
 
 /* Respect reduced motion preference globally */
 @media (prefers-reduced-motion: reduce) {

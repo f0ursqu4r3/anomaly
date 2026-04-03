@@ -84,7 +84,7 @@ const circumference = 2 * Math.PI * 15 // ~94.25
 
 .drop-label {
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: 0.625rem;
   color: var(--text-secondary);
   margin-top: 2px;
   white-space: nowrap;

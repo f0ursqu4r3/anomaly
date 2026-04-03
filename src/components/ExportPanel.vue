@@ -185,7 +185,7 @@ function returnEta(platform: Building): string {
 
 .section-label {
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: 0.625rem;
   font-weight: 700;
   letter-spacing: 0.15em;
   color: var(--text-secondary);
@@ -197,7 +197,7 @@ function returnEta(platform: Building): string {
   display: flex;
   gap: 8px;
   font-family: var(--font-mono);
-  font-size: 11px;
+  font-size: 0.6875rem;
   padding: 5px 10px;
   background: var(--accent-dim);
   border: 1px solid var(--accent-muted);
@@ -209,7 +209,7 @@ function returnEta(platform: Building): string {
 
 .rate-label {
   color: var(--text-muted);
-  font-size: 10px;
+  font-size: 0.625rem;
   letter-spacing: 0.1em;
 }
 
@@ -249,7 +249,7 @@ function returnEta(platform: Building): string {
   justify-content: space-between;
   align-items: center;
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: 0.625rem;
   font-weight: 700;
   letter-spacing: 0.15em;
   color: var(--text-primary);
@@ -257,7 +257,7 @@ function returnEta(platform: Building): string {
 }
 
 .platform-status {
-  font-size: 10px;
+  font-size: 0.625rem;
   font-weight: 400;
   letter-spacing: 0.05em;
 }
@@ -278,7 +278,7 @@ function returnEta(platform: Building): string {
   justify-content: space-between;
   align-items: center;
   font-family: var(--font-mono);
-  font-size: 11px;
+  font-size: 0.6875rem;
   color: var(--cyan);
   padding: 5px 0;
 }
@@ -292,7 +292,7 @@ function returnEta(platform: Building): string {
   display: flex;
   justify-content: space-between;
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: 0.625rem;
   font-weight: 700;
   letter-spacing: 0.15em;
   color: var(--text-secondary);
@@ -332,7 +332,7 @@ function returnEta(platform: Building): string {
   display: flex;
   gap: 8px;
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: 0.625rem;
   color: var(--text-secondary);
 }
 
@@ -350,7 +350,7 @@ function returnEta(platform: Building): string {
 
 .action-btn {
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: 0.625rem;
   letter-spacing: 0.05em;
   padding: 6px 12px;
   border: 1px solid var(--accent-muted);
@@ -387,7 +387,7 @@ function returnEta(platform: Building): string {
   display: flex;
   gap: 8px;
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: 0.625rem;
   align-items: baseline;
   padding-top: 6px;
   margin-top: 2px;

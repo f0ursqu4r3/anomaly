@@ -116,14 +116,14 @@ function fmtOffsetTime(ms: number): string {
 }
 
 .report-title {
-  font-size: 20px;
+  font-size: 1.25rem;
   font-weight: 700;
   color: var(--cyan);
   margin-bottom: 4px;
 }
 
 .report-duration {
-  font-size: 13px;
+  font-size: 0.8125rem;
   color: var(--text-muted);
   margin-bottom: 16px;
 }
@@ -139,7 +139,7 @@ function fmtOffsetTime(ms: number): string {
 }
 
 .report-event {
-  font-size: 12px;
+  font-size: 0.75rem;
   display: flex;
   gap: 8px;
   align-items: baseline;
@@ -149,7 +149,7 @@ function fmtOffsetTime(ms: number): string {
 }
 
 .event-time {
-  font-size: 10px;
+  font-size: 0.625rem;
   color: var(--text-secondary);
   flex-shrink: 0;
   min-width: 52px;
@@ -169,7 +169,7 @@ function fmtOffsetTime(ms: number): string {
 }
 
 .report-quiet {
-  font-size: 13px;
+  font-size: 0.8125rem;
   color: var(--text-muted);
   margin-bottom: 16px;
   font-style: italic;
@@ -190,7 +190,7 @@ function fmtOffsetTime(ms: number): string {
 }
 
 .delta-label {
-  font-size: 10px;
+  font-size: 0.625rem;
   font-family: var(--font-mono);
   text-transform: uppercase;
   letter-spacing: 0.1em;
@@ -198,7 +198,7 @@ function fmtOffsetTime(ms: number): string {
 }
 
 .delta-value {
-  font-size: 15px;
+  font-size: 0.9375rem;
   font-weight: 600;
 }
 
@@ -211,7 +211,7 @@ function fmtOffsetTime(ms: number): string {
 }
 
 .report-status {
-  font-size: 12px;
+  font-size: 0.75rem;
   font-weight: 700;
   font-family: var(--font-mono);
   text-transform: uppercase;
@@ -240,7 +240,7 @@ function fmtOffsetTime(ms: number): string {
 .resume-btn {
   width: 100%;
   padding: 14px;
-  font-size: 16px;
+  font-size: 1rem;
   font-weight: 700;
   background: var(--cyan);
   color: var(--bg-deep);

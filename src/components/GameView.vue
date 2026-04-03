@@ -60,7 +60,7 @@ const { lens, isTransitioning, toggleLens } = useLensView()
   border-radius: var(--radius-sm);
   color: var(--cyan);
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: 0.625rem;
   letter-spacing: 0.08em;
   padding: 8px 14px;
   cursor: pointer;

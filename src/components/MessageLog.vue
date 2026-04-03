@@ -62,7 +62,7 @@ onMounted(() => {
   -webkit-overflow-scrolling: touch;
   padding: 8px 10px;
   font-family: var(--font-mono);
-  font-size: 11px;
+  font-size: 0.6875rem;
   line-height: 1.6;
 }
 

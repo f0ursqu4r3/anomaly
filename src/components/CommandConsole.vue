@@ -466,7 +466,7 @@ function missionStatusLabel(mission: SurveyMission): string {
   flex: 1;
   padding: 10px 4px;
   font-family: var(--font-mono);
-  font-size: 11px;
+  font-size: 0.6875rem;
   font-weight: 700;
   letter-spacing: 0.12em;
   color: var(--text-secondary);
@@ -505,13 +505,13 @@ function missionStatusLabel(mission: SurveyMission): string {
 
 .status-label {
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: 0.625rem;
   letter-spacing: 0.1em;
   color: var(--text-secondary);
 }
 
 .status-val {
-  font-size: 12px;
+  font-size: 0.75rem;
   color: var(--text-primary);
   display: flex;
   align-items: center;
@@ -535,7 +535,7 @@ function missionStatusLabel(mission: SurveyMission): string {
   border: none;
   color: var(--text-muted);
   cursor: pointer;
-  font-size: 14px;
+  font-size: 0.875rem;
 }
 
 .settings-btn:hover {
@@ -552,7 +552,7 @@ function missionStatusLabel(mission: SurveyMission): string {
   background: var(--bg-deep);
   border-bottom: 1px solid var(--accent-dim);
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: 0.625rem;
   flex-shrink: 0;
 }
 
@@ -583,7 +583,7 @@ function missionStatusLabel(mission: SurveyMission): string {
   align-items: center;
   gap: 6px;
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: 0.625rem;
   letter-spacing: 0.05em;
   padding: 6px 12px;
   border: 1px solid var(--cyan);
@@ -621,7 +621,7 @@ function missionStatusLabel(mission: SurveyMission): string {
 }
 
 .ping-cooldown-text {
-  font-size: 10px;
+  font-size: 0.625rem;
 }
 
 .ping-progress-bar {
@@ -651,7 +651,7 @@ function missionStatusLabel(mission: SurveyMission): string {
 
 .sector-detail {
   font-family: var(--font-mono);
-  font-size: 11px;
+  font-size: 0.6875rem;
 }
 
 .sector-header {
@@ -662,14 +662,14 @@ function missionStatusLabel(mission: SurveyMission): string {
 }
 
 .sector-terrain {
-  font-size: 12px;
+  font-size: 0.75rem;
   font-weight: 700;
   letter-spacing: 0.05em;
 }
 
 .sector-coords {
   color: var(--text-secondary);
-  font-size: 10px;
+  font-size: 0.625rem;
 }
 
 .sector-close {
@@ -677,7 +677,7 @@ function missionStatusLabel(mission: SurveyMission): string {
   background: none;
   border: none;
   color: var(--text-secondary);
-  font-size: 16px;
+  font-size: 1rem;
   cursor: pointer;
   padding: 0 4px;
   font-family: var(--font-mono);
@@ -686,12 +686,12 @@ function missionStatusLabel(mission: SurveyMission): string {
 .sector-desc {
   color: var(--text-secondary);
   margin: 0 0 8px;
-  font-size: 10px;
+  font-size: 0.625rem;
   line-height: 1.4;
 }
 
 .sector-info {
-  font-size: 10px;
+  font-size: 0.625rem;
   margin-bottom: 8px;
   padding: 4px 8px;
   border-left: 2px solid;
@@ -715,7 +715,7 @@ function missionStatusLabel(mission: SurveyMission): string {
 
 .outpost-name {
   color: var(--green);
-  font-size: 12px;
+  font-size: 0.75rem;
   font-weight: 700;
   margin-bottom: 4px;
 }
@@ -724,7 +724,7 @@ function missionStatusLabel(mission: SurveyMission): string {
   display: flex;
   gap: 12px;
   color: var(--text-secondary);
-  font-size: 10px;
+  font-size: 0.625rem;
   margin-bottom: 8px;
   flex-wrap: wrap;
 }
@@ -740,7 +740,7 @@ function missionStatusLabel(mission: SurveyMission): string {
 
 .action-btn {
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: 0.625rem;
   letter-spacing: 0.05em;
   padding: 6px 12px;
   border: 1px solid var(--accent-muted);
@@ -773,7 +773,7 @@ function missionStatusLabel(mission: SurveyMission): string {
 
 .crew-label {
   color: var(--text-secondary);
-  font-size: 10px;
+  font-size: 0.625rem;
   margin-bottom: 6px;
 }
 
@@ -789,7 +789,7 @@ function missionStatusLabel(mission: SurveyMission): string {
   align-items: center;
   gap: 4px;
   color: var(--text-primary);
-  font-size: 10px;
+  font-size: 0.625rem;
   cursor: pointer;
 }
 
@@ -800,7 +800,7 @@ function missionStatusLabel(mission: SurveyMission): string {
 .crew-trait {
   color: var(--cyan);
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: 0.625rem;
   margin-left: 6px;
   opacity: 0.7;
 }
@@ -808,7 +808,7 @@ function missionStatusLabel(mission: SurveyMission): string {
 .crew-expertise {
   color: var(--amber);
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: 0.625rem;
   margin-left: 6px;
   opacity: 0.7;
 }
@@ -822,7 +822,7 @@ function missionStatusLabel(mission: SurveyMission): string {
 
 .moon-overview {
   font-family: var(--font-mono);
-  font-size: 11px;
+  font-size: 0.6875rem;
 }
 
 .overview-section {
@@ -830,7 +830,7 @@ function missionStatusLabel(mission: SurveyMission): string {
 }
 
 .overview-heading {
-  font-size: 10px;
+  font-size: 0.625rem;
   font-weight: 700;
   letter-spacing: 0.1em;
   color: var(--text-secondary);
@@ -856,20 +856,20 @@ function missionStatusLabel(mission: SurveyMission): string {
 
 .overview-item-name {
   font-weight: 600;
-  font-size: 11px;
+  font-size: 0.6875rem;
 }
 
 .overview-item-name.green { color: var(--green); }
 .overview-item-name.amber { color: var(--amber); }
 
 .overview-item-detail {
-  font-size: 10px;
+  font-size: 0.625rem;
   color: var(--text-secondary);
 }
 
 .overview-empty {
   color: var(--text-muted);
-  font-size: 10px;
+  font-size: 0.625rem;
   padding: 20px 8px;
   text-align: center;
   line-height: 1.5;

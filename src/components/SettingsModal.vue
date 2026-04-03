@@ -181,14 +181,14 @@ function doReset() {
 
 .settings-title {
   font-family: var(--font-mono);
-  font-size: 12px;
+  font-size: 0.75rem;
   font-weight: 700;
   letter-spacing: 0.15em;
   color: var(--cyan);
 }
 
 .close-btn {
-  font-size: 20px;
+  font-size: 1.25rem;
   color: var(--text-muted);
   background: none;
   border: none;
@@ -220,7 +220,7 @@ function doReset() {
   align-items: center;
   padding: 10px 16px;
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: 0.625rem;
   font-weight: 700;
   letter-spacing: 0.15em;
   color: var(--text-secondary);
@@ -233,7 +233,7 @@ function doReset() {
 }
 
 .chevron {
-  font-size: 12px;
+  font-size: 0.75rem;
   color: var(--text-muted);
 }
 
@@ -247,7 +247,7 @@ function doReset() {
   align-items: center;
   padding: 8px 0;
   font-family: var(--font-mono);
-  font-size: 12px;
+  font-size: 0.75rem;
   color: var(--text-primary);
   cursor: pointer;
 }
@@ -271,7 +271,7 @@ function doReset() {
 
 .reset-btn {
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: 0.625rem;
   font-weight: 700;
   letter-spacing: 0.1em;
   padding: 4px 12px;

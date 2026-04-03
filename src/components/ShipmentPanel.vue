@@ -242,7 +242,7 @@ function formatEta(arrivalAt: number): string {
 
 .section-label {
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: 0.625rem;
   font-weight: 700;
   letter-spacing: 0.15em;
   color: var(--text-secondary);
@@ -253,7 +253,7 @@ function formatEta(arrivalAt: number): string {
 }
 
 .manifest-meta {
-  font-size: 10px;
+  font-size: 0.625rem;
   font-weight: 400;
   letter-spacing: 0.05em;
 }
@@ -280,7 +280,7 @@ function formatEta(arrivalAt: number): string {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 10px;
+  font-size: 0.625rem;
   letter-spacing: 0.12em;
   color: var(--cyan);
 }
@@ -302,11 +302,11 @@ function formatEta(arrivalAt: number): string {
 }
 
 .transit-label {
-  font-size: 11px;
+  font-size: 0.6875rem;
   color: var(--cyan);
 }
 .transit-eta {
-  font-size: 10px;
+  font-size: 0.625rem;
   color: var(--cyan);
 }
 
@@ -342,13 +342,13 @@ function formatEta(arrivalAt: number): string {
   flex-shrink: 0;
 }
 .manifest-name {
-  font-size: 11px;
+  font-size: 0.6875rem;
   color: var(--text-primary);
   flex: 1;
   min-width: 0;
 }
 .manifest-wt {
-  font-size: 10px;
+  font-size: 0.625rem;
   color: var(--text-secondary);
   flex-shrink: 0;
 }
@@ -500,7 +500,7 @@ function formatEta(arrivalAt: number): string {
 }
 
 .manifest-total {
-  font-size: 13px;
+  font-size: 0.8125rem;
   color: var(--amber);
   display: flex;
   align-items: center;
@@ -515,7 +515,7 @@ function formatEta(arrivalAt: number): string {
 .repeat-btn {
   padding: 8px 14px;
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: 0.625rem;
   font-weight: 600;
   letter-spacing: 0.08em;
   background: var(--bg-elevated);
@@ -541,7 +541,7 @@ function formatEta(arrivalAt: number): string {
 }
 
 .relaunch-hint {
-  font-size: 10px;
+  font-size: 0.625rem;
   color: var(--text-secondary);
 }
 
@@ -552,7 +552,7 @@ function formatEta(arrivalAt: number): string {
 .clear-btn {
   padding: 8px 14px;
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: 0.625rem;
   font-weight: 600;
   letter-spacing: 0.08em;
   background: var(--bg-elevated);
@@ -563,7 +563,7 @@ function formatEta(arrivalAt: number): string {
 .launch-btn {
   padding: 8px 22px;
   font-family: var(--font-mono);
-  font-size: 11px;
+  font-size: 0.6875rem;
   font-weight: 700;
   letter-spacing: 0.1em;
   background: var(--cyan);
@@ -640,7 +640,7 @@ function formatEta(arrivalAt: number): string {
   color: var(--cyan);
 }
 .cat-label {
-  font-size: 10px;
+  font-size: 0.625rem;
   font-weight: 600;
   color: var(--text-primary);
   line-height: 1.2;
@@ -653,7 +653,7 @@ function formatEta(arrivalAt: number): string {
 }
 
 .cat-cost {
-  font-size: 10px;
+  font-size: 0.625rem;
   color: var(--amber);
   display: flex;
   align-items: center;
@@ -661,7 +661,7 @@ function formatEta(arrivalAt: number): string {
 }
 
 .cat-weight {
-  font-size: 10px;
+  font-size: 0.625rem;
   color: var(--text-secondary);
 }
 
@@ -677,7 +677,7 @@ function formatEta(arrivalAt: number): string {
   width: 36px;
   height: 36px;
   min-height: 36px;
-  font-size: 16px;
+  font-size: 1rem;
   font-weight: 700;
   display: flex;
   align-items: center;
@@ -708,7 +708,7 @@ function formatEta(arrivalAt: number): string {
 .qty-count {
   width: 22px;
   text-align: center;
-  font-size: 12px;
+  font-size: 0.75rem;
   color: var(--text-primary);
 }
 
@@ -731,7 +731,7 @@ function formatEta(arrivalAt: number): string {
     width: 32px;
     height: 32px;
     min-height: 32px;
-    font-size: 15px;
+    font-size: 0.9375rem;
   }
 }
 

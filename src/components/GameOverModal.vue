@@ -64,14 +64,14 @@ const game = useGameStore()
 }
 
 .modal-title {
-  font-size: 22px;
+  font-size: 1.375rem;
   font-weight: 700;
   color: var(--red);
   margin-bottom: 8px;
 }
 
 .modal-reason {
-  font-size: 14px;
+  font-size: 0.875rem;
   color: var(--text-secondary);
   margin-bottom: 20px;
 }
@@ -90,7 +90,7 @@ const game = useGameStore()
 }
 
 .stat-label {
-  font-size: 9px;
+  font-size: 0.5625rem;
   font-family: var(--font-mono);
   text-transform: uppercase;
   letter-spacing: 0.1em;
@@ -98,7 +98,7 @@ const game = useGameStore()
 }
 
 .stat-value {
-  font-size: 16px;
+  font-size: 1rem;
   font-weight: 600;
   color: var(--text-primary);
 }
@@ -106,7 +106,7 @@ const game = useGameStore()
 .restart-btn {
   width: 100%;
   padding: 14px;
-  font-size: 16px;
+  font-size: 1rem;
   font-weight: 700;
   background: var(--cyan);
   color: var(--bg-deep);

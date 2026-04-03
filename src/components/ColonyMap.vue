@@ -106,12 +106,7 @@
         :y="selectedBuilding.y"
       />
       <MapSupplyDrop v-for="d in game.supplyDrops" :key="d.id" :drop="d" @select="selectDrop" />
-      <DropInfo
-        v-if="selectedDrop"
-        :drop="selectedDrop"
-        :x="selectedDrop.x"
-        :y="selectedDrop.y"
-      />
+      <DropInfo v-if="selectedDrop" :drop="selectedDrop" :x="selectedDrop.x" :y="selectedDrop.y" />
 
       <MapColonist
         v-for="c in visibleColonists"
@@ -192,14 +187,12 @@ const wornPaths = computed(() => {
     const zone2 = ZONE_MAP[z2]
     if (!zone1 || !zone2) continue
 
-    let opacity = 0.1
+    let opacity = 0.05
     let width = 1
     if (count >= 150) {
-      opacity = 0.35
-      width = 2
-    } else if (count >= 50) {
-      opacity = 0.2
       width = 1.5
+    } else if (count >= 50) {
+      width = 1.25
     }
 
     paths.push({ x1: zone1.x, y1: zone1.y, x2: zone2.x, y2: zone2.y, opacity, width })
@@ -265,12 +258,17 @@ const selectedDrop = ref<SupplyDrop | null>(null)
 const hazardFlash = ref(false)
 
 // Watch for hazard events — flash the screen
-watch(() => game.lastHazardAt, () => {
-  if (game.lastHazardAt > 0) {
-    hazardFlash.value = true
-    setTimeout(() => { hazardFlash.value = false }, 400)
-  }
-})
+watch(
+  () => game.lastHazardAt,
+  () => {
+    if (game.lastHazardAt > 0) {
+      hazardFlash.value = true
+      setTimeout(() => {
+        hazardFlash.value = false
+      }, 400)
+    }
+  },
+)
 
 function clearSelection() {
   selectedBuilding.value = null
@@ -413,15 +411,21 @@ onUnmounted(() => cancelAnimationFrame(fpsRaf))
 }
 
 @keyframes hazard-vignette {
-  0% { opacity: 1; }
-  30% { opacity: 1; }
-  100% { opacity: 0; }
+  0% {
+    opacity: 1;
+  }
+  30% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
 }
 
 .zone-marker {
   position: absolute;
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: 0.625rem;
   font-weight: 600;
   letter-spacing: 0.18em;
   color: var(--text-secondary);
@@ -487,7 +491,7 @@ onUnmounted(() => cancelAnimationFrame(fpsRaf))
 
 .feed-text {
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: 0.625rem;
   font-weight: 700;
   letter-spacing: 0.15em;
   color: var(--red-glow);
@@ -541,7 +545,7 @@ onUnmounted(() => cancelAnimationFrame(fpsRaf))
   bottom: 8px;
   left: 8px;
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: 0.625rem;
   color: var(--text-secondary);
   z-index: 9;
   pointer-events: none;
@@ -560,7 +564,7 @@ onUnmounted(() => cancelAnimationFrame(fpsRaf))
 
 .pause-text {
   font-family: var(--font-mono);
-  font-size: 24px;
+  font-size: 1.5rem;
   color: var(--text-muted);
   letter-spacing: 8px;
   text-transform: uppercase;
@@ -572,7 +576,7 @@ onUnmounted(() => cancelAnimationFrame(fpsRaf))
   bottom: 36px;
   left: 8px;
   z-index: 10;
-  font-size: 10px;
+  font-size: 0.625rem;
   color: var(--amber);
   padding: 2px 6px;
   background: var(--bg-elevated);

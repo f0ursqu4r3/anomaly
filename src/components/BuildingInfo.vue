@@ -135,7 +135,7 @@ const platformStatusClass = computed(() => {
   border-radius: var(--radius-sm);
   padding: 6px 8px;
   font-family: var(--font-mono);
-  font-size: 11px;
+  font-size: 0.6875rem;
   color: var(--text-secondary);
   pointer-events: none;
   min-width: 100px;
@@ -147,7 +147,7 @@ const platformStatusClass = computed(() => {
 }
 
 .info-header {
-  font-size: 10px;
+  font-size: 0.625rem;
   color: var(--text-primary);
   margin-bottom: 4px;
   border-bottom: 1px solid var(--accent-dim);

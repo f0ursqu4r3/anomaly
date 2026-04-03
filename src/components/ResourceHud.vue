@@ -97,12 +97,12 @@ function rateClass(n: number): string {
 }
 
 .hud-val {
-  font-size: 11px;
+  font-size: 0.6875rem;
   color: var(--text-primary);
 }
 
 .hud-rate {
-  font-size: 9px;
+  font-size: 0.5625rem;
 }
 
 .rate-pos {
@@ -124,7 +124,7 @@ function rateClass(n: number): string {
 }
 
 .hud-breakdown {
-  font-size: 9px;
+  font-size: 0.5625rem;
   color: var(--text-secondary);
 }
 
@@ -137,10 +137,10 @@ function rateClass(n: number): string {
 }
 .hud-item.outposts .hud-val {
   color: var(--cyan);
-  font-size: 10px;
+  font-size: 0.625rem;
 }
 .away-count {
-  font-size: 9px;
+  font-size: 0.5625rem;
   color: var(--amber);
 }
 </style>

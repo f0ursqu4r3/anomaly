@@ -52,7 +52,7 @@ watch(
 }
 
 .hazard-message {
-  font-size: 13px;
+  font-size: 0.8125rem;
   font-weight: 700;
   color: var(--text-primary);
 }
