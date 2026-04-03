@@ -101,21 +101,20 @@
     <div class="section-label" :style="game.manifest.length > 0 ? 'margin-top: 6px;' : ''">
       ITEMS
     </div>
-    <div class="catalog-grid">
+    <!-- Catalog rows -->
+    <div class="catalog">
       <button
         v-for="opt in options"
         :key="opt.label"
-        class="catalog-btn"
+        class="catalog-row"
         :class="{ disabled: !canAdd(opt), tapped: tappedItem === opt.label }"
-        :disabled="!canAdd(opt)"
         @click="addFromCatalog(opt)"
       >
-        <SvgIcon :name="shipmentIcon(opt)" size="lg" class="cat-icon" />
-        <span class="cat-label">{{ opt.label }}</span>
-        <div class="cat-meta">
-          <span class="cat-cost mono"><SvgIcon name="credits" size="xs" />{{ opt.cost }}</span>
-          <span class="cat-weight mono">{{ opt.weight }}kg</span>
-        </div>
+        <SvgIcon :name="shipmentIcon(opt)" size="sm" class="catalog-icon" />
+        <span class="catalog-name">{{ opt.label }}</span>
+        <span class="catalog-stat mono">{{ opt.abbrevStat }}</span>
+        <span class="catalog-cost mono">{{ opt.cost }}cr</span>
+        <span class="catalog-weight mono">{{ opt.weight }}kg</span>
       </button>
     </div>
   </div>
@@ -595,74 +594,79 @@ function formatEta(arrivalAt: number): string {
   animation: none;
 }
 
-/* Catalog grid */
-.catalog-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
-  gap: 4px;
-}
-
-.catalog-btn {
+/* Catalog rows */
+.catalog {
   display: flex;
   flex-direction: column;
+  gap: 2px;
+  padding-top: 8px;
+}
+
+.catalog-row {
+  display: flex;
   align-items: center;
-  justify-content: center;
-  gap: 4px;
-  aspect-ratio: 1;
-  padding: 6px 4px;
+  gap: 8px;
+  padding: 8px 10px;
   background: var(--bg-surface);
+  border: 1px solid transparent;
   border-radius: var(--radius-sm);
+  width: 100%;
   cursor: pointer;
-  -webkit-tap-highlight-color: transparent;
-  transition:
-    transform 0.12s cubic-bezier(0.25, 1, 0.5, 1),
-    background 0.15s ease,
-    opacity 0.2s ease;
-  text-align: center;
+  transition: all 0.1s;
+  font-family: var(--font-mono);
 }
 
-.catalog-btn:active:not(:disabled) {
-  transform: scale(0.93);
-  background: var(--bg-elevated);
+.catalog-row:active:not(.disabled) {
+  background: var(--accent-dim);
+  border-color: var(--cyan);
 }
 
-.catalog-btn:disabled {
-  opacity: 0.35;
+.catalog-row.disabled {
+  opacity: 0.4;
   cursor: not-allowed;
 }
 
-.cat-icon {
-  color: var(--text-muted);
-  transition: color 0.15s ease;
+.catalog-row.tapped {
+  animation: row-flash 0.2s ease;
 }
 
-.catalog-btn.tapped .cat-icon {
-  color: var(--cyan);
+@keyframes row-flash {
+  0% { background: var(--accent-dim); }
+  100% { background: var(--bg-surface); }
 }
-.cat-label {
-  font-size: 0.625rem;
+
+.catalog-icon {
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+
+.catalog-name {
+  flex: 1;
+  font-size: 0.75rem;
   font-weight: 600;
   color: var(--text-primary);
-  line-height: 1.2;
+  text-align: left;
 }
 
-.cat-meta {
-  display: flex;
-  gap: 6px;
-  align-items: center;
-}
-
-.cat-cost {
+.catalog-stat {
   font-size: 0.625rem;
   color: var(--amber);
-  display: flex;
-  align-items: center;
-  gap: 2px;
+  min-width: 50px;
+  text-align: right;
 }
 
-.cat-weight {
+.catalog-cost {
+  font-size: 0.6875rem;
+  color: var(--green);
+  min-width: 50px;
+  text-align: right;
+}
+
+.catalog-weight {
   font-size: 0.625rem;
-  color: var(--text-secondary);
+  color: var(--text-muted);
+  min-width: 30px;
+  text-align: right;
 }
 
 /* Qty controls (in manifest rows) */
@@ -712,17 +716,8 @@ function formatEta(arrivalAt: number): string {
   color: var(--text-primary);
 }
 
-/* Landscape: narrow panel, ensure 2-col grid and compact manifest */
+/* Landscape: compact manifest */
 @media (orientation: landscape), (min-width: 768px) {
-  .catalog-grid {
-    grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
-  }
-
-  .catalog-btn {
-    padding: 5px 3px;
-    gap: 3px;
-  }
-
   .manifest-item {
     padding: 3px 6px;
   }
@@ -735,12 +730,8 @@ function formatEta(arrivalAt: number): string {
   }
 }
 
-/* Portrait: wide panel, let grid breathe */
+/* Portrait: wider launch/clear buttons */
 @media (orientation: portrait) and (max-width: 767px) {
-  .catalog-grid {
-    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
-  }
-
   .launch-btn,
   .clear-btn {
     padding: 10px 18px;
