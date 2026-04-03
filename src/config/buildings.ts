@@ -10,6 +10,7 @@ export interface BuildingConfig {
   costIce: number
   shipmentCost: number | null // null = colony-built, not orderable from HQ
   shipmentWeight: number | null
+  abbrevStat: string
 }
 
 export const BUILDING_CONFIGS: BuildingConfig[] = [
@@ -23,6 +24,7 @@ export const BUILDING_CONFIGS: BuildingConfig[] = [
     costIce: 0,
     shipmentCost: 800,
     shipmentWeight: 18,
+    abbrevStat: '+4 pwr',
   },
   {
     type: 'o2generator',
@@ -34,6 +36,7 @@ export const BUILDING_CONFIGS: BuildingConfig[] = [
     costIce: 5,
     shipmentCost: 1000,
     shipmentWeight: 32,
+    abbrevStat: '+2 O2',
   },
   {
     type: 'extractionrig',
@@ -45,6 +48,7 @@ export const BUILDING_CONFIGS: BuildingConfig[] = [
     costIce: 0,
     shipmentCost: 1300,
     shipmentWeight: 55,
+    abbrevStat: '+extract',
   },
   {
     type: 'medbay',
@@ -56,6 +60,7 @@ export const BUILDING_CONFIGS: BuildingConfig[] = [
     costIce: 10,
     shipmentCost: 1500,
     shipmentWeight: 40,
+    abbrevStat: 'heals',
   },
   {
     type: 'partsfactory',
@@ -67,6 +72,7 @@ export const BUILDING_CONFIGS: BuildingConfig[] = [
     costIce: 0,
     shipmentCost: 800,
     shipmentWeight: 30,
+    abbrevStat: '+repairs',
   },
   {
     type: 'storageSilo',
@@ -78,6 +84,7 @@ export const BUILDING_CONFIGS: BuildingConfig[] = [
     costIce: 0,
     shipmentCost: 600,
     shipmentWeight: 20,
+    abbrevStat: '+storage',
   },
   {
     type: 'launchplatform',
@@ -89,6 +96,7 @@ export const BUILDING_CONFIGS: BuildingConfig[] = [
     costIce: 0,
     shipmentCost: 2000,
     shipmentWeight: 60,
+    abbrevStat: 'exports',
   },
 ]
 

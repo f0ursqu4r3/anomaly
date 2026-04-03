@@ -88,6 +88,7 @@ export interface ShipmentOption {
   description: string
   cost: number
   weight: number // cargo weight units
+  abbrevStat: string
   buildingType?: BuildingType
 }
 
@@ -274,6 +275,7 @@ const EQUIPMENT_SHIPMENTS: ShipmentOption[] = BUILDING_CONFIGS
     description: c.description,
     cost: c.shipmentCost!,
     weight: c.shipmentWeight!,
+    abbrevStat: c.abbrevStat,
     buildingType: c.type,
   }))
 
@@ -284,6 +286,7 @@ export const SHIPMENT_OPTIONS: ShipmentOption[] = [
     description: '+15 metals, +5 ice',
     cost: 600,
     weight: 20,
+    abbrevStat: '+15m +5i',
   },
   ...EQUIPMENT_SHIPMENTS,
   {
@@ -292,6 +295,7 @@ export const SHIPMENT_OPTIONS: ShipmentOption[] = [
     description: 'Recruit crew member',
     cost: 1750,
     weight: 35,
+    abbrevStat: '+1 crew',
   },
   {
     type: 'repairKit',
@@ -299,6 +303,7 @@ export const SHIPMENT_OPTIONS: ShipmentOption[] = [
     description: 'Fix one damaged building',
     cost: 250,
     weight: 5,
+    abbrevStat: 'fix 1',
   },
   {
     type: 'emergencyO2',
@@ -306,6 +311,7 @@ export const SHIPMENT_OPTIONS: ShipmentOption[] = [
     description: '+30 air (fast delivery)',
     cost: 350,
     weight: 25,
+    abbrevStat: '+30 O2',
   },
   {
     type: 'emergencyPower',
@@ -313,6 +319,7 @@ export const SHIPMENT_OPTIONS: ShipmentOption[] = [
     description: '+30 power (fast delivery)',
     cost: 350,
     weight: 15,
+    abbrevStat: '+30 pwr',
   },
 ]
 
