@@ -1,15 +1,15 @@
 <template>
-  <div ref="logEl" class="message-log" @scroll="onScroll">
+  <div ref="logEl" class="message-log" @scroll="onScroll" @click="onLogClick">
     <div v-for="msg in game.messages" :key="msg.id" class="log-entry" :class="msg.severity">
       <span class="log-time mono">{{ fmtMissionTime(msg.timestamp) }}</span>
-      <span class="log-text">{{ msg.text }}</span>
+      <span class="log-text" v-html="renderMessage(msg.text)" />
     </div>
     <div v-if="game.messages.length === 0" class="log-empty">Awaiting colony transmissions...</div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, watch, nextTick, onMounted } from 'vue'
+import { ref, computed, watch, nextTick, onMounted } from 'vue'
 import { useGameStore } from '@/stores/gameStore'
 
 const game = useGameStore()
@@ -21,6 +21,43 @@ function fmtMissionTime(ms: number): string {
   const m = Math.floor(totalSec / 60)
   const s = totalSec % 60
   return `T+${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`
+}
+
+const colonistNames = computed(() =>
+  game.colonists.map(c => c.name).sort((a, b) => b.length - a.length)
+)
+
+function renderMessage(text: string): string {
+  let result = escapeHtml(text)
+  for (const name of colonistNames.value) {
+    const escapedName = escapeHtml(name)
+    const colonist = game.colonists.find(c => c.name === name)
+    if (colonist) {
+      result = result.replace(
+        new RegExp(`\\b${escapeRegex(escapedName)}\\b`, 'g'),
+        `<span class="colonist-link" data-colonist-id="${colonist.id}">${escapedName}</span>`
+      )
+    }
+  }
+  return result
+}
+
+function escapeHtml(str: string): string {
+  return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+}
+
+function escapeRegex(str: string): string {
+  return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+}
+
+function onLogClick(e: Event) {
+  const target = e.target as HTMLElement
+  if (target.classList.contains('colonist-link')) {
+    const id = target.dataset.colonistId
+    if (id) {
+      game.trackColonist(game.trackedColonistId === id ? null : id)
+    }
+  }
 }
 
 function isAtBottom(): boolean {
@@ -112,5 +149,17 @@ onMounted(() => {
   text-align: center;
   padding: 20px;
   font-style: italic;
+}
+
+:deep(.colonist-link) {
+  color: var(--cyan);
+  cursor: pointer;
+  border-bottom: 1px dotted var(--cyan);
+  padding-bottom: 1px;
+}
+
+:deep(.colonist-link:active) {
+  color: var(--text-primary);
+  background: var(--accent-dim);
 }
 </style>
