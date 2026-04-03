@@ -148,7 +148,7 @@ const activeEntries = computed(() =>
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 16px;
+  padding: calc(var(--safe-top) + 16px) calc(var(--safe-right) + 16px) calc(var(--safe-bottom) + 16px) calc(var(--safe-left) + 16px);
 }
 
 .manual-modal {
@@ -185,7 +185,11 @@ const activeEntries = computed(() =>
   color: var(--text-muted);
   font-size: 1.25rem;
   cursor: pointer;
-  min-height: auto;
+  min-height: 44px;
+  min-width: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   padding: 4px;
 }
 
@@ -197,7 +201,8 @@ const activeEntries = computed(() =>
 
 .nav-btn {
   flex: 1;
-  padding: 8px 4px;
+  padding: 10px 4px;
+  min-height: 44px;
   font-family: var(--font-mono);
   font-size: 0.625rem;
   font-weight: 700;

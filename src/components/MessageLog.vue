@@ -155,7 +155,8 @@ onMounted(() => {
   color: var(--cyan);
   cursor: pointer;
   border-bottom: 1px dotted var(--cyan);
-  padding-bottom: 1px;
+  padding: 4px 2px;
+  margin: -4px -2px;
 }
 
 :deep(.colonist-link:active) {

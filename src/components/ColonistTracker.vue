@@ -97,10 +97,15 @@ const moraleClass = computed(() => {
   background: transparent;
   border: none;
   color: var(--text-muted);
-  font-size: 0.875rem;
+  font-size: 1.125rem;
   cursor: pointer;
-  padding: 0 2px;
-  min-height: auto;
+  padding: 8px;
+  margin: -8px -8px -8px 0;
+  min-height: 44px;
+  min-width: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   line-height: 1;
 }
 
@@ -109,7 +114,7 @@ const moraleClass = computed(() => {
   justify-content: space-between;
   gap: 8px;
   font-family: var(--font-mono);
-  font-size: 0.5625rem;
+  font-size: 0.625rem;
 }
 
 .tracker-label {

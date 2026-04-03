@@ -606,8 +606,8 @@ onUnmounted(() => cancelAnimationFrame(fpsRaf))
 
 .settings-btn {
   position: absolute;
-  top: 8px;
-  right: 8px;
+  top: calc(var(--safe-top) + 8px);
+  right: calc(var(--safe-right) + 8px);
   z-index: 10;
   background: transparent;
   border: none;
@@ -628,8 +628,8 @@ onUnmounted(() => cancelAnimationFrame(fpsRaf))
 
 .edge-stats {
   position: absolute;
-  top: 8px;
-  left: 8px;
+  top: calc(var(--safe-top) + 8px);
+  left: calc(var(--safe-left) + 8px);
   z-index: 5;
   display: flex;
   gap: 10px;
