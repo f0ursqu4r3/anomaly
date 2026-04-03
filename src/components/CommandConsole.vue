@@ -223,6 +223,8 @@
       </div>
     </template>
 
+    <OperatorsManual :visible="showManual" @close="showManual = false" />
+
     <div class="console-statusbar">
       <span class="status-item">
         <span class="status-label">CREDITS</span>
@@ -303,6 +305,7 @@ import MessageLog from './MessageLog.vue'
 import ShipmentPanel from './ShipmentPanel.vue'
 import ResourceHeader from './ResourceHeader.vue'
 import OperationsPanel from './OperationsPanel.vue'
+import OperatorsManual from './OperatorsManual.vue'
 import { CARGO_CAPACITY } from '@/stores/gameStore'
 
 import type { Outpost, SurveyMission } from '@/types/moon'
