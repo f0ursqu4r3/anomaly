@@ -37,3 +37,4 @@ npm-debug.log*
 # Vite
 vite.config.ts.timestamp-*
 .superpowers/
+.worktrees/
