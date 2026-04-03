@@ -117,6 +117,11 @@
         :visual-state="getColonistState(c.id).visualState"
         :transition-ms="getColonistState(c.id).transitionMs"
       />
+      <ColonistTracker
+        v-if="trackedColonistPos"
+        :x="trackedColonistPos.targetX"
+        :y="trackedColonistPos.targetY"
+      />
     </div>
 
     <HazardAlert />
@@ -164,6 +169,7 @@ import MapColonist from './MapColonist.vue'
 import MapSupplyDrop from './MapSupplyDrop.vue'
 import BuildingInfo from './BuildingInfo.vue'
 import DropInfo from './DropInfo.vue'
+import ColonistTracker from './ColonistTracker.vue'
 
 defineEmits<{ openSettings: [] }>()
 
@@ -212,6 +218,11 @@ const wornPaths = computed(() => {
 function getColonistState(id: string) {
   return positions.value.get(id) || getOrCreate(id)
 }
+
+const trackedColonistPos = computed(() => {
+  if (!game.trackedColonistId) return null
+  return getColonistState(game.trackedColonistId)
+})
 
 // Colonists working inside buildings are shown as pips on the building, not as map markers
 const INSIDE_ACTIONS = new Set([
