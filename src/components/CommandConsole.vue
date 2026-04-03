@@ -2,6 +2,7 @@
   <div class="command-console">
     <!-- Close lens: normal tabs -->
     <template v-if="lens === 'close'">
+      <ResourceHeader />
       <div class="console-tabs">
         <button
           v-for="t in tabs"
@@ -16,8 +17,7 @@
       <div class="console-content">
         <MessageLog v-if="tab === 'log'" />
         <ShipmentPanel v-if="tab === 'shipments'" />
-        <DirectivePanel v-if="tab === 'directives'" />
-        <ExportPanel v-if="tab === 'export'" />
+        <OperationsPanel v-if="tab === 'ops'" />
       </div>
     </template>
 
@@ -234,19 +234,56 @@
         <span class="status-label">INCOME</span>
         <span class="status-val mono">+${{ game.creditRate.toFixed(1) }}/s</span>
       </span>
-      <span class="status-item">
-        <span class="status-label">CREW</span>
-        <span class="status-val mono">
-          <SvgIcon name="crew" size="xs" />{{ game.aliveColonists.length }}/{{
-            game.colonists.length
-          }}
+
+      <!-- Context-sensitive right side -->
+      <template v-if="lens === 'close'">
+        <template v-if="tab === 'log'">
+          <span class="status-item">
+            <span class="status-label">CREW</span>
+            <span class="status-val mono">{{ game.aliveColonists.length }}/{{ game.colonists.length }}</span>
+          </span>
+          <span class="status-item">
+            <span class="status-label">DEPTH</span>
+            <span class="status-val mono">{{ game.depth }}m</span>
+          </span>
+        </template>
+        <template v-else-if="tab === 'shipments'">
+          <span class="status-item">
+            <span class="status-label">WEIGHT</span>
+            <span class="status-val mono">{{ game.manifestWeight }}/{{ CARGO_CAPACITY }}kg</span>
+          </span>
+          <span class="status-item">
+            <span class="status-label">COST</span>
+            <span class="status-val mono">{{ game.manifestCost }}cr</span>
+          </span>
+        </template>
+        <template v-else-if="tab === 'ops'">
+          <span class="status-item">
+            <span class="status-label">MODE</span>
+            <span class="status-val mono directive-badge">{{ directiveShort }}</span>
+          </span>
+          <span class="status-item">
+            <span class="status-label">PLATFORMS</span>
+            <span class="status-val mono">{{ game.operationalPlatforms.length }}</span>
+          </span>
+        </template>
+      </template>
+
+      <!-- Moon lens keeps existing crew/mode display -->
+      <template v-else>
+        <span class="status-item">
+          <span class="status-label">CREW</span>
+          <span class="status-val mono">
+            <SvgIcon name="crew" size="xs" />{{ game.aliveColonists.length }}/{{ game.colonists.length }}
+          </span>
         </span>
-      </span>
-      <span class="status-item">
-        <span class="status-label">MODE</span>
-        <span class="status-val mono directive-badge">{{ directiveShort }}</span>
-      </span>
-      <button class="settings-btn" @click="$emit('openSettings')">&#x2699;</button>
+        <span class="status-item">
+          <span class="status-label">MODE</span>
+          <span class="status-val mono directive-badge">{{ directiveShort }}</span>
+        </span>
+      </template>
+
+      <button class="manual-btn" @click="showManual = true" title="Operator's Manual">&#x1F4D6;</button>
     </div>
   </div>
 </template>
@@ -264,8 +301,9 @@ defineEmits<{ openSettings: [] }>()
 import SvgIcon from './SvgIcon.vue'
 import MessageLog from './MessageLog.vue'
 import ShipmentPanel from './ShipmentPanel.vue'
-import DirectivePanel from './DirectivePanel.vue'
-import ExportPanel from './ExportPanel.vue'
+import ResourceHeader from './ResourceHeader.vue'
+import OperationsPanel from './OperationsPanel.vue'
+import { CARGO_CAPACITY } from '@/stores/gameStore'
 
 import type { Outpost, SurveyMission } from '@/types/moon'
 
@@ -273,19 +311,18 @@ const game = useGameStore()
 const moon = useMoonStore()
 const { lens } = useLensView()
 
-const tab = ref<'log' | 'shipments' | 'directives' | 'export'>('log')
+const tab = ref<'log' | 'shipments' | 'ops'>('log')
 
 const tabs = computed(() => {
-  const t: { id: 'log' | 'shipments' | 'directives' | 'export'; label: string }[] = [
+  const t: { id: 'log' | 'shipments' | 'ops'; label: string }[] = [
     { id: 'log', label: 'COMMS' },
     { id: 'shipments', label: 'SHIPMENTS' },
+    { id: 'ops', label: 'OPS' },
   ]
-  if (game.operationalPlatforms.length > 0) {
-    t.push({ id: 'export', label: 'EXPORT' })
-  }
-  t.push({ id: 'directives', label: 'DIRECTIVES' })
   return t
 })
+
+const showManual = ref(false)
 
 const directiveShort = computed(() => {
   const map: Record<string, string> = {
@@ -526,20 +563,21 @@ function missionStatusLabel(mission: SurveyMission): string {
   color: var(--cyan);
 }
 
-.settings-btn {
+.manual-btn {
+  background: transparent;
+  border: 1px solid var(--accent-muted);
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+  padding: 4px 8px;
+  cursor: pointer;
+  min-height: 36px;
   display: flex;
   align-items: center;
-  justify-content: center;
-  padding: 4px;
-  background: none;
-  border: none;
-  color: var(--text-muted);
-  cursor: pointer;
-  font-size: 0.875rem;
 }
 
-.settings-btn:hover {
-  color: var(--text-primary);
+.manual-btn:active {
+  background: var(--bg-elevated);
 }
 
 /* ── Moon status bar ── */
