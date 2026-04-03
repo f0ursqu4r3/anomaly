@@ -1,7 +1,7 @@
 <template>
   <div class="game-view">
     <div class="map-panel" :class="{ transitioning: isTransitioning }">
-      <ColonyMap v-if="lens === 'close'" />
+      <ColonyMap v-if="lens === 'close'" @open-settings="$emit('open-settings')" />
       <MoonMap v-else />
       <button class="lens-switch" @click="toggleLens">
         {{ lens === 'close' ? '◉ SURFACE' : '◉ COLONY' }}

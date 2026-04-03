@@ -120,7 +120,15 @@
     </div>
 
     <HazardAlert />
-    <ResourceHud />
+
+    <!-- Settings gear — top right -->
+    <button class="settings-btn" @click="$emit('openSettings')">&#x2699;</button>
+
+    <!-- Edge stats -->
+    <div class="edge-stats">
+      <span class="edge-stat mono">CREW {{ game.aliveColonists.length }}</span>
+      <span class="edge-stat mono">DEPTH {{ game.depth }}m</span>
+    </div>
 
     <div v-if="moon.awayCount > 0" class="away-indicator mono">
       {{ moon.awayCount }} CREW DEPLOYED
@@ -150,13 +158,14 @@ import { useMoonStore } from '@/stores/moonStore'
 import { useColonistMovement } from '@/composables/useColonistMovement'
 import { ZONES, PATH_EDGES, ZONE_MAP } from '@/systems/mapLayout'
 import HazardAlert from './HazardAlert.vue'
-import ResourceHud from './ResourceHud.vue'
 import PauseButton from './PauseButton.vue'
 import MapBuilding from './MapBuilding.vue'
 import MapColonist from './MapColonist.vue'
 import MapSupplyDrop from './MapSupplyDrop.vue'
 import BuildingInfo from './BuildingInfo.vue'
 import DropInfo from './DropInfo.vue'
+
+defineEmits<{ openSettings: [] }>()
 
 const game = useGameStore()
 const settings = useSettingsStore()
@@ -582,5 +591,47 @@ onUnmounted(() => cancelAnimationFrame(fpsRaf))
   background: var(--bg-elevated);
   border: 1px solid var(--accent-dim);
   border-radius: 2px;
+}
+
+.settings-btn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 10;
+  background: var(--bg-elevated);
+  border: 1px solid var(--accent-muted);
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+  font-size: 1.125rem;
+  padding: 6px 10px;
+  cursor: pointer;
+  min-height: 36px;
+  min-width: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0.7;
+}
+
+.settings-btn:active {
+  opacity: 1;
+  background: var(--bg-surface);
+}
+
+.edge-stats {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  z-index: 5;
+  display: flex;
+  gap: 10px;
+}
+
+.edge-stat {
+  font-family: var(--font-mono);
+  font-size: 0.5625rem;
+  letter-spacing: 0.1em;
+  color: var(--text-muted);
+  opacity: 0.6;
 }
 </style>
