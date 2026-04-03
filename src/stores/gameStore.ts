@@ -179,7 +179,6 @@ export interface ColonyState {
 
   gameOver: boolean
   gameOverReason: string
-  isPaused: boolean
   totalPlaytimeMs: number
   lastTickAt: number
   lastSavedAt: number
@@ -437,7 +436,6 @@ function freshState(): ColonyState {
     ticksSinceLastReport: 0,
     gameOver: false,
     gameOverReason: '',
-    isPaused: false,
     totalPlaytimeMs: 0,
     lastTickAt: Date.now(),
     lastSavedAt: Date.now(),
@@ -595,14 +593,6 @@ export const useGameStore = defineStore('game', {
     // ── Colonist Tracking ──
     trackColonist(id: string | null) {
       this.trackedColonistId = id
-    },
-
-    // ── Pause ──
-    togglePause() {
-      this.isPaused = !this.isPaused
-      if (this.isPaused) {
-        this.save()
-      }
     },
 
     // ── Tick ──

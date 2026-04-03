@@ -29,7 +29,10 @@
       "Bash(git -C /Users/kyle/git/anomaly add src/systems/colonistIdentity.ts)",
       "Bash(git -C /Users/kyle/git/anomaly commit -m ':*)",
       "Bash(node -e \"const {TaskUpdate} = require; console.log\\('done'\\)\")",
-      "Bash(npx vue-tsc:*)"
+      "Bash(npx vue-tsc:*)",
+      "Bash(bun install:*)",
+      "Bash(git:*)",
+      "Bash(grep -rn \"safe-top\\\\|safe-bottom\\\\|safe-left\\\\|safe-right\\\\|landscape\\\\|orientation\\\\|min-height\" /Users/kyle/git/anomaly/.worktrees/console-ui-overhaul/src/components/*.vue --include=\"*.vue\")"
     ]
   }
 }

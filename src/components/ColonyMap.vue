@@ -139,12 +139,6 @@
       {{ moon.awayCount }} CREW DEPLOYED
     </div>
 
-    <PauseButton />
-
-    <div v-if="game.isPaused" class="pause-overlay">
-      <span class="pause-text">PAUSED</span>
-    </div>
-
     <div class="feed-indicator">
       <span class="feed-dot" />
       <span class="feed-text">LIVE</span>
@@ -163,7 +157,6 @@ import { useMoonStore } from '@/stores/moonStore'
 import { useColonistMovement } from '@/composables/useColonistMovement'
 import { ZONES, PATH_EDGES, ZONE_MAP } from '@/systems/mapLayout'
 import HazardAlert from './HazardAlert.vue'
-import PauseButton from './PauseButton.vue'
 import MapBuilding from './MapBuilding.vue'
 import MapColonist from './MapColonist.vue'
 import MapSupplyDrop from './MapSupplyDrop.vue'
@@ -569,26 +562,6 @@ onUnmounted(() => cancelAnimationFrame(fpsRaf))
   color: var(--text-secondary);
   z-index: 9;
   pointer-events: none;
-}
-
-.pause-overlay {
-  position: absolute;
-  inset: 0;
-  z-index: 12;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: color-mix(in srgb, var(--bg-deep) 50%, transparent);
-  pointer-events: none;
-}
-
-.pause-text {
-  font-family: var(--font-mono);
-  font-size: 1.5rem;
-  color: var(--text-muted);
-  letter-spacing: 8px;
-  text-transform: uppercase;
-  opacity: 0.6;
 }
 
 .away-indicator {
