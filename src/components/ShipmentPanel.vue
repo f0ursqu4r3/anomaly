@@ -15,18 +15,6 @@
       </div>
     </div>
 
-    <!-- Auto-relaunch toggle (visible when no manifest but previous exists) -->
-    <div v-if="game.manifest.length === 0 && game.lastManifest.length > 0" class="relaunch-row">
-      <button
-        class="repeat-btn standalone"
-        :class="{ active: game.autoRelaunch }"
-        @click="game.toggleAutoRelaunch()"
-      >
-        {{ game.autoRelaunch ? '⟳ AUTO-REPEAT ON' : '⟳ AUTO-REPEAT' }}
-      </button>
-      <span class="relaunch-hint mono">Last: {{ game.lastManifest.length }} items</span>
-    </div>
-
     <!-- Manifest (only when items selected) -->
     <Transition name="manifest-reveal">
       <div
@@ -534,25 +522,6 @@ function formatEta(arrivalAt: number): string {
   background: var(--accent-dim);
   color: var(--cyan);
   border: 1px solid var(--cyan);
-}
-
-.relaunch-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 8px;
-  padding: 6px 8px;
-  background: var(--bg-surface);
-  border-radius: var(--radius-sm);
-}
-
-.relaunch-hint {
-  font-size: 0.625rem;
-  color: var(--text-secondary);
-}
-
-.repeat-btn.standalone {
-  padding: 6px 12px;
 }
 
 .clear-btn {

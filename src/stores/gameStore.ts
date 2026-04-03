@@ -173,8 +173,6 @@ export interface ColonyState {
   lastPartsProducedAt: number
   manifest: ShipmentOption[] // items queued for next shipment
   shipmentCooldownUntil: number // totalPlaytimeMs when next shipment can launch
-  autoRelaunch: boolean
-  lastManifest: ShipmentOption[]
   ticksSinceLastReport: number
 
   gameOver: boolean
@@ -431,8 +429,6 @@ function freshState(): ColonyState {
     lastPartsProducedAt: 0,
     manifest: [],
     shipmentCooldownUntil: 0,
-    autoRelaunch: false,
-    lastManifest: [],
     ticksSinceLastReport: 0,
     gameOver: false,
     gameOverReason: '',
@@ -989,29 +985,6 @@ export const useGameStore = defineStore('game', {
       // Process shipments and supply drops
       this.processShipments()
 
-      // Auto-relaunch
-      if (this.autoRelaunch && this.lastManifest.length > 0 && !this.shipmentOnCooldown) {
-        const cost = this.lastManifest.reduce((sum, o) => sum + o.cost, 0)
-        if (this.credits >= cost) {
-          this.credits -= cost
-          const hasEmergency = this.lastManifest.some(
-            (o) => o.type === 'emergencyO2' || o.type === 'emergencyPower',
-          )
-          const transit = hasEmergency ? EMERGENCY_TRANSIT_MS : SHIPMENT_TRANSIT_MS
-          this.inTransitShipments.push({
-            id: uid(),
-            contents: [...this.lastManifest],
-            totalWeight: this.lastManifest.reduce((sum, o) => sum + o.weight, 0),
-            arrivalAt: this.totalPlaytimeMs + transit,
-          })
-          this.shipmentCooldownUntil = this.totalPlaytimeMs + SHIPMENT_COOLDOWN_MS
-          this.pushMessage('Auto-relaunching shipment...', 'event')
-        } else {
-          this.pushMessage('Auto-relaunch skipped — insufficient credits.', 'warning')
-          this.autoRelaunch = false
-        }
-      }
-
       this.processSupplyDrops(dtMs)
 
       // Moon systems
@@ -1148,7 +1121,6 @@ export const useGameStore = defineStore('game', {
         `Shipment launched (${totalWeight}kg): ${launchSummary}. ETA ${transit / 1000}s.`,
         'event',
       )
-      this.lastManifest = [...this.manifest]
       this.manifest = []
       this.shipmentCooldownUntil = this.totalPlaytimeMs + SHIPMENT_COOLDOWN_MS
     },
@@ -1520,20 +1492,11 @@ export const useGameStore = defineStore('game', {
         ;(this as any).exportPlatforms = {}
       }
 
-      if (this.lastManifest?.length > 0 && this.lastManifest[0].cost < 100) {
-        for (const item of this.lastManifest) {
-          item.cost = Math.round(item.cost * 10)
-        }
-      }
       if (this.manifest?.length > 0 && this.manifest[0].cost < 100) {
         for (const item of this.manifest) {
           item.cost = Math.round(item.cost * 10)
         }
       }
-    },
-
-    toggleAutoRelaunch() {
-      this.autoRelaunch = !this.autoRelaunch
     },
 
     launchExport(platformId: string, force: boolean = false) {

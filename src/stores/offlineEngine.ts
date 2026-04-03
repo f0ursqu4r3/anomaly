@@ -393,28 +393,6 @@ export function simulateOffline(inputState: ColonyState, elapsedMs: number): Off
     state.metals = Math.min(state.metals, offlineCaps.metals)
     state.ice = Math.min(state.ice, offlineCaps.ice)
 
-    // Auto-relaunch (offline)
-    if (state.autoRelaunch && state.lastManifest.length > 0 && state.totalPlaytimeMs >= state.shipmentCooldownUntil) {
-      const cost = state.lastManifest.reduce((sum, o) => sum + o.cost, 0)
-      if (state.credits >= cost) {
-        state.credits -= cost
-        const hasEmergency = state.lastManifest.some(
-          (o) => o.type === 'emergencyO2' || o.type === 'emergencyPower',
-        )
-        const transit = hasEmergency ? EMERGENCY_TRANSIT_MS : SHIPMENT_TRANSIT_MS
-        state.inTransitShipments.push({
-          id: uid(),
-          contents: [...state.lastManifest],
-          totalWeight: state.lastManifest.reduce((sum, o) => sum + o.weight, 0),
-          arrivalAt: state.totalPlaytimeMs + transit,
-        })
-        state.shipmentCooldownUntil = state.totalPlaytimeMs + SHIPMENT_COOLDOWN_MS
-        events.push({ type: 'shipment', severity: 'info', offsetMs: elapsedSoFar, message: 'Auto-relaunched shipment.' })
-      } else {
-        state.autoRelaunch = false
-      }
-    }
-
     if (state.activeDirective !== 'emergency') {
       if (state.air < state.airMax * 0.2 || state.power < state.powerMax * 0.2) {
         state.activeDirective = 'emergency'
