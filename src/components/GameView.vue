@@ -28,7 +28,7 @@ const { lens, isTransitioning, toggleLens } = useLensView()
 .game-view {
   height: 100%;
   display: grid;
-  grid-template-rows: 55fr 45fr;
+  grid-template-rows: 50fr 50fr;
 }
 
 .map-panel {
@@ -78,7 +78,7 @@ const { lens, isTransitioning, toggleLens } = useLensView()
 @media (orientation: landscape), (min-width: 768px) {
   .game-view {
     grid-template-rows: none;
-    grid-template-columns: 55fr 45fr;
+    grid-template-columns: 50fr 50fr;
   }
 
   .map-panel {
