@@ -289,9 +289,9 @@ button:active {
   }
 }
 
-html[data-text-size="small"] { font-size: 13px; }
-html[data-text-size="normal"] { font-size: 16px; }
-html[data-text-size="large"] { font-size: 19px; }
+html[data-text-size="small"] { font-size: 16px; }
+html[data-text-size="normal"] { font-size: 19px; }
+html[data-text-size="large"] { font-size: 22px; }
 
 /* Respect reduced motion preference globally */
 @media (prefers-reduced-motion: reduce) {
