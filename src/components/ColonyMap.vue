@@ -127,7 +127,7 @@
     <HazardAlert />
 
     <!-- Settings gear — top right -->
-    <button class="settings-btn" @click="$emit('openSettings')">&#x2699;</button>
+    <button class="settings-btn" @click="$emit('openSettings')">&#x2699;&#xFE0E;</button>
 
     <!-- Edge stats -->
     <div class="edge-stats">
@@ -609,24 +609,21 @@ onUnmounted(() => cancelAnimationFrame(fpsRaf))
   top: 8px;
   right: 8px;
   z-index: 10;
-  background: var(--bg-elevated);
-  border: 1px solid var(--accent-muted);
-  border-radius: var(--radius-sm);
-  color: var(--text-secondary);
-  font-size: 1.125rem;
-  padding: 6px 10px;
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  font-size: 1.5rem;
   cursor: pointer;
-  min-height: 36px;
-  min-width: 36px;
+  min-height: 44px;
+  min-width: 44px;
   display: flex;
   align-items: center;
   justify-content: center;
-  opacity: 0.7;
+  opacity: 0.5;
 }
 
 .settings-btn:active {
-  opacity: 1;
-  background: var(--bg-surface);
+  opacity: 0.8;
 }
 
 .edge-stats {
