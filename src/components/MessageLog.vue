@@ -69,7 +69,20 @@ onMounted(() => {
 .log-entry {
   display: flex;
   gap: 8px;
-  padding: 2px 0;
+  padding: 2px 0 2px 6px;
+  border-left: 2px solid transparent;
+}
+
+.log-entry.event {
+  border-left-color: var(--cyan);
+}
+
+.log-entry.warning {
+  border-left-color: var(--amber);
+}
+
+.log-entry.critical {
+  border-left-color: var(--red);
 }
 
 .log-time {
