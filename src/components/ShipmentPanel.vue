@@ -133,10 +133,12 @@ import SvgIcon from './SvgIcon.vue'
 const game = useGameStore()
 const options = SHIPMENT_OPTIONS
 
+const byPrice = (a: ShipmentOption, b: ShipmentOption) => a.cost - b.cost
+
 const catalogGroups = computed(() => [
-  { label: 'BUILDINGS', items: options.filter(o => o.type === 'equipment') },
-  { label: 'SUPPLIES', items: options.filter(o => ['supplyCrate', 'newColonist', 'repairKit'].includes(o.type)) },
-  { label: 'EMERGENCY', items: options.filter(o => ['emergencyO2', 'emergencyPower'].includes(o.type)) },
+  { label: 'BUILDINGS', items: options.filter(o => o.type === 'equipment').sort(byPrice) },
+  { label: 'SUPPLIES', items: options.filter(o => ['supplyCrate', 'newColonist', 'repairKit'].includes(o.type)).sort(byPrice) },
+  { label: 'EMERGENCY', items: options.filter(o => ['emergencyO2', 'emergencyPower'].includes(o.type)).sort(byPrice) },
 ])
 const maxWeight = CARGO_CAPACITY
 
