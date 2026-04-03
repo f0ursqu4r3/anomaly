@@ -98,24 +98,23 @@
     </Transition>
 
     <!-- Item catalog — tap to add -->
-    <div class="section-label" :style="game.manifest.length > 0 ? 'margin-top: 6px;' : ''">
-      ITEMS
-    </div>
-    <!-- Catalog rows -->
-    <div class="catalog">
-      <button
-        v-for="opt in options"
-        :key="opt.label"
-        class="catalog-row"
-        :class="{ disabled: !canAdd(opt), tapped: tappedItem === opt.label }"
-        @click="addFromCatalog(opt)"
-      >
-        <SvgIcon :name="shipmentIcon(opt)" size="sm" class="catalog-icon" />
-        <span class="catalog-name">{{ opt.label }}</span>
-        <span class="catalog-stat mono">{{ opt.abbrevStat }}</span>
-        <span class="catalog-cost mono">{{ opt.cost }}cr</span>
-        <span class="catalog-weight mono">{{ opt.weight }}kg</span>
-      </button>
+    <div v-for="group in catalogGroups" :key="group.label" class="catalog-group">
+      <div class="section-label">{{ group.label }}</div>
+      <div class="catalog">
+        <button
+          v-for="opt in group.items"
+          :key="opt.label"
+          class="catalog-row"
+          :class="{ disabled: !canAdd(opt), tapped: tappedItem === opt.label }"
+          @click="addFromCatalog(opt)"
+        >
+          <SvgIcon :name="shipmentIcon(opt)" size="sm" class="catalog-icon" />
+          <span class="catalog-name">{{ opt.label }}</span>
+          <span class="catalog-stat mono">{{ opt.abbrevStat }}</span>
+          <span class="catalog-cost mono">{{ opt.cost }}cr</span>
+          <span class="catalog-weight mono">{{ opt.weight }}kg</span>
+        </button>
+      </div>
     </div>
   </div>
 </template>
@@ -133,6 +132,12 @@ import SvgIcon from './SvgIcon.vue'
 
 const game = useGameStore()
 const options = SHIPMENT_OPTIONS
+
+const catalogGroups = computed(() => [
+  { label: 'BUILDINGS', items: options.filter(o => o.type === 'equipment') },
+  { label: 'SUPPLIES', items: options.filter(o => ['supplyCrate', 'newColonist', 'repairKit'].includes(o.type)) },
+  { label: 'EMERGENCY', items: options.filter(o => ['emergencyO2', 'emergencyPower'].includes(o.type)) },
+])
 const maxWeight = CARGO_CAPACITY
 
 const pulsingItem = ref<string | null>(null)
@@ -594,12 +599,16 @@ function formatEta(arrivalAt: number): string {
   animation: none;
 }
 
-/* Catalog rows */
+/* Catalog groups */
+.catalog-group {
+  margin-top: 8px;
+}
+
 .catalog {
   display: flex;
   flex-direction: column;
   gap: 2px;
-  padding-top: 8px;
+  margin-top: 4px;
 }
 
 .catalog-row {
