@@ -79,6 +79,11 @@
 
     <ellipse :cx="zones.power.x" :cy="zones.power.y" rx="9" ry="6" fill="rgba(20,25,35,0.18)" />
     <ellipse :cx="zones.lifeSup.x" :cy="zones.lifeSup.y" rx="9" ry="6" fill="rgba(20,25,35,0.18)" />
+    <!-- Storage: compacted ground with faint grid lines -->
+    <ellipse :cx="zones.storage.x" :cy="zones.storage.y" rx="7" ry="5" fill="rgba(20,25,35,0.18)" />
+    <line :x1="zones.storage.x - 3" :y1="zones.storage.y" :x2="zones.storage.x + 3" :y2="zones.storage.y" stroke="rgba(136,136,136,0.03)" stroke-width="0.3" />
+    <line :x1="zones.storage.x" :y1="zones.storage.y - 2" :x2="zones.storage.x" :y2="zones.storage.y + 2" stroke="rgba(136,136,136,0.03)" stroke-width="0.3" />
+
     <ellipse :cx="zones.medical.x" :cy="zones.medical.y" rx="7" ry="5" fill="rgba(20,25,35,0.15)" />
 
     <ellipse :cx="zones.workshop.x" :cy="zones.workshop.y" rx="8" ry="6" fill="rgba(22,28,38,0.18)" />

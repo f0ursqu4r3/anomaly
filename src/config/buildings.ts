@@ -78,7 +78,7 @@ export const BUILDING_CONFIGS: BuildingConfig[] = [
     type: 'storageSilo',
     label: 'Storage Silo',
     description: 'Increases resource storage capacity',
-    zone: 'extraction',
+    zone: 'storage',
     constructionTime: 20,
     costMetals: 20,
     costIce: 0,
