@@ -156,6 +156,9 @@
                     )
                   "
                 >
+                  <option :value="0.125">⅛x</option>
+                  <option :value="0.25">¼x</option>
+                  <option :value="0.5">½x</option>
                   <option :value="1">1x</option>
                   <option :value="2">2x</option>
                   <option :value="5">5x</option>

@@ -34,6 +34,10 @@ watch(() => settings.textSize, (size) => {
   document.documentElement.dataset.textSize = size
 }, { immediate: true })
 
+watch(() => settings.scanlines, (on) => {
+  document.documentElement.dataset.scanlines = on ? 'true' : ''
+}, { immediate: true })
+
 watch(() => settings.reduceAnimations, (on) => {
   document.documentElement.dataset.reduceMotion = on ? 'true' : ''
 }, { immediate: true })

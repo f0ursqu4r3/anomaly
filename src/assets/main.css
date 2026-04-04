@@ -79,8 +79,8 @@ body {
   overflow: hidden;
 }
 
-/* Scanline overlay */
-#app::after {
+/* Scanline overlay — toggled via data-scanlines on <html> */
+html[data-scanlines="true"] #app::after {
   content: '';
   position: fixed;
   inset: 0;

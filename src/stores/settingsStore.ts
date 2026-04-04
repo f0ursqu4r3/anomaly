@@ -21,7 +21,7 @@ export interface Settings {
   // Debug
   showFps: boolean
   showActionStates: boolean
-  timeMultiplier: 1 | 2 | 5
+  timeMultiplier: 0.125 | 0.25 | 0.5 | 1 | 2 | 5
 }
 
 const DEFAULTS: Settings = {

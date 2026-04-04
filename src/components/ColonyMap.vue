@@ -12,7 +12,6 @@
     @dblclick="resetView"
     @click="clearSelection"
   >
-    <div v-if="settings.scanlines" class="scanlines" />
     <!-- Hazard flash vignette -->
     <div v-if="hazardFlash" class="hazard-flash" />
 
@@ -553,20 +552,6 @@ onUnmounted(() => cancelAnimationFrame(fpsRaf))
     radial-gradient(ellipse at 50% 50%, rgba(18, 22, 32, 0.4) 0%, transparent 60%),
     linear-gradient(160deg, #080c14 0%, #0c1220 40%, #101828 60%, #080e18 100%);
   box-shadow: inset 0 0 120px rgba(0, 0, 0, 0.6);
-}
-
-.scanlines {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  z-index: 8;
-  background: repeating-linear-gradient(
-    0deg,
-    transparent,
-    transparent 3px,
-    var(--accent-faint) 3px,
-    var(--accent-faint) 4px
-  );
 }
 
 .hazard-flash {

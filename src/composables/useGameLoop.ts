@@ -25,12 +25,19 @@ export function useGameLoop() {
 
   let tickInterval: ReturnType<typeof setInterval> | null = null
   let tickCount = 0
+  let lastTickTime = 0
 
   function startLoop() {
     if (tickInterval) return
     const settings = useSettingsStore()
+    lastTickTime = performance.now()
     tickInterval = setInterval(() => {
-      game.tick(TICK_MS)
+      const now = performance.now()
+      const elapsed = now - lastTickTime
+      lastTickTime = now
+      // Cap delta to avoid huge jumps if the browser stalls
+      const dtMs = Math.min(elapsed * settings.timeMultiplier, TICK_MS * 5)
+      game.tick(dtMs)
       tickCount++
       if (settings.autoSave && tickCount % SAVE_EVERY_N_TICKS === 0) {
         game.save()
