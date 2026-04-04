@@ -116,7 +116,7 @@
     <HazardAlert />
 
     <!-- Settings gear — top right -->
-    <button class="settings-btn" @click="$emit('openSettings')">&#x2699;&#xFE0E;</button>
+    <button class="settings-btn" @click="$emit('openSettings')">CFG</button>
 
     <!-- Edge stats -->
     <div class="edge-stats">

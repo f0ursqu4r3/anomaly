@@ -285,7 +285,7 @@
         </span>
       </template>
 
-      <button class="manual-btn" @click="showManual = true" title="Operator's Manual">&#x1F4D6;</button>
+      <button class="manual-btn" @click="showManual = true" title="Operator's Manual">MAN</button>
     </div>
   </div>
 </template>
