@@ -13,6 +13,33 @@ const MORALE_DRAIN_PASSIVE = 0.2
 const MORALE_RECOVERY_SOCIAL = 2.0
 const MORALE_RECOVERY_RESTING = 0.5
 
+// Focus
+const FOCUS_DRAIN_WORKING = 2.5
+const FOCUS_RECOVERY_REST = 2.0
+const FOCUS_RECOVERY_SOCIAL = 1.5
+const FOCUS_RECOVERY_EAT = 1.0
+const FOCUS_RECOVERY_WANDER = 0.5
+export const FOCUS_RECOVERY_TRANSITION = 0.3
+const FOCUS_LOW = 25
+const FOCUS_DEPLETED = 10
+
+// Hunger
+const HUNGER_DRAIN = 0.3
+const HUNGER_HUNGRY = 40
+const HUNGER_STARVING = 15
+
+// Transitions
+const TRANSITION_PAUSE_SHORT: [number, number] = [2, 3]
+const TRANSITION_PAUSE_LONG: [number, number] = [3, 5]
+const BOND_DETOUR_CHANCE = 0.2
+
+// Restlessness
+const RESTLESS_THRESHOLD = 3
+const RESTLESS_HEAVY_THRESHOLD = 4
+const RESTLESS_PENALTY = 0.7
+const RESTLESS_HEAVY_PENALTY = 0.5
+const WORK_ACTIONS: ActionType[] = ['extract', 'engineer', 'repair', 'construct', 'load']
+
 const ENERGY_TIRED = 30
 const ENERGY_EXHAUSTED = 10
 const MORALE_STRESSED = 25
@@ -31,6 +58,7 @@ const DURATION: Record<ActionType, [number, number]> = {
   wander: [8, 18],
   load: [8, 15],
   construct: [20, 40],
+  eat: [8, 15],
 }
 
 interface TraitMod {
@@ -42,6 +70,9 @@ interface TraitMod {
   medicalThresholdBonus: number
   durationMult: number
   walkSpeedMult: number
+  focusDrainMult: number
+  restlessThreshold: number
+  transitionMult: number
 }
 
 const TRAIT_MODS: Record<Trait, TraitMod> = {
@@ -54,6 +85,9 @@ const TRAIT_MODS: Record<Trait, TraitMod> = {
     medicalThresholdBonus: 0,
     durationMult: 1.0,
     walkSpeedMult: 1.0,
+    focusDrainMult: 1.0,
+    restlessThreshold: 3,
+    transitionMult: 1.0,
   },
   diligent: {
     energyDrainMult: 1.0,
@@ -64,6 +98,9 @@ const TRAIT_MODS: Record<Trait, TraitMod> = {
     medicalThresholdBonus: 0,
     durationMult: 1.0,
     walkSpeedMult: 1.0,
+    focusDrainMult: 0.8,
+    restlessThreshold: 4,
+    transitionMult: 1.0,
   },
   social: {
     energyDrainMult: 1.0,
@@ -74,6 +111,9 @@ const TRAIT_MODS: Record<Trait, TraitMod> = {
     medicalThresholdBonus: 0,
     durationMult: 1.0,
     walkSpeedMult: 1.0,
+    focusDrainMult: 1.3,
+    restlessThreshold: 2,
+    transitionMult: 1.5,
   },
   cautious: {
     energyDrainMult: 1.0,
@@ -84,6 +124,9 @@ const TRAIT_MODS: Record<Trait, TraitMod> = {
     medicalThresholdBonus: 15,
     durationMult: 1.0,
     walkSpeedMult: 1.0,
+    focusDrainMult: 1.0,
+    restlessThreshold: 3,
+    transitionMult: 1.0,
   },
   efficient: {
     energyDrainMult: 1.0,
@@ -94,6 +137,9 @@ const TRAIT_MODS: Record<Trait, TraitMod> = {
     medicalThresholdBonus: 0,
     durationMult: 0.85,
     walkSpeedMult: 1.1,
+    focusDrainMult: 1.0,
+    restlessThreshold: 3,
+    transitionMult: 0.5,
   },
   stoic: {
     energyDrainMult: 1.0,
@@ -104,6 +150,9 @@ const TRAIT_MODS: Record<Trait, TraitMod> = {
     medicalThresholdBonus: 0,
     durationMult: 1.0,
     walkSpeedMult: 1.0,
+    focusDrainMult: 0.9,
+    restlessThreshold: 99,
+    transitionMult: 1.0,
   },
 }
 
@@ -122,6 +171,10 @@ export interface ColonistLike {
   health: number
   energy: number
   morale: number
+  focus: number
+  hunger: number
+  actionHistory: ActionType[]
+  transitionTicks: number
   trait: Trait
   skillTrait: SkillTrait
   extractionXP: number
@@ -147,6 +200,8 @@ export function updateNeeds(colonist: ColonistLike): void {
       colonist.energy = Math.min(100, colonist.energy + ENERGY_RECOVERY_RESTING)
     } else if (action.type === 'socialize') {
       colonist.energy = Math.min(100, colonist.energy + ENERGY_RECOVERY_RESTING * 0.3)
+    } else if (action.type === 'eat') {
+      colonist.energy = Math.min(100, colonist.energy + ENERGY_RECOVERY_RESTING * 0.3)
     } else if (action.type === 'wander') {
       // No drain while wandering
     } else {
@@ -167,9 +222,33 @@ export function updateNeeds(colonist: ColonistLike): void {
     colonist.morale = Math.min(100, colonist.morale + MORALE_RECOVERY_SOCIAL)
   } else if (action?.type === 'rest') {
     colonist.morale = Math.min(100, colonist.morale + MORALE_RECOVERY_RESTING)
+  } else if (action?.type === 'eat') {
+    colonist.morale = Math.min(100, colonist.morale + MORALE_RECOVERY_RESTING * 0.5)
   } else {
     colonist.morale = Math.max(0, colonist.morale - MORALE_DRAIN_PASSIVE * mod.moraleDrainMult)
   }
+
+  // Focus
+  if (action) {
+    if (action.walkPath && action.walkPath.length > 0) {
+      // Walking — no focus drain
+    } else if (action.type === 'rest') {
+      colonist.focus = Math.min(100, colonist.focus + FOCUS_RECOVERY_REST)
+    } else if (action.type === 'socialize') {
+      colonist.focus = Math.min(100, colonist.focus + FOCUS_RECOVERY_SOCIAL)
+    } else if (action.type === 'eat') {
+      colonist.focus = Math.min(100, colonist.focus + FOCUS_RECOVERY_EAT)
+    } else if (action.type === 'wander') {
+      colonist.focus = Math.min(100, colonist.focus + FOCUS_RECOVERY_WANDER)
+    } else {
+      // Working — drain focus
+      colonist.focus = Math.max(0, colonist.focus - FOCUS_DRAIN_WORKING * mod.focusDrainMult)
+    }
+  }
+
+  // Hunger — drains passively every tick regardless of action
+  const hungerDrainMult = colonist.skillTrait === 'ironStomach' ? 0.7 : 1.0
+  colonist.hunger = Math.max(0, colonist.hunger - HUNGER_DRAIN * hungerDrainMult)
 }
 
 // ── Forced Interrupts ──
@@ -196,7 +275,7 @@ export function checkInterrupt(colonist: ColonistLike): boolean {
 const WALK_SPEED_PCT = 3 // % of map per second — must match useColonistMovement
 
 /** Calculate how many ticks to walk between two zones */
-function walkTicksBetween(fromId: string, toId: string): number {
+export function walkTicksBetween(fromId: string, toId: string): number {
   const from = ZONE_MAP[fromId]
   const to = ZONE_MAP[toId]
   if (!from || !to) return 3
@@ -238,13 +317,54 @@ export function advanceAction(colonist: ColonistLike): boolean {
   return false
 }
 
-function getActionDuration(type: ActionType, colonist: ColonistLike): number {
+export function getActionDuration(type: ActionType, colonist: ColonistLike): number {
   const [min, max] = DURATION[type]
   const base = min + Math.floor(Math.random() * (max - min + 1))
   const traitMult = TRAIT_MODS[colonist.trait].durationMult
   const efficiency = getEfficiencyMultiplier(colonist as any, type)
   // Higher efficiency = shorter duration
   return Math.max(1, Math.round((base * traitMult) / efficiency))
+}
+
+/** Calculate how long a colonist pauses between actions */
+export function getTransitionTicks(
+  colonist: ColonistLike,
+  completedActionTicks: number,
+  completedActionType?: ActionType,
+): number {
+  const mod = TRAIT_MODS[colonist.trait]
+  let [min, max] = completedActionTicks > 20 ? TRANSITION_PAUSE_LONG : TRANSITION_PAUSE_SHORT
+
+  // Socializing → shorter pause (already refreshed)
+  if (completedActionType === 'socialize') {
+    min = 1
+    max = 2
+  }
+
+  const base = min + Math.floor(Math.random() * (max - min + 1))
+  return Math.max(1, Math.round(base * mod.transitionMult))
+}
+
+/** Check if colonist should detour to visit a bonded partner during transition */
+export function checkBondDetour(colonist: ColonistLike, state: ColonyState): string | null {
+  if (Math.random() > BOND_DETOUR_CHANCE) return null
+  if (!colonist.bonds) return null
+
+  const currentZone = ZONE_MAP[colonist.currentZone]
+  if (!currentZone) return null
+
+  for (const [partnerId, affinity] of Object.entries(colonist.bonds)) {
+    if (affinity < 20) continue
+    const partner = state.colonists.find((p) => p.id === partnerId && p.health > 0)
+    if (!partner || partner.currentZone === colonist.currentZone) continue
+
+    // Check if partner is in an adjacent zone (direct path, 1 hop)
+    const path = findPath(colonist.currentZone, partner.currentZone)
+    if (path && path.length === 2) {
+      return partner.currentZone
+    }
+  }
+  return null
 }
 
 // ── Utility Scoring ──
@@ -266,12 +386,44 @@ function countWorkers(state: ColonyState, actionType: ActionType, targetId?: str
   }).length
 }
 
+/** Calculate restlessness penalty for a given action type based on recent history */
+function getRestlessPenalty(colonist: ColonistLike, actionType: ActionType): number {
+  if (!WORK_ACTIONS.includes(actionType)) return 1.0
+  const mod = TRAIT_MODS[colonist.trait]
+  if (mod.restlessThreshold >= 99) return 1.0 // stoic: immune
+
+  const count = colonist.actionHistory.filter((a) => a === actionType).length
+  if (count >= RESTLESS_HEAVY_THRESHOLD) {
+    return RESTLESS_HEAVY_PENALTY
+  }
+  if (count >= mod.restlessThreshold) {
+    return RESTLESS_PENALTY
+  }
+  return 1.0
+}
+
 export function selectAction(colonist: ColonistLike, state: ColonyState): Action | null {
   if (colonist.health <= 0) return null
 
   const mod = TRAIT_MODS[colonist.trait]
   const dirMod = DIRECTIVE_UTILITY[state.activeDirective]
   const candidates: ScoredAction[] = []
+
+  // Focus penalty on work actions
+  let focusMult = 1.0
+  if (colonist.focus < FOCUS_DEPLETED) {
+    focusMult = 0.0 // won't select work at all
+  } else if (colonist.focus < FOCUS_LOW) {
+    focusMult = 0.4
+  }
+
+  // Hunger penalty on work actions
+  let hungerMult = 1.0
+  if (colonist.hunger < HUNGER_STARVING) {
+    hungerMult = 0.3
+  } else if (colonist.hunger < HUNGER_HUNGRY) {
+    hungerMult = 0.8
+  }
 
   // EXTRACT
   if (colonist.energy > 20) {
@@ -282,7 +434,7 @@ export function selectAction(colonist: ColonistLike, state: ColonyState): Action
         type: 'extract',
         targetZone: 'extraction',
         targetId: rig.id,
-        score: 50 * dirMod.extract * mod.workUtilityMult,
+        score: 50 * dirMod.extract * mod.workUtilityMult * focusMult * hungerMult * getRestlessPenalty(colonist, 'extract'),
       })
     }
   }
@@ -328,7 +480,7 @@ export function selectAction(colonist: ColonistLike, state: ColonyState): Action
         type: 'engineer',
         targetZone: zone,
         targetId: targetBuilding?.id,
-        score: 45 * dirMod.engineer * mod.workUtilityMult * emergencyMult * saturationDiscount,
+        score: 45 * dirMod.engineer * mod.workUtilityMult * emergencyMult * saturationDiscount * focusMult * hungerMult * getRestlessPenalty(colonist, 'engineer'),
       })
     }
 
@@ -349,7 +501,7 @@ export function selectAction(colonist: ColonistLike, state: ColonyState): Action
         type: 'engineer',
         targetZone: 'workshop',
         targetId: factory.id,
-        score: 35 * dirMod.engineer * mod.workUtilityMult * workerDiscount * kitUrgency,
+        score: 35 * dirMod.engineer * mod.workUtilityMult * workerDiscount * kitUrgency * focusMult * hungerMult * getRestlessPenalty(colonist, 'engineer'),
       })
     }
   }
@@ -366,7 +518,7 @@ export function selectAction(colonist: ColonistLike, state: ColonyState): Action
       type: 'repair',
       targetZone,
       targetId: target.id,
-      score: 80 * dirMod.repair * mod.repairUtilityMult * workerDiscount,
+      score: 80 * dirMod.repair * mod.repairUtilityMult * workerDiscount * focusMult * hungerMult * getRestlessPenalty(colonist, 'repair'),
     })
   }
 
@@ -385,7 +537,7 @@ export function selectAction(colonist: ColonistLike, state: ColonyState): Action
         type: 'construct',
         targetZone,
         targetId: site.id,
-        score: 75 * dirMod.engineer * mod.workUtilityMult * workerDiscount,
+        score: 75 * dirMod.engineer * mod.workUtilityMult * workerDiscount * focusMult * hungerMult * getRestlessPenalty(colonist, 'construct'),
       })
     }
   }
@@ -404,7 +556,7 @@ export function selectAction(colonist: ColonistLike, state: ColonyState): Action
       type: 'unpack',
       targetZone: 'landing',
       targetId: drop.id,
-      score: 70 * unpackDiscount,
+      score: 70 * unpackDiscount * focusMult * hungerMult,
     })
   }
 
@@ -436,7 +588,7 @@ export function selectAction(colonist: ColonistLike, state: ColonyState): Action
           type: 'load',
           targetZone: 'landing',
           targetId: platform.id,
-          score: 45 * mod.workUtilityMult * loaderDiscount * urgency,
+          score: 45 * mod.workUtilityMult * loaderDiscount * urgency * focusMult * hungerMult * getRestlessPenalty(colonist, 'load'),
         })
         break // only consider one platform per colonist decision
       }
@@ -466,6 +618,18 @@ export function selectAction(colonist: ColonistLike, state: ColonyState): Action
     }
     socialScore *= mod.socialUtilityMult
     candidates.push({ type: 'socialize', targetZone: 'habitat', score: socialScore })
+  }
+
+  // EAT
+  {
+    let eatScore = 5
+    if (colonist.hunger < HUNGER_HUNGRY) {
+      eatScore = 30 + (HUNGER_HUNGRY - colonist.hunger) * 1.5
+    }
+    if (colonist.hunger < HUNGER_STARVING) {
+      eatScore = 120
+    }
+    candidates.push({ type: 'eat', targetZone: 'habitat', score: eatScore })
   }
 
   // SEEK_MEDICAL

@@ -25,6 +25,7 @@ export type ActionType =
   | 'wander'
   | 'load'
   | 'construct'
+  | 'eat'
 
 export interface Action {
   type: ActionType

@@ -2,11 +2,27 @@ import { defineStore } from 'pinia'
 import { Preferences } from '@capacitor/preferences'
 import { simulateOffline } from './offlineEngine'
 import type { OfflineEvent, OfflineResult } from './offlineEngine'
-import type { Trait, Action, SkillTrait, Specialization } from '@/types/colonist'
+import type { Trait, Action, ActionType, SkillTrait, Specialization } from '@/types/colonist'
 import { randomTrait, randomSkillTrait, SPECIALIZATION_LABELS } from '@/types/colonist'
-import { getBuildingPosition, getLandingPosition } from '@/systems/mapLayout'
-import { updateNeeds, checkInterrupt, advanceAction, selectAction } from '@/systems/colonistAI'
-import { generateChatter } from '@/systems/radioChatter'
+import { getBuildingPosition, getLandingPosition, findPath } from '@/systems/mapLayout'
+import {
+  updateNeeds,
+  checkInterrupt,
+  advanceAction,
+  selectAction,
+  getTransitionTicks,
+  checkBondDetour,
+  walkTicksBetween,
+  getActionDuration,
+  FOCUS_RECOVERY_TRANSITION,
+} from '@/systems/colonistAI'
+import {
+  generateChatter,
+  emitFocusDepletedChatter,
+  emitRestlessSwitchChatter,
+  emitBondDetourChatter,
+  emitReturnFromBreakChatter,
+} from '@/systems/radioChatter'
 import {
   awardXP,
   checkSpecialization,
@@ -44,6 +60,10 @@ export interface Colonist {
   lastBreakdownAt: number | null
   currentAction: Action | null
   currentZone: string
+  focus: number
+  hunger: number
+  actionHistory: ActionType[]
+  transitionTicks: number
 }
 
 export type BuildingType = 'o2generator' | 'solar' | 'extractionrig' | 'medbay' | 'partsfactory' | 'storageSilo' | 'launchplatform'
@@ -376,8 +396,8 @@ function summarizeItems(labels: string[]): string {
 
 function makeStartingColonists(): Colonist[] {
   return [
-    { id: uid(), name: 'Riko', health: 100, energy: 80, morale: 70, trait: randomTrait(), skillTrait: randomSkillTrait(), extractionXP: 0, engineeringXP: 0, medicalXP: 0, specialization: null, bonds: {}, lastBreakdownAt: null, currentAction: null, currentZone: 'habitat' },
-    { id: uid(), name: 'Sable', health: 100, energy: 80, morale: 70, trait: randomTrait(), skillTrait: randomSkillTrait(), extractionXP: 0, engineeringXP: 0, medicalXP: 0, specialization: null, bonds: {}, lastBreakdownAt: null, currentAction: null, currentZone: 'habitat' },
+    { id: uid(), name: 'Riko', health: 100, energy: 80, morale: 70, trait: randomTrait(), skillTrait: randomSkillTrait(), extractionXP: 0, engineeringXP: 0, medicalXP: 0, specialization: null, bonds: {}, lastBreakdownAt: null, currentAction: null, currentZone: 'habitat', focus: 80 + Math.floor(Math.random() * 21), hunger: 70 + Math.floor(Math.random() * 31), actionHistory: [], transitionTicks: 0 },
+    { id: uid(), name: 'Sable', health: 100, energy: 80, morale: 70, trait: randomTrait(), skillTrait: randomSkillTrait(), extractionXP: 0, engineeringXP: 0, medicalXP: 0, specialization: null, bonds: {}, lastBreakdownAt: null, currentAction: null, currentZone: 'habitat', focus: 80 + Math.floor(Math.random() * 21), hunger: 70 + Math.floor(Math.random() * 31), actionHistory: [], transitionTicks: 0 },
   ]
 }
 
@@ -606,6 +626,12 @@ export const useGameStore = defineStore('game', {
       this.totalPlaytimeMs += dtMs
       this.lastTickAt = Date.now()
 
+      const buildingLabel = (id: string) => {
+        const b = this.buildings.find(b => b.id === id)
+        return b ? (BLUEPRINTS.find(bp => bp.type === b.type)?.label ?? b.type) : 'building'
+      }
+      const emitMsg = (text: string, severity: 'info' | 'event') => this.pushMessage(text, severity)
+
       if (this.aliveColonists.length === 0) {
         this.gameOver = true
         this.gameOverReason = 'All colonists have perished.'
@@ -618,6 +644,48 @@ export const useGameStore = defineStore('game', {
         updateNeeds(c)
         const interrupted = checkInterrupt(c)
         if (!interrupted) {
+          // Handle transition pause countdown
+          if (c.transitionTicks > 0) {
+            c.transitionTicks--
+            // Trickle recovery during pause
+            c.energy = Math.min(100, c.energy + FOCUS_RECOVERY_TRANSITION)
+            c.focus = Math.min(100, c.focus + FOCUS_RECOVERY_TRANSITION)
+            if (c.transitionTicks <= 0) {
+              // Check for bond detour
+              const detourZone = checkBondDetour(c, this.$state)
+              if (detourZone) {
+                const walkPath = findPath(c.currentZone, detourZone)
+                const needsWalk = walkPath && walkPath.length > 1
+                c.currentAction = {
+                  type: 'wander',
+                  targetZone: detourZone,
+                  remainingTicks: needsWalk ? walkTicksBetween(walkPath![0], walkPath![1]) : 4,
+                  walkPath: needsWalk ? walkPath : undefined,
+                }
+                emitBondDetourChatter(c, this.colonists, buildingLabel, emitMsg, this.totalPlaytimeMs)
+              } else {
+                const prevType = c.actionHistory.length > 0 ? c.actionHistory[c.actionHistory.length - 1] : null
+                c.currentAction = selectAction(c, this.$state)
+                const isWork = c.currentAction && ['extract', 'engineer', 'repair', 'construct', 'load'].includes(c.currentAction.type)
+                if (isWork) {
+                  // Only emit return-from-break if previous action was a break (not work→work)
+                  const wasBreak = !prevType || !['extract', 'engineer', 'repair', 'construct', 'load'].includes(prevType)
+                  if (wasBreak) {
+                    emitReturnFromBreakChatter(c, this.colonists, buildingLabel, emitMsg, this.totalPlaytimeMs)
+                  }
+                  // Restless switch: chose a different work action than what they were repeating
+                  if (prevType && c.currentAction!.type !== prevType) {
+                    const repeatCount = c.actionHistory.filter(a => a === prevType).length
+                    if (repeatCount >= 3) {
+                      emitRestlessSwitchChatter(c, this.colonists, buildingLabel, emitMsg, this.totalPlaytimeMs)
+                    }
+                  }
+                }
+              }
+            }
+            continue
+          }
+
           const prevAction = c.currentAction?.type
           const needsDecision = advanceAction(c)
           if (needsDecision) {
@@ -626,20 +694,51 @@ export const useGameStore = defineStore('game', {
               awardXP(c, prevAction)
               const newSpec = checkSpecialization(c)
               if (newSpec) {
-                this.pushMessage(`${c.name} has earned the rank of ${SPECIALIZATION_LABELS[newSpec]}.`, 'event')
+                this.pushMessage(
+                  `${c.name} has earned the rank of ${SPECIALIZATION_LABELS[newSpec]}`,
+                  'event',
+                )
+              }
+
+              // Eat completion — restore hunger
+              if (prevAction === 'eat') {
+                c.hunger = 80 + Math.floor(Math.random() * 16) // 80-95
+                c.focus = Math.min(100, c.focus + 5 + Math.floor(Math.random() * 6)) // +5-10
+                c.morale = Math.min(100, c.morale + 2 + Math.floor(Math.random() * 2)) // +2-3
+              }
+
+              // Track work action in history
+              const workActions: ActionType[] = ['extract', 'engineer', 'repair', 'construct', 'load']
+              if (workActions.includes(prevAction)) {
+                c.actionHistory.push(prevAction)
+                if (c.actionHistory.length > 5) c.actionHistory.shift()
               }
             }
-            // Check for breakdown before selecting next action
+
+            // Check for breakdown
             const breakdownTicks = checkBreakdown(c, this.totalPlaytimeMs)
             if (breakdownTicks) {
-              c.currentAction = { type: 'rest', targetZone: 'habitat', remainingTicks: breakdownTicks }
+              c.currentAction = {
+                type: 'rest',
+                targetZone: 'habitat',
+                remainingTicks: breakdownTicks,
+              }
               c.currentZone = 'habitat'
-              this.pushMessage(`${c.name}: I can't keep going. Need to stop.`, 'info')
+              this.pushMessage(`${c.name}: I can't keep going...`, 'info')
             } else {
-              c.currentAction = selectAction(c, this.$state)
+              // Enter transition pause instead of immediately selecting next action
+              const totalActionTicks = getActionDuration(prevAction ?? 'wander', c)
+              c.transitionTicks = getTransitionTicks(c, totalActionTicks, prevAction)
+              c.currentAction = null
+
+              // Emit focus depletion chatter if that's why they stopped
+              if (c.focus < 25 && prevAction && ['extract', 'engineer', 'repair', 'construct', 'load'].includes(prevAction)) {
+                emitFocusDepletedChatter(c, this.colonists, buildingLabel, emitMsg, this.totalPlaytimeMs)
+              }
             }
           }
         } else {
+          // Interrupted — select immediately (no pause for urgent needs)
           c.currentAction = selectAction(c, this.$state)
         }
       }
@@ -687,11 +786,8 @@ export const useGameStore = defineStore('game', {
       generateChatter(
         alive,
         this.colonists,
-        (id) => {
-          const b = this.buildings.find(b => b.id === id)
-          return b ? (BLUEPRINTS.find(bp => bp.type === b.type)?.label ?? b.type) : 'building'
-        },
-        (text, severity) => this.pushMessage(text, severity),
+        buildingLabel,
+        emitMsg,
         this.totalPlaytimeMs,
         settingsState.radioChatter,
       )
@@ -1243,6 +1339,10 @@ export const useGameStore = defineStore('game', {
               extractionXP: 0, engineeringXP: 0, medicalXP: 0,
               specialization: null, bonds: {}, lastBreakdownAt: null,
               currentAction: null, currentZone: 'habitat',
+              focus: 80 + Math.floor(Math.random() * 21),
+              hunger: 70 + Math.floor(Math.random() * 31),
+              actionHistory: [],
+              transitionTicks: 0,
             })
             this.pushMessage(`${name} has joined the colony.`, 'event')
             break
@@ -1443,6 +1543,11 @@ export const useGameStore = defineStore('game', {
         if ((c as any).specialization === undefined) (c as any).specialization = null
         if ((c as any).bonds === undefined) (c as any).bonds = {}
         if ((c as any).lastBreakdownAt === undefined) (c as any).lastBreakdownAt = null
+        // v6→v7: Add focus, hunger, actionHistory, transitionTicks
+        if ((c as any).focus === undefined) c.focus = 80
+        if ((c as any).hunger === undefined) c.hunger = 70 + Math.floor(Math.random() * 31)
+        if ((c as any).actionHistory === undefined) c.actionHistory = []
+        if ((c as any).transitionTicks === undefined) c.transitionTicks = 0
       }
 
       // Backfill constructionProgress for saves that predate this field
