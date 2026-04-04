@@ -15,39 +15,15 @@
     <div v-if="hazardFlash" class="hazard-flash" />
 
     <div class="map-content" :style="transformStyle">
-      <!-- Zone boundaries and paths (SVG) -->
+      <MapTerrain />
+
+      <!-- Worn paths from colonist traffic (SVG) -->
       <svg
         class="zone-overlay"
         :class="{ 'high-contrast': settings.highContrast }"
         viewBox="0 0 100 100"
         preserveAspectRatio="xMidYMid meet"
       >
-        <template v-if="settings.pathLines">
-          <line
-            v-for="(edge, i) in pathEdges"
-            :key="'p' + i"
-            :x1="edge.x1"
-            :y1="edge.y1"
-            :x2="edge.x2"
-            :y2="edge.y2"
-            stroke="var(--accent-dim)"
-            stroke-width="0.3"
-            opacity="0.12"
-          />
-        </template>
-        <circle
-          v-for="zone in zones"
-          :key="zone.id"
-          :cx="zone.x"
-          :cy="zone.y"
-          :r="zone.radius"
-          fill="none"
-          :stroke="zone.color"
-          stroke-width="0.2"
-          stroke-dasharray="1.5,1"
-          opacity="0.15"
-        />
-        <!-- Worn paths from colonist traffic -->
         <line
           v-for="(p, i) in wornPaths"
           :key="'path-' + i"
@@ -61,24 +37,6 @@
         />
       </svg>
 
-      <!-- Zone labels -->
-      <template v-if="settings.zoneLabels">
-        <div
-          v-for="zone in zones"
-          :key="'label-' + zone.id"
-          class="zone-marker"
-          :style="{
-            left: zone.x + '%',
-            top: zone.y - zone.radius - 2 + '%',
-            color: zone.color,
-            transform: `translate(-50%, -50%) scale(var(--marker-scale, 1))`,
-          }"
-        >
-          {{ zone.label }}
-        </div>
-      </template>
-
-      <div class="habitat-ring" />
 
       <MapBuilding v-for="b in game.buildings" :key="b.id" :building="b" @select="selectBuilding" />
       <!-- Connector line from building to info overlay (45° elbow) -->
@@ -155,7 +113,8 @@ import type { Building, SupplyDrop } from '@/stores/gameStore'
 import { useSettingsStore } from '@/stores/settingsStore'
 import { useMoonStore } from '@/stores/moonStore'
 import { useColonistMovement } from '@/composables/useColonistMovement'
-import { ZONES, PATH_EDGES, ZONE_MAP } from '@/systems/mapLayout'
+import { ZONE_MAP } from '@/systems/mapLayout'
+import MapTerrain from './MapTerrain.vue'
 import HazardAlert from './HazardAlert.vue'
 import MapBuilding from './MapBuilding.vue'
 import MapColonist from './MapColonist.vue'
@@ -170,14 +129,6 @@ const game = useGameStore()
 const settings = useSettingsStore()
 const moon = useMoonStore()
 const { positions, getOrCreate } = useColonistMovement()
-
-const zones = ZONES
-const pathEdges = PATH_EDGES.map((e) => ({
-  x1: ZONE_MAP[e.from].x,
-  y1: ZONE_MAP[e.from].y,
-  x2: ZONE_MAP[e.to].x,
-  y2: ZONE_MAP[e.to].y,
-}))
 
 const wornPaths = computed(() => {
   const paths: {
@@ -371,33 +322,11 @@ onUnmounted(() => cancelAnimationFrame(fpsRaf))
   overflow: hidden;
   container-type: size;
   background:
-    radial-gradient(ellipse at 20% 70%, rgba(15, 20, 35, 0.8) 0%, transparent 50%),
-    radial-gradient(ellipse at 75% 25%, rgba(20, 25, 40, 0.7) 0%, transparent 45%),
-    radial-gradient(ellipse at 45% 85%, rgba(25, 18, 30, 0.6) 0%, transparent 40%),
-    radial-gradient(ellipse at 60% 40%, rgba(10, 15, 25, 0.5) 0%, transparent 55%),
-    linear-gradient(170deg, #050810 0%, #080c18 40%, #0a0e1a 70%, #060a14 100%);
-  box-shadow: inset 0 0 150px rgba(0, 0, 0, 0.7);
-}
-
-/* Subtle noise texture via repeating gradient */
-.colony-map::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  opacity: 0.4;
-  background-image:
-    radial-gradient(circle at 30% 20%, rgba(80, 120, 160, 0.04) 0%, transparent 2px),
-    radial-gradient(circle at 70% 60%, rgba(80, 120, 160, 0.03) 0%, transparent 1.5px),
-    radial-gradient(circle at 15% 80%, rgba(80, 120, 160, 0.03) 0%, transparent 1px),
-    radial-gradient(circle at 85% 35%, rgba(80, 120, 160, 0.04) 0%, transparent 2px),
-    radial-gradient(circle at 55% 10%, rgba(80, 120, 160, 0.02) 0%, transparent 1px);
-  background-size:
-    120px 120px,
-    80px 80px,
-    150px 150px,
-    100px 100px,
-    60px 60px;
+    radial-gradient(ellipse at 30% 60%, rgba(25,30,40,0.95) 0%, transparent 35%),
+    radial-gradient(ellipse at 70% 35%, rgba(20,25,35,0.85) 0%, transparent 30%),
+    radial-gradient(ellipse at 50% 50%, rgba(18,22,32,0.4) 0%, transparent 60%),
+    linear-gradient(160deg, #080c14 0%, #0c1220 40%, #101828 60%, #080e18 100%);
+  box-shadow: inset 0 0 120px rgba(0, 0, 0, 0.6);
 }
 
 .scanlines {
@@ -435,17 +364,6 @@ onUnmounted(() => cancelAnimationFrame(fpsRaf))
   }
 }
 
-.zone-marker {
-  position: absolute;
-  font-family: var(--font-mono);
-  font-size: 0.625rem;
-  font-weight: 600;
-  letter-spacing: 0.18em;
-  color: var(--text-secondary);
-  pointer-events: none;
-  z-index: 1;
-}
-
 .info-connector {
   position: absolute;
   top: 0;
@@ -467,20 +385,6 @@ onUnmounted(() => cancelAnimationFrame(fpsRaf))
   to {
     stroke-dashoffset: 0;
   }
-}
-
-.habitat-ring {
-  position: absolute;
-  left: 50%;
-  top: 40%;
-  width: 50px;
-  height: 50px;
-  transform: translate(-50%, -50%) scale(var(--marker-scale, 1));
-  border-radius: 50%;
-  border: 1px solid var(--accent-dim);
-  box-shadow: 0 0 20px var(--accent-faint);
-  pointer-events: none;
-  z-index: 1;
 }
 
 .feed-indicator {
@@ -542,10 +446,6 @@ onUnmounted(() => cancelAnimationFrame(fpsRaf))
 
 .zone-overlay.high-contrast line {
   opacity: 0.3;
-}
-.zone-overlay.high-contrast circle {
-  opacity: 0.35;
-  stroke-width: 0.4;
 }
 
 .reduce-animations .colonist-dot,
