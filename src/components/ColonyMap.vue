@@ -329,6 +329,16 @@ const connectorPoints = computed(() => {
 
 const hazardFlash = ref(false)
 
+// Clear selected drop if it gets removed (unpacking complete)
+watch(
+  () => game.supplyDrops,
+  () => {
+    if (selectedDrop.value && !game.supplyDrops.find(d => d.id === selectedDrop.value!.id)) {
+      selectedDrop.value = null
+    }
+  },
+)
+
 // Watch for hazard events — flash the screen
 watch(
   () => game.lastHazardAt,
