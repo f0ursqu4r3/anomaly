@@ -149,7 +149,7 @@ const platformAway = computed(() => {
 const alertType = computed(() => {
   if (props.building.damaged) return null // wrench icon handles damage
   if (props.building.constructionProgress !== null) return null
-  const needsWorkers = ['extractionrig', 'launchplatform'].includes(props.building.type)
+  const needsWorkers = props.building.type === 'extractionrig'
   if (needsWorkers && workerCount.value === 0) return 'alert-warning'
   return null
 })
