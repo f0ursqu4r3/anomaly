@@ -624,7 +624,7 @@ onUnmounted(() => cancelAnimationFrame(fpsRaf))
 
 .fps-counter {
   position: absolute;
-  bottom: calc(var(--safe-bottom, 0px) + 64px);
+  bottom: calc(var(--safe-bottom, 0px) + 80px);
   left: calc(var(--safe-left, 0px) + 8px);
   font-family: var(--font-mono);
   font-size: 0.625rem;
@@ -635,7 +635,7 @@ onUnmounted(() => cancelAnimationFrame(fpsRaf))
 
 .activity-summary {
   position: absolute;
-  bottom: calc(var(--safe-bottom, 0px) + 48px);
+  bottom: calc(var(--safe-bottom, 0px) + 64px);
   left: calc(var(--safe-left, 0px) + 8px);
   z-index: 5;
   display: flex;
