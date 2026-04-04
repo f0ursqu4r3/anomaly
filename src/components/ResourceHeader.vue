@@ -39,8 +39,7 @@ const game = useGameStore()
 
 function fmt(n: number): string {
   if (n >= 1000) return (n / 1000).toFixed(1) + 'K'
-  if (n >= 100) return Math.floor(n).toString()
-  return n.toFixed(1)
+  return Math.round(n).toString()
 }
 
 function fmtRate(n: number): string {

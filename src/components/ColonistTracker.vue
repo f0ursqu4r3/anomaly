@@ -15,7 +15,7 @@
       </div>
       <div class="tracker-row">
         <span class="tracker-label">MORALE</span>
-        <span class="tracker-val" :class="moraleClass">{{ colonist.morale }}</span>
+        <span class="tracker-val" :class="moraleClass">{{ Math.round(colonist.morale) }}</span>
       </div>
     </div>
     <div class="tracker-pip" />
