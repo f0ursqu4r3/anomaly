@@ -14,6 +14,7 @@ import {
   checkBondDetour,
   walkTicksBetween,
   getActionDuration,
+  FOCUS_RECOVERY_TRANSITION,
 } from '@/systems/colonistAI'
 import {
   generateChatter,
@@ -640,8 +641,8 @@ export const useGameStore = defineStore('game', {
           if (c.transitionTicks > 0) {
             c.transitionTicks--
             // Trickle recovery during pause
-            c.energy = Math.min(100, c.energy + 0.3)
-            c.focus = Math.min(100, c.focus + 0.3)
+            c.energy = Math.min(100, c.energy + FOCUS_RECOVERY_TRANSITION)
+            c.focus = Math.min(100, c.focus + FOCUS_RECOVERY_TRANSITION)
             if (c.transitionTicks <= 0) {
               // Check for bond detour
               const detourZone = checkBondDetour(c, this.$state)
@@ -658,10 +659,15 @@ export const useGameStore = defineStore('game', {
               } else {
                 const prevType = c.actionHistory.length > 0 ? c.actionHistory[c.actionHistory.length - 1] : null
                 c.currentAction = selectAction(c, this.$state)
-                if (c.currentAction && ['extract', 'engineer', 'repair', 'construct', 'load'].includes(c.currentAction.type)) {
-                  emitReturnFromBreakChatter(c, this.colonists, buildingLabel, emitMsg, this.totalPlaytimeMs)
+                const isWork = c.currentAction && ['extract', 'engineer', 'repair', 'construct', 'load'].includes(c.currentAction.type)
+                if (isWork) {
+                  // Only emit return-from-break if previous action was a break (not work→work)
+                  const wasBreak = !prevType || !['extract', 'engineer', 'repair', 'construct', 'load'].includes(prevType)
+                  if (wasBreak) {
+                    emitReturnFromBreakChatter(c, this.colonists, buildingLabel, emitMsg, this.totalPlaytimeMs)
+                  }
                   // Restless switch: chose a different work action than what they were repeating
-                  if (prevType && c.currentAction.type !== prevType) {
+                  if (prevType && c.currentAction!.type !== prevType) {
                     const repeatCount = c.actionHistory.filter(a => a === prevType).length
                     if (repeatCount >= 3) {
                       emitRestlessSwitchChatter(c, this.colonists, buildingLabel, emitMsg, this.totalPlaytimeMs)

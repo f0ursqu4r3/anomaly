@@ -91,6 +91,7 @@ const actionLabel = computed(() => {
   if (action.type === 'load') return 'loading cargo'
   if (action.type === 'construct') return 'constructing'
   if (action.type === 'socialize') return 'socializing'
+  if (action.type === 'wander') return 'wandering'
   return action.type
 })
 
