@@ -229,7 +229,7 @@ const flowLines = computed(() => {
         y1: solar.y,
         x2: consumer.x,
         y2: consumer.y,
-        color: 'rgba(245, 158, 11, 0.07)',
+        color: 'rgba(245, 158, 11, 0.02)',
       })
     }
   }
@@ -240,7 +240,7 @@ const flowLines = computed(() => {
         y1: o2.y,
         x2: consumer.x,
         y2: consumer.y,
-        color: 'rgba(126, 207, 255, 0.07)',
+        color: 'rgba(126, 207, 255, 0.02)',
       })
     }
   }
@@ -475,6 +475,26 @@ function resetView() {
   panX.value = 0
   panY.value = 0
 }
+
+const mapContainer = ref<HTMLElement | null>(null)
+
+watch(
+  () => game.panToColonistId,
+  (id) => {
+    if (!id || !mapContainer.value) return
+    const pos = positions.value.get(id) || getOrCreate(id)
+    const rect = mapContainer.value.getBoundingClientRect()
+    // Colonist position is in % of container; convert to pixel offset from center
+    const cx = (pos.x / 100) * rect.width
+    const cy = (pos.y / 100) * rect.height
+    const targetX = (rect.width / 2 - cx) / zoom.value
+    const targetY = (rect.height / 2 - cy) / zoom.value
+    panX.value = targetX
+    panY.value = targetY
+    if (zoom.value < 1.2) zoom.value = 1.3
+    game.panToColonistId = null
+  },
+)
 
 const fps = ref(0)
 let fpsFrames = 0

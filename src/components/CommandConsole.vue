@@ -18,6 +18,7 @@
         <MessageLog v-if="tab === 'log'" />
         <ShipmentPanel v-if="tab === 'shipments'" />
         <OperationsPanel v-if="tab === 'ops'" />
+        <PersonnelPanel v-if="tab === 'crew'" @track-colonist="handleTrackColonist" />
       </div>
     </template>
 
@@ -327,6 +328,7 @@ import MessageLog from './MessageLog.vue'
 import ShipmentPanel from './ShipmentPanel.vue'
 import ResourceHeader from './ResourceHeader.vue'
 import OperationsPanel from './OperationsPanel.vue'
+import PersonnelPanel from './PersonnelPanel.vue'
 import OperatorsManual from './OperatorsManual.vue'
 import { CARGO_CAPACITY } from '@/stores/gameStore'
 
@@ -336,13 +338,14 @@ const game = useGameStore()
 const moon = useMoonStore()
 const { lens } = useLensView()
 
-const tab = ref<'log' | 'shipments' | 'ops'>('log')
+const tab = ref<'log' | 'shipments' | 'ops' | 'crew'>('log')
 
 const tabs = computed(() => {
-  const t: { id: 'log' | 'shipments' | 'ops'; label: string }[] = [
+  const t: { id: 'log' | 'shipments' | 'ops' | 'crew'; label: string }[] = [
     { id: 'log', label: 'COMMS' },
     { id: 'shipments', label: 'SHIPMENTS' },
     { id: 'ops', label: 'OPS' },
+    { id: 'crew', label: 'CREW' },
   ]
   return t
 })
@@ -358,6 +361,10 @@ const directiveShort = computed(() => {
   }
   return map[game.activeDirective] || 'BAL'
 })
+
+function handleTrackColonist(id: string) {
+  game.panToColonist(id)
+}
 
 function fmtCredits(n: number): string {
   if (n < 10) return n.toFixed(1)

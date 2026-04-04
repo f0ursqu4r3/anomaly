@@ -184,6 +184,7 @@ export interface ColonyState {
   exportPlatforms: Record<string, ExportPlatformState>
   zonePaths: Record<string, number>
   trackedColonistId: string | null
+  panToColonistId: string | null
 }
 
 // ── Constants ──────────────────────────────────────────────────────
@@ -439,6 +440,7 @@ function freshState(): ColonyState {
     exportPlatforms: {},
     zonePaths: {},
     trackedColonistId: null,
+    panToColonistId: null,
   }
 }
 
@@ -589,6 +591,11 @@ export const useGameStore = defineStore('game', {
     // ── Colonist Tracking ──
     trackColonist(id: string | null) {
       this.trackedColonistId = id
+    },
+
+    panToColonist(id: string) {
+      this.trackedColonistId = id
+      this.panToColonistId = id
     },
 
     // ── Tick ──
