@@ -55,9 +55,9 @@
               />
             </div>
             <div v-if="loaded(platform) > 0" class="cargo-breakdown">
-              <span v-if="getState(platform)!.cargo.metals > 0" class="cargo-item">{{ getState(platform)!.cargo.metals }}m</span>
-              <span v-if="getState(platform)!.cargo.ice > 0" class="cargo-item">{{ getState(platform)!.cargo.ice }}i</span>
-              <span v-if="getState(platform)!.cargo.rareMinerals > 0" class="cargo-item">{{ getState(platform)!.cargo.rareMinerals }}r</span>
+              <span v-if="getState(platform)!.cargo.metals > 0" class="cargo-item">{{ Math.round(getState(platform)!.cargo.metals) }}m</span>
+              <span v-if="getState(platform)!.cargo.ice > 0" class="cargo-item">{{ Math.round(getState(platform)!.cargo.ice) }}i</span>
+              <span v-if="getState(platform)!.cargo.rareMinerals > 0" class="cargo-item">{{ Math.round(getState(platform)!.cargo.rareMinerals) }}r</span>
               <span class="cargo-estimate">~{{ estimate(platform) }}cr</span>
             </div>
           </div>
@@ -126,7 +126,7 @@ function getState(platform: Building) {
 function loaded(platform: Building): number {
   const ep = getState(platform)
   if (!ep) return 0
-  return ep.cargo.metals + ep.cargo.ice + ep.cargo.rareMinerals
+  return Math.round(ep.cargo.metals + ep.cargo.ice + ep.cargo.rareMinerals)
 }
 
 function estimate(platform: Building): number {
