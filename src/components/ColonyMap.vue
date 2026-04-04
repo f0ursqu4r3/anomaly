@@ -7,6 +7,9 @@
     @pointerdown="onPointerDown"
     @pointermove="onPointerMove"
     @pointerup="onPointerUp"
+    @touchstart.passive="onTouchStart"
+    @touchmove.prevent="onTouchMove"
+    @touchend.passive="onTouchEnd"
     @dblclick="resetView"
     @click="clearSelection"
   >
@@ -363,6 +366,39 @@ function onPointerMove(e: PointerEvent) {
 
 function onPointerUp() {
   isPanning.value = false
+}
+
+// Pinch zoom
+let lastPinchDist = 0
+let isPinching = false
+
+function getTouchDist(e: TouchEvent): number {
+  const [a, b] = [e.touches[0], e.touches[1]]
+  const dx = a.clientX - b.clientX
+  const dy = a.clientY - b.clientY
+  return Math.sqrt(dx * dx + dy * dy)
+}
+
+function onTouchStart(e: TouchEvent) {
+  if (e.touches.length === 2) {
+    isPinching = true
+    lastPinchDist = getTouchDist(e)
+  }
+}
+
+function onTouchMove(e: TouchEvent) {
+  if (isPinching && e.touches.length === 2) {
+    const dist = getTouchDist(e)
+    const scale = dist / lastPinchDist
+    zoom.value = Math.min(2.0, Math.max(0.8, zoom.value * scale))
+    lastPinchDist = dist
+  }
+}
+
+function onTouchEnd(e: TouchEvent) {
+  if (e.touches.length < 2) {
+    isPinching = false
+  }
 }
 
 function resetView() {
