@@ -43,6 +43,9 @@ interface TraitMod {
   medicalThresholdBonus: number
   durationMult: number
   walkSpeedMult: number
+  focusDrainMult: number
+  restlessThreshold: number
+  transitionMult: number
 }
 
 const TRAIT_MODS: Record<Trait, TraitMod> = {
@@ -55,6 +58,9 @@ const TRAIT_MODS: Record<Trait, TraitMod> = {
     medicalThresholdBonus: 0,
     durationMult: 1.0,
     walkSpeedMult: 1.0,
+    focusDrainMult: 1.0,
+    restlessThreshold: 3,
+    transitionMult: 1.0,
   },
   diligent: {
     energyDrainMult: 1.0,
@@ -65,6 +71,9 @@ const TRAIT_MODS: Record<Trait, TraitMod> = {
     medicalThresholdBonus: 0,
     durationMult: 1.0,
     walkSpeedMult: 1.0,
+    focusDrainMult: 0.8,
+    restlessThreshold: 4,
+    transitionMult: 1.0,
   },
   social: {
     energyDrainMult: 1.0,
@@ -75,6 +84,9 @@ const TRAIT_MODS: Record<Trait, TraitMod> = {
     medicalThresholdBonus: 0,
     durationMult: 1.0,
     walkSpeedMult: 1.0,
+    focusDrainMult: 1.3,
+    restlessThreshold: 2,
+    transitionMult: 1.5,
   },
   cautious: {
     energyDrainMult: 1.0,
@@ -85,6 +97,9 @@ const TRAIT_MODS: Record<Trait, TraitMod> = {
     medicalThresholdBonus: 15,
     durationMult: 1.0,
     walkSpeedMult: 1.0,
+    focusDrainMult: 1.0,
+    restlessThreshold: 3,
+    transitionMult: 1.0,
   },
   efficient: {
     energyDrainMult: 1.0,
@@ -95,6 +110,9 @@ const TRAIT_MODS: Record<Trait, TraitMod> = {
     medicalThresholdBonus: 0,
     durationMult: 0.85,
     walkSpeedMult: 1.1,
+    focusDrainMult: 1.0,
+    restlessThreshold: 3,
+    transitionMult: 0.5,
   },
   stoic: {
     energyDrainMult: 1.0,
@@ -105,6 +123,9 @@ const TRAIT_MODS: Record<Trait, TraitMod> = {
     medicalThresholdBonus: 0,
     durationMult: 1.0,
     walkSpeedMult: 1.0,
+    focusDrainMult: 0.9,
+    restlessThreshold: 99,
+    transitionMult: 1.0,
   },
 }
 
@@ -123,6 +144,10 @@ export interface ColonistLike {
   health: number
   energy: number
   morale: number
+  focus: number
+  hunger: number
+  actionHistory: ActionType[]
+  transitionTicks: number
   trait: Trait
   skillTrait: SkillTrait
   extractionXP: number
