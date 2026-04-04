@@ -31,6 +31,7 @@ const DURATION: Record<ActionType, [number, number]> = {
   wander: [8, 18],
   load: [8, 15],
   construct: [20, 40],
+  eat: [8, 15],
 }
 
 interface TraitMod {

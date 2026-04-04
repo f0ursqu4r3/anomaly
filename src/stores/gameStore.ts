@@ -2,7 +2,7 @@ import { defineStore } from 'pinia'
 import { Preferences } from '@capacitor/preferences'
 import { simulateOffline } from './offlineEngine'
 import type { OfflineEvent, OfflineResult } from './offlineEngine'
-import type { Trait, Action, SkillTrait, Specialization } from '@/types/colonist'
+import type { Trait, Action, ActionType, SkillTrait, Specialization } from '@/types/colonist'
 import { randomTrait, randomSkillTrait, SPECIALIZATION_LABELS } from '@/types/colonist'
 import { getBuildingPosition, getLandingPosition } from '@/systems/mapLayout'
 import { updateNeeds, checkInterrupt, advanceAction, selectAction } from '@/systems/colonistAI'
@@ -44,6 +44,10 @@ export interface Colonist {
   lastBreakdownAt: number | null
   currentAction: Action | null
   currentZone: string
+  focus: number
+  hunger: number
+  actionHistory: ActionType[]
+  transitionTicks: number
 }
 
 export type BuildingType = 'o2generator' | 'solar' | 'extractionrig' | 'medbay' | 'partsfactory' | 'storageSilo' | 'launchplatform'
@@ -375,8 +379,8 @@ function summarizeItems(labels: string[]): string {
 
 function makeStartingColonists(): Colonist[] {
   return [
-    { id: uid(), name: 'Riko', health: 100, energy: 80, morale: 70, trait: randomTrait(), skillTrait: randomSkillTrait(), extractionXP: 0, engineeringXP: 0, medicalXP: 0, specialization: null, bonds: {}, lastBreakdownAt: null, currentAction: null, currentZone: 'habitat' },
-    { id: uid(), name: 'Sable', health: 100, energy: 80, morale: 70, trait: randomTrait(), skillTrait: randomSkillTrait(), extractionXP: 0, engineeringXP: 0, medicalXP: 0, specialization: null, bonds: {}, lastBreakdownAt: null, currentAction: null, currentZone: 'habitat' },
+    { id: uid(), name: 'Riko', health: 100, energy: 80, morale: 70, trait: randomTrait(), skillTrait: randomSkillTrait(), extractionXP: 0, engineeringXP: 0, medicalXP: 0, specialization: null, bonds: {}, lastBreakdownAt: null, currentAction: null, currentZone: 'habitat', focus: 80 + Math.floor(Math.random() * 21), hunger: 70 + Math.floor(Math.random() * 31), actionHistory: [], transitionTicks: 0 },
+    { id: uid(), name: 'Sable', health: 100, energy: 80, morale: 70, trait: randomTrait(), skillTrait: randomSkillTrait(), extractionXP: 0, engineeringXP: 0, medicalXP: 0, specialization: null, bonds: {}, lastBreakdownAt: null, currentAction: null, currentZone: 'habitat', focus: 80 + Math.floor(Math.random() * 21), hunger: 70 + Math.floor(Math.random() * 31), actionHistory: [], transitionTicks: 0 },
   ]
 }
 
@@ -1236,6 +1240,10 @@ export const useGameStore = defineStore('game', {
               extractionXP: 0, engineeringXP: 0, medicalXP: 0,
               specialization: null, bonds: {}, lastBreakdownAt: null,
               currentAction: null, currentZone: 'habitat',
+              focus: 80 + Math.floor(Math.random() * 21),
+              hunger: 70 + Math.floor(Math.random() * 31),
+              actionHistory: [],
+              transitionTicks: 0,
             })
             this.pushMessage(`${name} has joined the colony.`, 'event')
             break
@@ -1436,6 +1444,11 @@ export const useGameStore = defineStore('game', {
         if ((c as any).specialization === undefined) (c as any).specialization = null
         if ((c as any).bonds === undefined) (c as any).bonds = {}
         if ((c as any).lastBreakdownAt === undefined) (c as any).lastBreakdownAt = null
+        // v6→v7: Add focus, hunger, actionHistory, transitionTicks
+        if ((c as any).focus === undefined) c.focus = 80
+        if ((c as any).hunger === undefined) c.hunger = 70 + Math.floor(Math.random() * 31)
+        if ((c as any).actionHistory === undefined) c.actionHistory = []
+        if ((c as any).transitionTicks === undefined) c.transitionTicks = 0
       }
 
       // Backfill constructionProgress for saves that predate this field
