@@ -120,7 +120,7 @@ function hexPx(q: number): number {
 }
 
 function hexPy(q: number, r: number): number {
-  return hexSize * (Math.sqrt(3) / 2 * q + Math.sqrt(3) * r)
+  return hexSize * ((Math.sqrt(3) / 2) * q + Math.sqrt(3) * r)
 }
 
 // ── Pan & Zoom ──
@@ -132,8 +132,8 @@ const isPanning = ref(false)
 const lastPointer = ref({ x: 0, y: 0 })
 const panMoved = ref(false)
 
-const svgTransform = computed(() =>
-  `translate(${250 + svgPanX.value}, ${250 + svgPanY.value}) scale(${svgZoom.value})`,
+const svgTransform = computed(
+  () => `translate(${250 + svgPanX.value}, ${250 + svgPanY.value}) scale(${svgZoom.value})`,
 )
 
 function onWheel(e: WheelEvent) {
@@ -157,8 +157,8 @@ function onPointerMove(e: PointerEvent) {
   const rect = svg.getBoundingClientRect()
   const scaleX = 500 / rect.width
   const scaleY = 500 / rect.height
-  svgPanX.value += dx * scaleX / svgZoom.value
-  svgPanY.value += dy * scaleY / svgZoom.value
+  svgPanX.value += (dx * scaleX) / svgZoom.value
+  svgPanY.value += (dy * scaleY) / svgZoom.value
   lastPointer.value = { x: e.clientX, y: e.clientY }
 }
 
@@ -236,7 +236,10 @@ function missionPos(mission: SurveyMission): { x: number; y: number } | null {
   const now = game.totalPlaytimeMs
 
   if (mission.status === 'traveling') {
-    const t = Math.min(1, Math.max(0, (now - mission.departedAt) / (mission.arrivalAt - mission.departedAt)))
+    const t = Math.min(
+      1,
+      Math.max(0, (now - mission.departedAt) / (mission.arrivalAt - mission.departedAt)),
+    )
     return { x: target.x * t, y: target.y * t }
   }
 
@@ -245,7 +248,10 @@ function missionPos(mission: SurveyMission): { x: number; y: number } | null {
   }
 
   if (mission.status === 'returning') {
-    const t = Math.min(1, Math.max(0, (now - mission.surveyCompleteAt) / (mission.returnAt - mission.surveyCompleteAt)))
+    const t = Math.min(
+      1,
+      Math.max(0, (now - mission.surveyCompleteAt) / (mission.returnAt - mission.surveyCompleteAt)),
+    )
     return { x: target.x * (1 - t), y: target.y * (1 - t) }
   }
 
@@ -260,7 +266,10 @@ function launchPos(launch: OutpostLaunch): { x: number; y: number } | null {
 
   const origin = { x: hexPx(sector.q), y: hexPy(sector.q, sector.r) }
   const now = game.totalPlaytimeMs
-  const t = Math.min(1, Math.max(0, (now - launch.launchedAt) / (launch.arrivalAt - launch.launchedAt)))
+  const t = Math.min(
+    1,
+    Math.max(0, (now - launch.launchedAt) / (launch.arrivalAt - launch.launchedAt)),
+  )
 
   return { x: origin.x * (1 - t), y: origin.y * (1 - t) }
 }

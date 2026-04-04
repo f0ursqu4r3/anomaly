@@ -118,11 +118,15 @@
 
         <!-- Outpost marker (non-colony) -->
         <template v-if="sector.outpostId && sector.id !== COLONY_SECTOR_ID">
-          <circle cx="0" :cy="hexSize * 0.15" :r="hexSize * 0.15" fill="none" stroke="var(--green)" stroke-width="1.5" />
-          <polygon
-            :points="outpostTrianglePoints"
-            fill="var(--green)"
+          <circle
+            cx="0"
+            :cy="hexSize * 0.15"
+            :r="hexSize * 0.15"
+            fill="none"
+            stroke="var(--green)"
+            stroke-width="1.5"
           />
+          <polygon :points="outpostTrianglePoints" fill="var(--green)" />
         </template>
 
         <!-- Scan signature hint -->
@@ -166,7 +170,15 @@
 
       <!-- Colony miniature: shows actual buildings and colonists -->
       <template v-if="sector.id === COLONY_SECTOR_ID">
-        <circle cx="0" cy="0" :r="hexSize * 0.4" fill="none" stroke="var(--cyan)" stroke-width="0.6" opacity="0.3" />
+        <circle
+          cx="0"
+          cy="0"
+          :r="hexSize * 0.4"
+          fill="none"
+          stroke="var(--cyan)"
+          stroke-width="0.6"
+          opacity="0.3"
+        />
         <!-- Buildings rendered at relative positions (colony coords 0-100 mapped to hex area) -->
         <rect
           v-for="b in colonyBuildings"
@@ -218,7 +230,7 @@ const terrainConfig = computed(() => TERRAIN_CONFIGS[props.sector.terrain])
 function sectorRng(seed: string) {
   let h = 0
   for (let i = 0; i < seed.length; i++) {
-    h = Math.imul(31, h) + seed.charCodeAt(i) | 0
+    h = (Math.imul(31, h) + seed.charCodeAt(i)) | 0
   }
   return () => {
     h = Math.imul(h ^ (h >>> 15), 1 | h)
@@ -379,12 +391,18 @@ function mapColonyCoord(val: number, axis: 'x' | 'y'): number {
 
 function buildingColor(type: BuildingType): string {
   switch (type) {
-    case 'solar': return 'var(--amber)'
-    case 'o2generator': return 'var(--cyan)'
-    case 'extractionrig': return 'var(--green)'
-    case 'medbay': return 'var(--red)'
-    case 'partsfactory': return 'var(--orange)'
-    default: return 'var(--text-muted)'
+    case 'solar':
+      return 'var(--amber)'
+    case 'o2generator':
+      return 'var(--cyan)'
+    case 'extractionrig':
+      return 'var(--green)'
+    case 'medbay':
+      return 'var(--red)'
+    case 'partsfactory':
+      return 'var(--orange)'
+    default:
+      return 'var(--text-muted)'
   }
 }
 

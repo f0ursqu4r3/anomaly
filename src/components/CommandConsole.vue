@@ -74,14 +74,19 @@
           <p class="sector-desc">{{ selectedTerrainConfig.description }}</p>
 
           <!-- Scan signature info -->
-          <div v-if="selectedSector.scanSignature && !selectedSector.deposit" class="sector-info cyan">
-            {{ selectedSector.scanSignature.qualityHint }} of {{ selectedSector.scanSignature.depositType }}
+          <div
+            v-if="selectedSector.scanSignature && !selectedSector.deposit"
+            class="sector-info cyan"
+          >
+            {{ selectedSector.scanSignature.qualityHint }} of
+            {{ selectedSector.scanSignature.depositType }}
           </div>
 
           <!-- Confirmed deposit info -->
           <div v-if="selectedSector.deposit" class="sector-info green">
             {{ selectedSector.deposit.quality }} {{ selectedSector.deposit.type }} &mdash;
-            {{ selectedSector.deposit.remainingYield }}/{{ selectedSector.deposit.totalYield }} remaining
+            {{ selectedSector.deposit.remainingYield }}/{{ selectedSector.deposit.totalYield }}
+            remaining
           </div>
 
           <!-- Outpost management -->
@@ -90,7 +95,9 @@
             <div class="outpost-stats">
               <span>Crew: {{ selectedOutpost.crewIds.length }}</span>
               <span>Stockpile: {{ totalStockpile(selectedOutpost) }}</span>
-              <span v-if="selectedSector.deposit">Deposit: {{ selectedSector.deposit.remainingYield }} left</span>
+              <span v-if="selectedSector.deposit"
+                >Deposit: {{ selectedSector.deposit.remainingYield }} left</span
+              >
             </div>
             <div class="sector-actions">
               <button
@@ -100,10 +107,7 @@
               >
                 LAUNCH PAYLOAD
               </button>
-              <button
-                class="action-btn red"
-                @click="doAbandon(selectedOutpost!.id)"
-              >
+              <button class="action-btn red" @click="doAbandon(selectedOutpost!.id)">
                 ABANDON
               </button>
             </div>
@@ -123,7 +127,13 @@
             </template>
 
             <!-- Establish outpost -->
-            <template v-if="selectedSector.status === 'surveyed' && selectedSector.deposit && !selectedSector.outpostId">
+            <template
+              v-if="
+                selectedSector.status === 'surveyed' &&
+                selectedSector.deposit &&
+                !selectedSector.outpostId
+              "
+            >
               <button
                 v-if="!showCrewSelect"
                 class="action-btn green"
@@ -140,20 +150,22 @@
                 Select crew ({{ crewAction === 'survey' ? '2-3' : '2+' }} required):
               </div>
               <div class="crew-list">
-                <label
-                  v-for="col in availableColonists"
-                  :key="col.id"
-                  class="crew-option"
-                >
+                <label v-for="col in availableColonists" :key="col.id" class="crew-option">
                   <input
+                    v-model="selectedCrewIds"
                     type="checkbox"
                     :value="col.id"
-                    v-model="selectedCrewIds"
-                    :disabled="crewAction === 'survey' && selectedCrewIds.length >= 3 && !selectedCrewIds.includes(col.id)"
+                    :disabled="
+                      crewAction === 'survey' &&
+                      selectedCrewIds.length >= 3 &&
+                      !selectedCrewIds.includes(col.id)
+                    "
                   />
                   {{ col.name }}
                   <span class="crew-trait">{{ SKILL_TRAIT_LABELS[col.skillTrait] }}</span>
-                  <span v-if="getExpertiseLabel(col)" class="crew-expertise">{{ getExpertiseLabel(col) }}</span>
+                  <span v-if="getExpertiseLabel(col)" class="crew-expertise">{{
+                    getExpertiseLabel(col)
+                  }}</span>
                 </label>
               </div>
               <div class="crew-actions">
@@ -184,8 +196,7 @@
             >
               <span class="overview-item-name green">{{ outpost.name }}</span>
               <span class="overview-item-detail">
-                Crew {{ outpost.crewIds.length }}
-                &middot; Stock {{ totalStockpile(outpost) }}
+                Crew {{ outpost.crewIds.length }} &middot; Stock {{ totalStockpile(outpost) }}
                 <template v-if="outpostSector(outpost)?.deposit">
                   &middot; {{ outpostSector(outpost)!.deposit!.remainingYield }} left
                 </template>
@@ -242,7 +253,9 @@
         <template v-if="tab === 'log'">
           <span class="status-item">
             <span class="status-label">CREW</span>
-            <span class="status-val mono">{{ game.aliveColonists.length }}/{{ game.colonists.length }}</span>
+            <span class="status-val mono">
+              {{ game.aliveColonists.length }}/{{ game.colonists.length }}
+            </span>
           </span>
           <span class="status-item">
             <span class="status-label">DEPTH</span>
@@ -276,7 +289,9 @@
         <span class="status-item">
           <span class="status-label">CREW</span>
           <span class="status-val mono">
-            <SvgIcon name="crew" size="xs" />{{ game.aliveColonists.length }}/{{ game.colonists.length }}
+            <SvgIcon name="crew" size="xs" />{{ game.aliveColonists.length }}/{{
+              game.colonists.length
+            }}
           </span>
         </span>
         <span class="status-item">
@@ -285,7 +300,9 @@
         </span>
       </template>
 
-      <button class="manual-btn" @click="showManual = true" title="Operator's Manual"><SvgIcon name="manual" size="sm" /></button>
+      <button title="Operator's Manual" class="manual-btn" @click="showManual = true">
+        <SvgIcon name="manual" size="sm" />
+      </button>
     </div>
   </div>
 </template>
@@ -293,7 +310,12 @@
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
 import { useGameStore } from '@/stores/gameStore'
-import { useMoonStore, PING_CHARGE_MS, OUTPOST_ESTABLISH_COST_METALS, OUTPOST_ESTABLISH_COST_CREDITS } from '@/stores/moonStore'
+import {
+  useMoonStore,
+  PING_CHARGE_MS,
+  OUTPOST_ESTABLISH_COST_METALS,
+  OUTPOST_ESTABLISH_COST_CREDITS,
+} from '@/stores/moonStore'
 import { useLensView } from '@/composables/useLensView'
 import { TERRAIN_CONFIGS } from '@/systems/sectorGen'
 import { getExpertiseLabel } from '@/systems/colonistIdentity'
@@ -396,7 +418,8 @@ const availableColonists = computed(() => {
 })
 
 const canAffordOutpost = computed(
-  () => game.metals >= OUTPOST_ESTABLISH_COST_METALS && game.credits >= OUTPOST_ESTABLISH_COST_CREDITS,
+  () =>
+    game.metals >= OUTPOST_ESTABLISH_COST_METALS && game.credits >= OUTPOST_ESTABLISH_COST_CREDITS,
 )
 
 const crewSelectionValid = computed(() => {
@@ -412,7 +435,9 @@ function openCrewSelect(action: 'survey' | 'outpost') {
 }
 
 function totalStockpile(outpost: Outpost): number {
-  return Math.floor(outpost.stockpile.metals + outpost.stockpile.ice + outpost.stockpile.rareMinerals)
+  return Math.floor(
+    outpost.stockpile.metals + outpost.stockpile.ice + outpost.stockpile.rareMinerals,
+  )
 }
 
 // ── Moon: Actions ──
@@ -433,7 +458,11 @@ function confirmCrew() {
       selectedCrewIds.value,
       game.totalPlaytimeMs,
       () => {
-        if (game.metals < OUTPOST_ESTABLISH_COST_METALS || game.credits < OUTPOST_ESTABLISH_COST_CREDITS) return false
+        if (
+          game.metals < OUTPOST_ESTABLISH_COST_METALS ||
+          game.credits < OUTPOST_ESTABLISH_COST_CREDITS
+        )
+          return false
         game.metals -= OUTPOST_ESTABLISH_COST_METALS
         game.credits -= OUTPOST_ESTABLISH_COST_CREDITS
         return true
@@ -452,10 +481,14 @@ function doLaunchPayload(outpostId: string) {
 }
 
 function doAbandon(outpostId: string) {
-  moon.abandonOutpost(outpostId, (cid: string) => {
-    const c = game.colonists.find((col) => col.id === cid)
-    if (c) c.currentZone = 'habitat'
-  }, game.pushMessage)
+  moon.abandonOutpost(
+    outpostId,
+    (cid: string) => {
+      const c = game.colonists.find((col) => col.id === cid)
+      if (c) c.currentZone = 'habitat'
+    },
+    game.pushMessage,
+  )
   moon.selectSector(null)
 }
 
@@ -472,10 +505,14 @@ function missionSectorCoords(mission: SurveyMission): string {
 
 function missionStatusLabel(mission: SurveyMission): string {
   switch (mission.status) {
-    case 'traveling': return 'En route'
-    case 'surveying': return 'Surveying'
-    case 'returning': return 'Returning'
-    default: return mission.status
+    case 'traveling':
+      return 'En route'
+    case 'surveying':
+      return 'Surveying'
+    case 'returning':
+      return 'Returning'
+    default:
+      return mission.status
   }
 }
 </script>
@@ -612,9 +649,15 @@ function missionStatusLabel(mission: SurveyMission): string {
   font-weight: 600;
 }
 
-.moon-stat-value.green { color: var(--green); }
-.moon-stat-value.amber { color: var(--amber); }
-.moon-stat-value.cyan { color: var(--cyan); }
+.moon-stat-value.green {
+  color: var(--green);
+}
+.moon-stat-value.amber {
+  color: var(--amber);
+}
+.moon-stat-value.cyan {
+  color: var(--cyan);
+}
 
 /* ── Ping button ── */
 
@@ -796,11 +839,25 @@ function missionStatusLabel(mission: SurveyMission): string {
   cursor: not-allowed;
 }
 
-.action-btn.cyan { color: var(--cyan); border-color: var(--cyan); }
-.action-btn.amber { color: var(--amber); border-color: var(--amber); }
-.action-btn.green { color: var(--green); border-color: var(--green); }
-.action-btn.red { color: var(--red); border-color: var(--red); }
-.action-btn.dim { color: var(--text-muted); }
+.action-btn.cyan {
+  color: var(--cyan);
+  border-color: var(--cyan);
+}
+.action-btn.amber {
+  color: var(--amber);
+  border-color: var(--amber);
+}
+.action-btn.green {
+  color: var(--green);
+  border-color: var(--green);
+}
+.action-btn.red {
+  color: var(--red);
+  border-color: var(--red);
+}
+.action-btn.dim {
+  color: var(--text-muted);
+}
 
 .action-btn:not(:disabled):hover {
   background: var(--bg-elevated);
@@ -834,7 +891,7 @@ function missionStatusLabel(mission: SurveyMission): string {
   cursor: pointer;
 }
 
-.crew-option input[type="checkbox"] {
+.crew-option input[type='checkbox'] {
   accent-color: var(--cyan);
 }
 
@@ -887,7 +944,9 @@ function missionStatusLabel(mission: SurveyMission): string {
   padding: 6px 8px;
   cursor: pointer;
   border-left: 2px solid transparent;
-  transition: background 0.1s, border-color 0.1s;
+  transition:
+    background 0.1s,
+    border-color 0.1s;
 }
 
 .overview-item:hover {
@@ -900,8 +959,12 @@ function missionStatusLabel(mission: SurveyMission): string {
   font-size: 0.6875rem;
 }
 
-.overview-item-name.green { color: var(--green); }
-.overview-item-name.amber { color: var(--amber); }
+.overview-item-name.green {
+  color: var(--green);
+}
+.overview-item-name.amber {
+  color: var(--amber);
+}
 
 .overview-item-detail {
   font-size: 0.625rem;

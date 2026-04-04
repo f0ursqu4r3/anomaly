@@ -30,7 +30,11 @@
               <span v-if="entry.cost" class="stat">Cost: {{ entry.cost }}cr</span>
               <span v-if="entry.weight" class="stat">Weight: {{ entry.weight }}kg</span>
               <span v-if="entry.buildTime" class="stat">Build: {{ entry.buildTime }}s</span>
-              <span v-if="entry.costMetals" class="stat">Materials: {{ entry.costMetals }}m{{ entry.costIce ? ' ' + entry.costIce + 'i' : '' }}</span>
+              <span v-if="entry.costMetals" class="stat">
+                Materials: {{ entry.costMetals }}m{{
+                  entry.costIce ? ' ' + entry.costIce + 'i' : ''
+                }}
+              </span>
             </div>
             <p v-if="entry.flavorText" class="entry-flavor">{{ entry.flavorText }}</p>
           </div>
@@ -95,7 +99,7 @@ const iconForSupply = (type: string): string => {
 }
 
 const entries: ManualEntry[] = [
-  ...BUILDING_CONFIGS.map(c => ({
+  ...BUILDING_CONFIGS.map((c) => ({
     label: c.label,
     icon: iconForBuilding(c.type),
     description: c.description,
@@ -106,7 +110,7 @@ const entries: ManualEntry[] = [
     weight: c.shipmentWeight ?? undefined,
     category: 'buildings',
   })),
-  ...SHIPMENT_OPTIONS.filter(o => o.type !== 'equipment').map(o => ({
+  ...SHIPMENT_OPTIONS.filter((o) => o.type !== 'equipment').map((o) => ({
     label: o.label,
     icon: iconForSupply(o.type),
     description: o.description,
@@ -117,26 +121,27 @@ const entries: ManualEntry[] = [
   {
     label: 'Export Operations',
     icon: 'launchplatform',
-    description: 'Launch platforms export colony resources to HQ in exchange for credits. Colonists automatically load cargo onto docked platforms. Platforms cycle: loading, in transit (120s), returning (180s). Force-launching skips the full-capacity wait but extends the return trip.',
+    description:
+      'Launch platforms export colony resources to HQ in exchange for credits. Colonists automatically load cargo onto docked platforms. Platforms cycle: loading, in transit (120s), returning (180s). Force-launching skips the full-capacity wait but extends the return trip.',
     category: 'systems',
   },
   {
     label: 'Directives',
     icon: 'balanced',
-    description: 'Directives control the extractor-to-engineer work ratio and modify extraction speed, hazard resistance, and production output. Changes take effect immediately. Choose based on current colony needs.',
+    description:
+      'Directives control the extractor-to-engineer work ratio and modify extraction speed, hazard resistance, and production output. Changes take effect immediately. Choose based on current colony needs.',
     category: 'systems',
   },
   {
     label: 'Colony Depth',
     icon: 'mining',
-    description: 'Extraction operations gradually increase colony depth. Greater depth unlocks rare mineral deposits but increases hazard frequency. Depth cannot be reduced.',
+    description:
+      'Extraction operations gradually increase colony depth. Greater depth unlocks rare mineral deposits but increases hazard frequency. Depth cannot be reduced.',
     category: 'systems',
   },
 ]
 
-const activeEntries = computed(() =>
-  entries.filter(e => e.category === activeCategory.value)
-)
+const activeEntries = computed(() => entries.filter((e) => e.category === activeCategory.value))
 </script>
 
 <style scoped>
@@ -148,7 +153,8 @@ const activeEntries = computed(() =>
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: calc(var(--safe-top) + 16px) calc(var(--safe-right) + 16px) calc(var(--safe-bottom) + 16px) calc(var(--safe-left) + 16px);
+  padding: calc(var(--safe-top) + 16px) calc(var(--safe-right) + 16px)
+    calc(var(--safe-bottom) + 16px) calc(var(--safe-left) + 16px);
 }
 
 .manual-modal {

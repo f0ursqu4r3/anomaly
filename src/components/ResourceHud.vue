@@ -4,20 +4,24 @@
       <SvgIcon name="air" size="xs" />
       <div class="hud-stack">
         <span class="hud-val mono">{{ fmt(game.air) }}</span>
-        <span class="hud-rate mono" :class="rateClass(game.airRate)">{{
-          fmtRate(game.airRate)
-        }}</span>
-        <span class="hud-breakdown mono">+{{ game.airProduction.toFixed(1) }} / -{{ game.airConsumption.toFixed(1) }}</span>
+        <span class="hud-rate mono" :class="rateClass(game.airRate)">
+          {{ fmtRate(game.airRate) }}
+        </span>
+        <span class="hud-breakdown mono">
+          +{{ game.airProduction.toFixed(1) }} / -{{ game.airConsumption.toFixed(1) }}
+        </span>
       </div>
     </div>
     <div class="hud-item" :class="{ danger: game.power / game.powerMax < 0.2 }">
       <SvgIcon name="power" size="xs" />
       <div class="hud-stack">
         <span class="hud-val mono">{{ fmt(game.power) }}</span>
-        <span class="hud-rate mono" :class="rateClass(game.powerRate)">{{
-          fmtRate(game.powerRate)
-        }}</span>
-        <span class="hud-breakdown mono">+{{ game.powerProduction.toFixed(1) }} / -{{ game.powerConsumption.toFixed(1) }}</span>
+        <span class="hud-rate mono" :class="rateClass(game.powerRate)">
+          {{ fmtRate(game.powerRate) }}
+        </span>
+        <span class="hud-breakdown mono">
+          +{{ game.powerProduction.toFixed(1) }} / -{{ game.powerConsumption.toFixed(1) }}
+        </span>
       </div>
     </div>
     <div class="hud-item">
@@ -28,7 +32,10 @@
       <SvgIcon name="ice" size="xs" />
       <span class="hud-val mono">{{ fmt(game.ice) }}</span>
     </div>
-    <div v-if="game.repairKits > 0 || game.buildings.some(b => b.damaged)" class="hud-item repair-kits">
+    <div
+      v-if="game.repairKits > 0 || game.buildings.some((b) => b.damaged)"
+      class="hud-item repair-kits"
+    >
       <SvgIcon name="repair" size="xs" />
       <span class="hud-val mono">{{ game.repairKits }}</span>
     </div>
@@ -36,7 +43,9 @@
       <SvgIcon name="depth" size="xs" />
       <div class="hud-stack">
         <span class="hud-val mono">{{ moon.activeOutposts.length }} outposts</span>
-        <span class="hud-rate mono away-count" v-if="moon.awayCount > 0">{{ moon.awayCount }} deployed</span>
+        <span v-if="moon.awayCount > 0" class="hud-rate mono away-count">
+          {{ moon.awayCount }} deployed
+        </span>
       </div>
     </div>
   </div>

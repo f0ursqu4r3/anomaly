@@ -24,18 +24,18 @@ function fmtMissionTime(ms: number): string {
 }
 
 const colonistNames = computed(() =>
-  game.colonists.map(c => c.name).sort((a, b) => b.length - a.length)
+  game.colonists.map((c) => c.name).sort((a, b) => b.length - a.length),
 )
 
 function renderMessage(text: string): string {
   let result = escapeHtml(text)
   for (const name of colonistNames.value) {
     const escapedName = escapeHtml(name)
-    const colonist = game.colonists.find(c => c.name === name)
+    const colonist = game.colonists.find((c) => c.name === name)
     if (colonist) {
       result = result.replace(
         new RegExp(`\\b${escapeRegex(escapedName)}\\b`, 'g'),
-        `<span class="colonist-link" data-colonist-id="${colonist.id}">${escapedName}</span>`
+        `<span class="colonist-link" data-colonist-id="${colonist.id}">${escapedName}</span>`,
       )
     }
   }

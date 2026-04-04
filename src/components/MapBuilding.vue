@@ -1,56 +1,268 @@
 <template>
   <div
     class="map-building"
-    :class="[typeClass, { damaged: building.damaged, constructing: isConstructing, 'just-completed': justCompleted, 'platform-away': platformAway }]"
-    :style="{ left: building.x + '%', top: building.y + '%', transform: `translate(-50%, -50%) rotate(${building.rotation || 0}deg)` }"
+    :class="[
+      typeClass,
+      {
+        damaged: building.damaged,
+        constructing: isConstructing,
+        'just-completed': justCompleted,
+        'platform-away': platformAway,
+      },
+    ]"
+    :style="{
+      left: building.x + '%',
+      top: building.y + '%',
+      transform: `translate(-50%, -50%) rotate(${building.rotation || 0}deg)`,
+    }"
     @click.stop="emit('select', building)"
   >
     <div class="building-shadow" />
     <div class="building-footprint">
       <!-- Solar: 3x2 panel grid -->
       <svg v-if="building.type === 'solar'" class="fp-svg" viewBox="0 0 28 20">
-        <rect x="1" y="1" width="8" height="8" rx="0.5" fill="currentColor" fill-opacity="0.5" stroke="currentColor" stroke-opacity="0.7" stroke-width="0.5" />
-        <rect x="10" y="1" width="8" height="8" rx="0.5" fill="currentColor" fill-opacity="0.5" stroke="currentColor" stroke-opacity="0.7" stroke-width="0.5" />
-        <rect x="19" y="1" width="8" height="8" rx="0.5" fill="currentColor" fill-opacity="0.5" stroke="currentColor" stroke-opacity="0.7" stroke-width="0.5" />
-        <rect x="1" y="11" width="8" height="8" rx="0.5" fill="currentColor" fill-opacity="0.5" stroke="currentColor" stroke-opacity="0.7" stroke-width="0.5" />
-        <rect x="10" y="11" width="8" height="8" rx="0.5" fill="currentColor" fill-opacity="0.5" stroke="currentColor" stroke-opacity="0.7" stroke-width="0.5" />
-        <rect x="19" y="11" width="8" height="8" rx="0.5" fill="currentColor" fill-opacity="0.5" stroke="currentColor" stroke-opacity="0.7" stroke-width="0.5" />
+        <rect
+          x="1"
+          y="1"
+          width="8"
+          height="8"
+          rx="0.5"
+          fill="currentColor"
+          fill-opacity="0.5"
+          stroke="currentColor"
+          stroke-opacity="0.7"
+          stroke-width="0.5"
+        />
+        <rect
+          x="10"
+          y="1"
+          width="8"
+          height="8"
+          rx="0.5"
+          fill="currentColor"
+          fill-opacity="0.5"
+          stroke="currentColor"
+          stroke-opacity="0.7"
+          stroke-width="0.5"
+        />
+        <rect
+          x="19"
+          y="1"
+          width="8"
+          height="8"
+          rx="0.5"
+          fill="currentColor"
+          fill-opacity="0.5"
+          stroke="currentColor"
+          stroke-opacity="0.7"
+          stroke-width="0.5"
+        />
+        <rect
+          x="1"
+          y="11"
+          width="8"
+          height="8"
+          rx="0.5"
+          fill="currentColor"
+          fill-opacity="0.5"
+          stroke="currentColor"
+          stroke-opacity="0.7"
+          stroke-width="0.5"
+        />
+        <rect
+          x="10"
+          y="11"
+          width="8"
+          height="8"
+          rx="0.5"
+          fill="currentColor"
+          fill-opacity="0.5"
+          stroke="currentColor"
+          stroke-opacity="0.7"
+          stroke-width="0.5"
+        />
+        <rect
+          x="19"
+          y="11"
+          width="8"
+          height="8"
+          rx="0.5"
+          fill="currentColor"
+          fill-opacity="0.5"
+          stroke="currentColor"
+          stroke-opacity="0.7"
+          stroke-width="0.5"
+        />
       </svg>
       <!-- O2 Generator: dome with inner ring -->
       <svg v-else-if="building.type === 'o2generator'" class="fp-svg fp-circle" viewBox="0 0 22 22">
-        <circle cx="11" cy="11" r="10" fill="currentColor" fill-opacity="0.15" stroke="currentColor" stroke-opacity="0.6" stroke-width="1" />
-        <circle cx="11" cy="11" r="5" fill="none" stroke="currentColor" stroke-opacity="0.3" stroke-width="0.5" />
+        <circle
+          cx="11"
+          cy="11"
+          r="10"
+          fill="currentColor"
+          fill-opacity="0.15"
+          stroke="currentColor"
+          stroke-opacity="0.6"
+          stroke-width="1"
+        />
+        <circle
+          cx="11"
+          cy="11"
+          r="5"
+          fill="none"
+          stroke="currentColor"
+          stroke-opacity="0.3"
+          stroke-width="0.5"
+        />
       </svg>
       <!-- Extraction Rig: rect with arm -->
       <svg v-else-if="building.type === 'extractionrig'" class="fp-svg" viewBox="0 0 32 18">
-        <rect x="1" y="1" width="24" height="16" rx="1.5" fill="currentColor" fill-opacity="0.15" stroke="currentColor" stroke-opacity="0.6" stroke-width="1" />
+        <rect
+          x="1"
+          y="1"
+          width="24"
+          height="16"
+          rx="1.5"
+          fill="currentColor"
+          fill-opacity="0.15"
+          stroke="currentColor"
+          stroke-opacity="0.6"
+          stroke-width="1"
+        />
         <rect x="25" y="5" width="6" height="2" rx="0.5" fill="currentColor" fill-opacity="0.5" />
       </svg>
       <!-- Med Bay: dome with cross -->
       <svg v-else-if="building.type === 'medbay'" class="fp-svg fp-circle" viewBox="0 0 20 20">
-        <circle cx="10" cy="10" r="9" fill="currentColor" fill-opacity="0.15" stroke="currentColor" stroke-opacity="0.5" stroke-width="1" />
-        <path d="M10 5v10M5 10h10" stroke="currentColor" stroke-opacity="0.6" stroke-width="1.5" stroke-linecap="round" />
+        <circle
+          cx="10"
+          cy="10"
+          r="9"
+          fill="currentColor"
+          fill-opacity="0.15"
+          stroke="currentColor"
+          stroke-opacity="0.5"
+          stroke-width="1"
+        />
+        <path
+          d="M10 5v10M5 10h10"
+          stroke="currentColor"
+          stroke-opacity="0.6"
+          stroke-width="1.5"
+          stroke-linecap="round"
+        />
       </svg>
       <!-- Storage Silo: small rect -->
       <svg v-else-if="building.type === 'storageSilo'" class="fp-svg" viewBox="0 0 16 12">
-        <rect x="1" y="1" width="14" height="10" rx="1" fill="currentColor" fill-opacity="0.15" stroke="currentColor" stroke-opacity="0.5" stroke-width="0.8" />
-        <line x1="1" y1="5" x2="15" y2="5" stroke="currentColor" stroke-opacity="0.2" stroke-width="0.5" />
+        <rect
+          x="1"
+          y="1"
+          width="14"
+          height="10"
+          rx="1"
+          fill="currentColor"
+          fill-opacity="0.15"
+          stroke="currentColor"
+          stroke-opacity="0.5"
+          stroke-width="0.8"
+        />
+        <line
+          x1="1"
+          y1="5"
+          x2="15"
+          y2="5"
+          stroke="currentColor"
+          stroke-opacity="0.2"
+          stroke-width="0.5"
+        />
       </svg>
       <!-- Launch Platform: square with H (dashed when vehicle is away) -->
       <svg v-else-if="building.type === 'launchplatform'" class="fp-svg" viewBox="0 0 26 26">
-        <rect x="1" y="1" width="24" height="24" rx="2" fill="currentColor" :fill-opacity="platformAway ? 0.02 : 0.06" stroke="currentColor" :stroke-opacity="platformAway ? 0.25 : 0.5" stroke-width="1.2" :stroke-dasharray="platformAway ? '2,2' : 'none'" />
-        <rect x="5" y="5" width="16" height="16" rx="1" fill="none" stroke="currentColor" :stroke-opacity="platformAway ? 0.12 : 0.25" stroke-width="0.5" />
-        <text v-if="!platformAway" x="13" y="17" text-anchor="middle" fill="currentColor" fill-opacity="0.35" font-family="var(--font-mono)" font-size="10" font-weight="700">H</text>
+        <rect
+          x="1"
+          y="1"
+          width="24"
+          height="24"
+          rx="2"
+          fill="currentColor"
+          :fill-opacity="platformAway ? 0.02 : 0.06"
+          stroke="currentColor"
+          :stroke-opacity="platformAway ? 0.25 : 0.5"
+          stroke-width="1.2"
+          :stroke-dasharray="platformAway ? '2,2' : 'none'"
+        />
+        <rect
+          x="5"
+          y="5"
+          width="16"
+          height="16"
+          rx="1"
+          fill="none"
+          stroke="currentColor"
+          :stroke-opacity="platformAway ? 0.12 : 0.25"
+          stroke-width="0.5"
+        />
+        <text
+          v-if="!platformAway"
+          x="13"
+          y="17"
+          text-anchor="middle"
+          fill="currentColor"
+          fill-opacity="0.35"
+          font-family="var(--font-mono)"
+          font-size="10"
+          font-weight="700"
+        >
+          H
+        </text>
       </svg>
       <!-- Parts Factory: rectangle -->
       <svg v-else-if="building.type === 'partsfactory'" class="fp-svg" viewBox="0 0 24 16">
-        <rect x="1" y="1" width="22" height="14" rx="1.5" fill="currentColor" fill-opacity="0.15" stroke="currentColor" stroke-opacity="0.6" stroke-width="1" />
-        <circle cx="8" cy="8" r="2" fill="none" stroke="currentColor" stroke-opacity="0.25" stroke-width="0.5" />
-        <circle cx="16" cy="8" r="2" fill="none" stroke="currentColor" stroke-opacity="0.25" stroke-width="0.5" />
+        <rect
+          x="1"
+          y="1"
+          width="22"
+          height="14"
+          rx="1.5"
+          fill="currentColor"
+          fill-opacity="0.15"
+          stroke="currentColor"
+          stroke-opacity="0.6"
+          stroke-width="1"
+        />
+        <circle
+          cx="8"
+          cy="8"
+          r="2"
+          fill="none"
+          stroke="currentColor"
+          stroke-opacity="0.25"
+          stroke-width="0.5"
+        />
+        <circle
+          cx="16"
+          cy="8"
+          r="2"
+          fill="none"
+          stroke="currentColor"
+          stroke-opacity="0.25"
+          stroke-width="0.5"
+        />
       </svg>
       <!-- Fallback: simple rect -->
       <svg v-else class="fp-svg" viewBox="0 0 20 20">
-        <rect x="1" y="1" width="18" height="18" rx="2" fill="currentColor" fill-opacity="0.15" stroke="currentColor" stroke-opacity="0.5" stroke-width="1" />
+        <rect
+          x="1"
+          y="1"
+          width="18"
+          height="18"
+          rx="2"
+          fill="currentColor"
+          fill-opacity="0.15"
+          stroke="currentColor"
+          stroke-opacity="0.5"
+          stroke-width="1"
+        />
       </svg>
     </div>
     <!-- No-workers badge -->
@@ -58,12 +270,21 @@
       <SvgIcon name="no-worker" size="xs" />
     </div>
     <!-- Zoom-dependent label -->
-    <div v-if="showLabel" class="building-label" :style="{ transform: `translateX(-50%) scale(var(--marker-scale, 1))` }">{{ shortLabel }}</div>
+    <div
+      v-if="showLabel"
+      class="building-label"
+      :style="{ transform: `translateX(-50%) scale(var(--marker-scale, 1))` }"
+    >
+      {{ shortLabel }}
+    </div>
     <div v-if="building.damaged" class="dmg-badge">
       <SvgIcon name="repair" size="xs" />
     </div>
     <div v-if="isConstructing" class="construction-bar">
-      <div class="construction-fill" :style="{ width: (building.constructionProgress! * 100) + '%' }" />
+      <div
+        class="construction-fill"
+        :style="{ width: building.constructionProgress! * 100 + '%' }"
+      />
     </div>
     <div v-if="workerCount > 0" class="worker-pips">
       <span v-for="n in workerCount" :key="n" class="worker-pip" :class="typeClass" />
@@ -75,7 +296,6 @@
 import { computed, ref, watch } from 'vue'
 import type { Building } from '@/stores/gameStore'
 import { useGameStore } from '@/stores/gameStore'
-import { ZONE_FOR_BUILDING } from '@/systems/mapLayout'
 import SvgIcon from './SvgIcon.vue'
 
 const props = defineProps<{ building: Building }>()
@@ -84,8 +304,8 @@ const game = useGameStore()
 
 const typeClass = computed(() => `type-${props.building.type}`)
 
-const isConstructing = computed(() =>
-  props.building.constructionProgress !== null && props.building.constructionProgress < 1
+const isConstructing = computed(
+  () => props.building.constructionProgress !== null && props.building.constructionProgress < 1,
 )
 
 // Flash when construction completes
@@ -93,7 +313,9 @@ const justCompleted = ref(false)
 watch(isConstructing, (newVal, oldVal) => {
   if (oldVal === true && newVal === false) {
     justCompleted.value = true
-    setTimeout(() => { justCompleted.value = false }, 1200)
+    setTimeout(() => {
+      justCompleted.value = false
+    }, 1200)
   }
 })
 
@@ -101,15 +323,16 @@ const workerCount = computed(() => {
   // Under construction: count constructors targeting this building
   if (isConstructing.value) {
     return game.colonists.filter(
-      c => c.health > 0 &&
+      (c) =>
+        c.health > 0 &&
         c.currentAction?.type === 'construct' &&
         c.currentAction?.targetId === props.building.id &&
-        !c.currentAction?.walkPath?.length
+        !c.currentAction?.walkPath?.length,
     ).length
   }
 
   // Operational: count workers targeting this specific building
-  return game.colonists.filter(c => {
+  return game.colonists.filter((c) => {
     if (c.health <= 0 || !c.currentAction || c.currentAction.walkPath?.length) return false
 
     // Repairers match by targetId
@@ -139,8 +362,6 @@ const SHORT_LABELS: Record<string, string> = {
 const shortLabel = computed(() => SHORT_LABELS[props.building.type] || '???')
 
 const showLabel = computed(() => true) // CSS controls visibility via zoom
-
-
 
 const platformAway = computed(() => {
   if (props.building.type !== 'launchplatform') return false
@@ -192,22 +413,50 @@ const alertType = computed(() => {
 }
 
 /* Type colors */
-.type-solar { color: var(--amber); }
-.type-o2generator { color: var(--cyan); }
-.type-extractionrig { color: var(--green); }
-.type-medbay { color: var(--red); }
-.type-partsfactory { color: var(--amber); }
-.type-storageSilo { color: var(--text-secondary, #888); }
-.type-launchplatform { color: var(--amber); }
+.type-solar {
+  color: var(--amber);
+}
+.type-o2generator {
+  color: var(--cyan);
+}
+.type-extractionrig {
+  color: var(--green);
+}
+.type-medbay {
+  color: var(--red);
+}
+.type-partsfactory {
+  color: var(--amber);
+}
+.type-storageSilo {
+  color: var(--text-secondary, #888);
+}
+.type-launchplatform {
+  color: var(--amber);
+}
 
 /* Glow per type */
-.type-solar .building-footprint { filter: drop-shadow(0 0 4px var(--amber-glow)); }
-.type-o2generator .building-footprint { filter: drop-shadow(0 0 4px var(--cyan-glow)); }
-.type-extractionrig .building-footprint { filter: drop-shadow(0 0 4px var(--green-glow)); }
-.type-medbay .building-footprint { filter: drop-shadow(0 0 4px var(--red-glow)); }
-.type-partsfactory .building-footprint { filter: drop-shadow(0 0 4px var(--amber-glow)); }
-.type-launchplatform .building-footprint { filter: drop-shadow(0 0 4px var(--amber-glow)); }
-.type-storageSilo .building-footprint { filter: drop-shadow(0 0 3px rgba(136,136,136,0.1)); }
+.type-solar .building-footprint {
+  filter: drop-shadow(0 0 4px var(--amber-glow));
+}
+.type-o2generator .building-footprint {
+  filter: drop-shadow(0 0 4px var(--cyan-glow));
+}
+.type-extractionrig .building-footprint {
+  filter: drop-shadow(0 0 4px var(--green-glow));
+}
+.type-medbay .building-footprint {
+  filter: drop-shadow(0 0 4px var(--red-glow));
+}
+.type-partsfactory .building-footprint {
+  filter: drop-shadow(0 0 4px var(--amber-glow));
+}
+.type-launchplatform .building-footprint {
+  filter: drop-shadow(0 0 4px var(--amber-glow));
+}
+.type-storageSilo .building-footprint {
+  filter: drop-shadow(0 0 3px rgba(136, 136, 136, 0.1));
+}
 
 /* Launch platform away state */
 .platform-away .building-footprint {
@@ -242,14 +491,27 @@ const alertType = computed(() => {
 }
 
 @keyframes complete-burst {
-  0% { filter: drop-shadow(0 0 15px currentColor); transform: scale(1.15); }
-  40% { filter: drop-shadow(0 0 25px currentColor); }
-  100% { filter: drop-shadow(0 0 4px currentColor); transform: scale(1); }
+  0% {
+    filter: drop-shadow(0 0 15px currentColor);
+    transform: scale(1.15);
+  }
+  40% {
+    filter: drop-shadow(0 0 25px currentColor);
+  }
+  100% {
+    filter: drop-shadow(0 0 4px currentColor);
+    transform: scale(1);
+  }
 }
 
 @keyframes construct-pulse {
-  0%, 100% { opacity: 0.35; }
-  50% { opacity: 0.5; }
+  0%,
+  100% {
+    opacity: 0.35;
+  }
+  50% {
+    opacity: 0.5;
+  }
 }
 
 /* Damage */
@@ -258,8 +520,13 @@ const alertType = computed(() => {
 }
 
 @keyframes dmg-pulse {
-  0%, 100% { filter: drop-shadow(0 0 6px var(--red-glow)); }
-  50% { filter: drop-shadow(0 0 15px var(--red-glow)); }
+  0%,
+  100% {
+    filter: drop-shadow(0 0 6px var(--red-glow));
+  }
+  50% {
+    filter: drop-shadow(0 0 15px var(--red-glow));
+  }
 }
 
 .dmg-badge {
@@ -285,8 +552,13 @@ const alertType = computed(() => {
 }
 
 @keyframes feed-blink {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.2; }
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.2;
+  }
 }
 
 /* Construction bar */
@@ -327,13 +599,27 @@ const alertType = computed(() => {
   box-shadow: 0 0 4px currentColor;
 }
 
-.worker-pip.type-solar { color: var(--amber); }
-.worker-pip.type-o2generator { color: var(--cyan); }
-.worker-pip.type-extractionrig { color: var(--green); }
-.worker-pip.type-medbay { color: var(--red); }
-.worker-pip.type-partsfactory { color: var(--amber); }
-.worker-pip.type-launchplatform { color: var(--amber); }
-.worker-pip.type-storageSilo { color: var(--text-secondary); }
+.worker-pip.type-solar {
+  color: var(--amber);
+}
+.worker-pip.type-o2generator {
+  color: var(--cyan);
+}
+.worker-pip.type-extractionrig {
+  color: var(--green);
+}
+.worker-pip.type-medbay {
+  color: var(--red);
+}
+.worker-pip.type-partsfactory {
+  color: var(--amber);
+}
+.worker-pip.type-launchplatform {
+  color: var(--amber);
+}
+.worker-pip.type-storageSilo {
+  color: var(--text-secondary);
+}
 
 /* No-workers badge */
 .no-worker-badge {
@@ -359,7 +645,12 @@ const alertType = computed(() => {
 }
 
 @keyframes badge-blink {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.2; }
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.2;
+  }
 }
 </style>

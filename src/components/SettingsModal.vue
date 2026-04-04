@@ -17,15 +17,25 @@
             <div v-if="openSections.game" class="section-content">
               <label class="setting-row">
                 <span>Auto-save</span>
-                <input type="checkbox" :checked="settings.autoSave" @change="settings.toggle('autoSave')" />
+                <input
+                  type="checkbox"
+                  :checked="settings.autoSave"
+                  @change="settings.toggle('autoSave')"
+                />
               </label>
               <label class="setting-row">
                 <span>Notifications</span>
-                <input type="checkbox" :checked="settings.notifications" @change="settings.toggle('notifications')" />
+                <input
+                  type="checkbox"
+                  :checked="settings.notifications"
+                  @change="settings.toggle('notifications')"
+                />
               </label>
               <div class="setting-row">
                 <span>Reset colony</span>
-                <button v-if="!confirmReset" class="reset-btn" @click="confirmReset = true">RESET</button>
+                <button v-if="!confirmReset" class="reset-btn" @click="confirmReset = true">
+                  RESET
+                </button>
                 <button v-else class="reset-btn danger" @click="doReset">CONFIRM?</button>
               </div>
             </div>
@@ -40,19 +50,35 @@
             <div v-if="openSections.display" class="section-content">
               <label class="setting-row">
                 <span>Scanlines</span>
-                <input type="checkbox" :checked="settings.scanlines" @change="settings.toggle('scanlines')" />
+                <input
+                  type="checkbox"
+                  :checked="settings.scanlines"
+                  @change="settings.toggle('scanlines')"
+                />
               </label>
               <label class="setting-row">
                 <span>Zone labels</span>
-                <input type="checkbox" :checked="settings.zoneLabels" @change="settings.toggle('zoneLabels')" />
+                <input
+                  type="checkbox"
+                  :checked="settings.zoneLabels"
+                  @change="settings.toggle('zoneLabels')"
+                />
               </label>
               <label class="setting-row">
                 <span>Path lines</span>
-                <input type="checkbox" :checked="settings.pathLines" @change="settings.toggle('pathLines')" />
+                <input
+                  type="checkbox"
+                  :checked="settings.pathLines"
+                  @change="settings.toggle('pathLines')"
+                />
               </label>
               <label class="setting-row">
                 <span>Radio chatter</span>
-                <input type="checkbox" :checked="settings.radioChatter" @change="settings.toggle('radioChatter')" />
+                <input
+                  type="checkbox"
+                  :checked="settings.radioChatter"
+                  @change="settings.toggle('radioChatter')"
+                />
               </label>
             </div>
           </div>
@@ -66,7 +92,12 @@
             <div v-if="openSections.accessibility" class="section-content">
               <div class="setting-row">
                 <span>Text size</span>
-                <select :value="settings.textSize" @change="settings.set('textSize', ($event.target as HTMLSelectElement).value as any)">
+                <select
+                  :value="settings.textSize"
+                  @change="
+                    settings.set('textSize', ($event.target as HTMLSelectElement).value as any)
+                  "
+                >
                   <option value="small">Small</option>
                   <option value="normal">Normal</option>
                   <option value="large">Large</option>
@@ -74,11 +105,19 @@
               </div>
               <label class="setting-row">
                 <span>Reduce animations</span>
-                <input type="checkbox" :checked="settings.reduceAnimations" @change="settings.toggle('reduceAnimations')" />
+                <input
+                  type="checkbox"
+                  :checked="settings.reduceAnimations"
+                  @change="settings.toggle('reduceAnimations')"
+                />
               </label>
               <label class="setting-row">
                 <span>High contrast</span>
-                <input type="checkbox" :checked="settings.highContrast" @change="settings.toggle('highContrast')" />
+                <input
+                  type="checkbox"
+                  :checked="settings.highContrast"
+                  @change="settings.toggle('highContrast')"
+                />
               </label>
             </div>
           </div>
@@ -92,15 +131,31 @@
             <div v-if="openSections.debug" class="section-content">
               <label class="setting-row">
                 <span>Show FPS</span>
-                <input type="checkbox" :checked="settings.showFps" @change="settings.toggle('showFps')" />
+                <input
+                  type="checkbox"
+                  :checked="settings.showFps"
+                  @change="settings.toggle('showFps')"
+                />
               </label>
               <label class="setting-row">
                 <span>Show action states</span>
-                <input type="checkbox" :checked="settings.showActionStates" @change="settings.toggle('showActionStates')" />
+                <input
+                  type="checkbox"
+                  :checked="settings.showActionStates"
+                  @change="settings.toggle('showActionStates')"
+                />
               </label>
               <div class="setting-row">
                 <span>Time speed</span>
-                <select :value="settings.timeMultiplier" @change="settings.set('timeMultiplier', Number(($event.target as HTMLSelectElement).value) as any)">
+                <select
+                  :value="settings.timeMultiplier"
+                  @change="
+                    settings.set(
+                      'timeMultiplier',
+                      Number(($event.target as HTMLSelectElement).value) as any,
+                    )
+                  "
+                >
                   <option :value="1">1x</option>
                   <option :value="2">2x</option>
                   <option :value="5">5x</option>
@@ -252,7 +307,7 @@ function doReset() {
   cursor: pointer;
 }
 
-.setting-row input[type="checkbox"] {
+.setting-row input[type='checkbox'] {
   accent-color: var(--cyan);
   width: 16px;
   height: 16px;

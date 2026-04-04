@@ -9,10 +9,7 @@
     @click.stop="emit('select', colonist)"
   >
     <div class="colonist-dot" />
-    <div
-      v-if="colonist.health > 0 && colonist.health < injuryThreshold"
-      class="health-pip"
-    >
+    <div v-if="colonist.health > 0 && colonist.health < injuryThreshold" class="health-pip">
       <div class="health-fill" :style="{ width: healthPct + '%' }" />
     </div>
     <div v-if="visualState === 'walking' && colonist.health > 0" class="colonist-trail" />
@@ -75,27 +72,37 @@ const stateClass = computed(() => {
 
 .action-extract .colonist-dot {
   background: var(--green);
-  box-shadow: 0 0 6px var(--green-glow), 0 0 12px rgba(52, 211, 153, 0.1);
+  box-shadow:
+    0 0 6px var(--green-glow),
+    0 0 12px rgba(52, 211, 153, 0.1);
 }
 
 .action-engineer .colonist-dot {
   background: var(--amber);
-  box-shadow: 0 0 6px var(--amber-glow), 0 0 12px rgba(245, 158, 11, 0.1);
+  box-shadow:
+    0 0 6px var(--amber-glow),
+    0 0 12px rgba(245, 158, 11, 0.1);
 }
 
 .action-repair .colonist-dot {
   background: var(--amber);
-  box-shadow: 0 0 6px var(--amber-glow), 0 0 12px rgba(245, 158, 11, 0.1);
+  box-shadow:
+    0 0 6px var(--amber-glow),
+    0 0 12px rgba(245, 158, 11, 0.1);
 }
 
 .action-unpack .colonist-dot {
   background: var(--cyan);
-  box-shadow: 0 0 6px var(--cyan-glow), 0 0 12px rgba(126, 207, 255, 0.1);
+  box-shadow:
+    0 0 6px var(--cyan-glow),
+    0 0 12px rgba(126, 207, 255, 0.1);
 }
 
 .action-medical .colonist-dot {
   background: var(--red);
-  box-shadow: 0 0 6px var(--red-glow), 0 0 12px rgba(233, 69, 96, 0.1);
+  box-shadow:
+    0 0 6px var(--red-glow),
+    0 0 12px rgba(233, 69, 96, 0.1);
 }
 
 .action-idle .colonist-dot {
@@ -118,8 +125,13 @@ const stateClass = computed(() => {
 }
 
 @keyframes rest-pulse {
-  0%, 100% { opacity: 0.3; }
-  50% { opacity: 0.5; }
+  0%,
+  100% {
+    opacity: 0.3;
+  }
+  50% {
+    opacity: 0.5;
+  }
 }
 
 .walking .colonist-dot {

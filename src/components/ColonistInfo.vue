@@ -10,7 +10,9 @@
     </div>
     <div v-if="colonist.health < 100" class="info-row">
       <span class="info-label">Health</span>
-      <span :class="colonist.health < 30 ? 'health-critical' : 'health-low'">{{ Math.round(colonist.health) }}%</span>
+      <span :class="colonist.health < 30 ? 'health-critical' : 'health-low'">
+        {{ Math.round(colonist.health) }}%
+      </span>
     </div>
   </InfoCard>
 </template>
@@ -18,7 +20,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import type { Colonist } from '@/stores/gameStore'
-import { useGameStore } from '@/stores/gameStore'
 import InfoCard from './InfoCard.vue'
 
 const props = defineProps<{
@@ -26,8 +27,6 @@ const props = defineProps<{
   x: number
   y: number
 }>()
-
-const game = useGameStore()
 
 const actionLabel = computed(() => {
   if (!props.colonist.currentAction) return 'idle'
@@ -68,9 +67,19 @@ const moraleClass = computed(() => {
   font-weight: 600;
 }
 
-.morale-ok { color: var(--green); }
-.morale-low { color: var(--amber); }
-.morale-critical { color: var(--red); }
-.health-low { color: var(--amber); }
-.health-critical { color: var(--red); }
+.morale-ok {
+  color: var(--green);
+}
+.morale-low {
+  color: var(--amber);
+}
+.morale-critical {
+  color: var(--red);
+}
+.health-low {
+  color: var(--amber);
+}
+.health-critical {
+  color: var(--red);
+}
 </style>

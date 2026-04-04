@@ -41,10 +41,18 @@ const { lens, isTransitioning, toggleLens } = useLensView()
 }
 
 @keyframes lens-refocus {
-  0% { filter: brightness(1) blur(0); }
-  40% { filter: brightness(0.3) blur(4px); }
-  60% { filter: brightness(0.3) blur(4px); }
-  100% { filter: brightness(1) blur(0); }
+  0% {
+    filter: brightness(1) blur(0);
+  }
+  40% {
+    filter: brightness(0.3) blur(4px);
+  }
+  60% {
+    filter: brightness(0.3) blur(4px);
+  }
+  100% {
+    filter: brightness(1) blur(0);
+  }
 }
 
 .console-panel {

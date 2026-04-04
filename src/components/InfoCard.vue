@@ -1,9 +1,5 @@
 <template>
-  <div
-    class="info-card"
-    :class="{ below: y < 30 }"
-    :style="cardStyle"
-  >
+  <div class="info-card" :class="{ below: y < 30 }" :style="cardStyle">
     <div v-if="showHeader" class="info-header">
       <span>{{ title }}</span>
       <button v-if="dismissable" class="info-dismiss" @click="$emit('dismiss')">&times;</button>

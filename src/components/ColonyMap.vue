@@ -1,8 +1,8 @@
 <template>
   <div
+    ref="mapContainer"
     class="colony-map"
     :class="{ 'reduce-animations': settings.reduceAnimations }"
-    ref="mapContainer"
     @wheel.prevent="onWheel"
     @pointerdown="onPointerDown"
     @pointermove="onPointerMove"
@@ -52,17 +52,28 @@
             stroke-dasharray="0.8,1.2"
             stroke-linecap="round"
           >
-            <animate attributeName="stroke-dashoffset" from="2" to="0" dur="3s" repeatCount="indefinite" />
+            <animate
+              attributeName="stroke-dashoffset"
+              from="2"
+              to="0"
+              dur="3s"
+              repeatCount="indefinite"
+            />
           </line>
         </template>
       </svg>
 
-
       <!-- Habitat label (counter-scaled like building labels) -->
       <div
         class="hab-label"
-        :style="{ left: ZONE_MAP.habitat.x + '%', top: ZONE_MAP.habitat.y + 5 + '%', transform: `translateX(-50%) scale(${1 / zoom})` }"
-      >HAB</div>
+        :style="{
+          left: ZONE_MAP.habitat.x + '%',
+          top: ZONE_MAP.habitat.y + 5 + '%',
+          transform: `translateX(-50%) scale(${1 / zoom})`,
+        }"
+      >
+        HAB
+      </div>
 
       <MapBuilding v-for="b in game.buildings" :key="b.id" :building="b" @select="selectBuilding" />
       <MapSupplyDrop v-for="d in game.supplyDrops" :key="d.id" :drop="d" @select="selectDrop" />
@@ -115,7 +126,9 @@
     <HazardAlert />
 
     <!-- Settings gear — top right -->
-    <button class="settings-btn" @click="$emit('openSettings')"><SvgIcon name="settings" size="md" /></button>
+    <button class="settings-btn" @click="$emit('openSettings')">
+      <SvgIcon name="settings" size="md" />
+    </button>
 
     <!-- Edge stats -->
     <div class="edge-stats">
@@ -129,11 +142,7 @@
 
     <!-- Activity summary -->
     <div class="activity-summary">
-      <span
-        v-for="a in activitySummary"
-        :key="a.label"
-        class="activity-item mono"
-      >
+      <span v-for="a in activitySummary" :key="a.label" class="activity-item mono">
         <span :style="{ color: a.color }">{{ a.count }}</span> {{ a.label }}
       </span>
     </div>
@@ -203,19 +212,23 @@ const wornPaths = computed(() => {
 
 const flowLines = computed(() => {
   const lines: { x1: number; y1: number; x2: number; y2: number; color: string }[] = []
-  const producers = game.buildings.filter(b => b.constructionProgress === null)
-  const solarPanels = producers.filter(b => b.type === 'solar')
-  const o2Generators = producers.filter(b => b.type === 'o2generator')
-  const consumerBuildings = producers.filter(b => !['solar', 'o2generator', 'storageSilo'].includes(b.type))
+  const producers = game.buildings.filter((b) => b.constructionProgress === null)
+  const solarPanels = producers.filter((b) => b.type === 'solar')
+  const o2Generators = producers.filter((b) => b.type === 'o2generator')
+  const consumerBuildings = producers.filter(
+    (b) => !['solar', 'o2generator', 'storageSilo'].includes(b.type),
+  )
   // Habitat is a visual landmark, not a game building — include it as a consumer
   const hab = ZONE_MAP.habitat
-  const consumers = [...consumerBuildings.map(b => ({ x: b.x, y: b.y })), { x: hab.x, y: hab.y }]
+  const consumers = [...consumerBuildings.map((b) => ({ x: b.x, y: b.y })), { x: hab.x, y: hab.y }]
 
   for (const solar of solarPanels) {
     for (const consumer of consumers) {
       lines.push({
-        x1: solar.x, y1: solar.y,
-        x2: consumer.x, y2: consumer.y,
+        x1: solar.x,
+        y1: solar.y,
+        x2: consumer.x,
+        y2: consumer.y,
         color: 'rgba(245, 158, 11, 0.07)',
       })
     }
@@ -223,8 +236,10 @@ const flowLines = computed(() => {
   for (const o2 of o2Generators) {
     for (const consumer of consumers) {
       lines.push({
-        x1: o2.x, y1: o2.y,
-        x2: consumer.x, y2: consumer.y,
+        x1: o2.x,
+        y1: o2.y,
+        x2: consumer.x,
+        y2: consumer.y,
         color: 'rgba(126, 207, 255, 0.07)',
       })
     }
@@ -237,12 +252,14 @@ const showFlowLines = computed(() => zoom.value >= 0.9)
 const activitySummary = computed(() => {
   const counts: { label: string; count: number; color: string }[] = []
   const alive = game.aliveColonists
-  const mining = alive.filter(c => c.currentAction?.type === 'extract').length
-  const engineering = alive.filter(c => ['engineer', 'construct', 'repair'].includes(c.currentAction?.type ?? '')).length
-  const medical = alive.filter(c => c.currentAction?.type === 'seek_medical').length
-  const loading = alive.filter(c => c.currentAction?.type === 'load').length
-  const resting = alive.filter(c => c.currentAction?.type === 'rest').length
-  const idle = alive.filter(c => !c.currentAction).length
+  const mining = alive.filter((c) => c.currentAction?.type === 'extract').length
+  const engineering = alive.filter((c) =>
+    ['engineer', 'construct', 'repair'].includes(c.currentAction?.type ?? ''),
+  ).length
+  const medical = alive.filter((c) => c.currentAction?.type === 'seek_medical').length
+  const loading = alive.filter((c) => c.currentAction?.type === 'load').length
+  const resting = alive.filter((c) => c.currentAction?.type === 'rest').length
+  const idle = alive.filter((c) => !c.currentAction).length
 
   if (mining) counts.push({ label: 'MINING', count: mining, color: 'var(--green)' })
   if (engineering) counts.push({ label: 'ENGINEER', count: engineering, color: 'var(--amber)' })
@@ -264,7 +281,7 @@ const trackedColonistPos = computed(() => {
 
 const trackedColonist = computed(() => {
   if (!game.trackedColonistId) return null
-  return game.colonists.find(c => c.id === game.trackedColonistId) ?? null
+  return game.colonists.find((c) => c.id === game.trackedColonistId) ?? null
 })
 
 // Colonists working inside buildings are shown as pips on the building, not as map markers
@@ -295,7 +312,8 @@ const selectedDrop = ref<SupplyDrop | null>(null)
 const selectedEntityPos = computed(() => {
   if (selectedBuilding.value) return { x: selectedBuilding.value.x, y: selectedBuilding.value.y }
   if (selectedDrop.value) return { x: selectedDrop.value.x, y: selectedDrop.value.y }
-  if (trackedColonistPos.value) return { x: trackedColonistPos.value.x, y: trackedColonistPos.value.y }
+  if (trackedColonistPos.value)
+    return { x: trackedColonistPos.value.x, y: trackedColonistPos.value.y }
   return null
 })
 
@@ -327,9 +345,7 @@ const connectorPoints = computed(() => {
   }
 
   const elbowDx = Math.abs(anchorX - bx)
-  const elbowY = below
-    ? by + elbowDx
-    : by - elbowDx
+  const elbowY = below ? by + elbowDx : by - elbowDx
   return `${anchorX},${overlayY} ${anchorX},${elbowY} ${bx},${by}`
 })
 
@@ -339,7 +355,7 @@ const hazardFlash = ref(false)
 watch(
   () => game.supplyDrops,
   () => {
-    if (selectedDrop.value && !game.supplyDrops.find(d => d.id === selectedDrop.value!.id)) {
+    if (selectedDrop.value && !game.supplyDrops.find((d) => d.id === selectedDrop.value!.id)) {
       selectedDrop.value = null
     }
   },
@@ -490,9 +506,9 @@ onUnmounted(() => cancelAnimationFrame(fpsRaf))
   overflow: hidden;
   container-type: size;
   background:
-    radial-gradient(ellipse at 30% 60%, rgba(25,30,40,0.95) 0%, transparent 35%),
-    radial-gradient(ellipse at 70% 35%, rgba(20,25,35,0.85) 0%, transparent 30%),
-    radial-gradient(ellipse at 50% 50%, rgba(18,22,32,0.4) 0%, transparent 60%),
+    radial-gradient(ellipse at 30% 60%, rgba(25, 30, 40, 0.95) 0%, transparent 35%),
+    radial-gradient(ellipse at 70% 35%, rgba(20, 25, 35, 0.85) 0%, transparent 30%),
+    radial-gradient(ellipse at 50% 50%, rgba(18, 22, 32, 0.4) 0%, transparent 60%),
     linear-gradient(160deg, #080c14 0%, #0c1220 40%, #101828 60%, #080e18 100%);
   box-shadow: inset 0 0 120px rgba(0, 0, 0, 0.6);
 }

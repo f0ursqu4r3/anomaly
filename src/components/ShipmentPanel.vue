@@ -125,9 +125,17 @@ const options = SHIPMENT_OPTIONS
 const byPrice = (a: ShipmentOption, b: ShipmentOption) => a.cost - b.cost
 
 const catalogGroups = computed(() => [
-  { label: 'BUILDINGS', items: options.filter(o => o.type === 'equipment').sort(byPrice) },
-  { label: 'SUPPLIES', items: options.filter(o => ['supplyCrate', 'newColonist', 'repairKit'].includes(o.type)).sort(byPrice) },
-  { label: 'EMERGENCY', items: options.filter(o => ['emergencyO2', 'emergencyPower'].includes(o.type)).sort(byPrice) },
+  { label: 'BUILDINGS', items: options.filter((o) => o.type === 'equipment').sort(byPrice) },
+  {
+    label: 'SUPPLIES',
+    items: options
+      .filter((o) => ['supplyCrate', 'newColonist', 'repairKit'].includes(o.type))
+      .sort(byPrice),
+  },
+  {
+    label: 'EMERGENCY',
+    items: options.filter((o) => ['emergencyO2', 'emergencyPower'].includes(o.type)).sort(byPrice),
+  },
 ])
 const maxWeight = CARGO_CAPACITY
 
@@ -613,8 +621,12 @@ function formatEta(arrivalAt: number): string {
 }
 
 @keyframes row-flash {
-  0% { background: var(--accent-dim); }
-  100% { background: var(--bg-surface); }
+  0% {
+    background: var(--accent-dim);
+  }
+  100% {
+    background: var(--bg-surface);
+  }
 }
 
 .catalog-icon {

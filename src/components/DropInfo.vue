@@ -1,5 +1,9 @@
 <template>
-  <div class="drop-info" :class="{ below: y < 30 }" :style="{ left: Math.max(15, Math.min(85, x)) + '%', top: (y < 30 ? y + 6 : y - 6) + '%' }">
+  <div
+    class="drop-info"
+    :class="{ below: y < 30 }"
+    :style="{ left: Math.max(15, Math.min(85, x)) + '%', top: (y < 30 ? y + 6 : y - 6) + '%' }"
+  >
     <div class="info-header">Supply Drop</div>
     <div class="info-row">
       <span class="info-label">Status</span>
@@ -101,7 +105,13 @@ const groupedContents = computed(() => {
   padding-top: 3px;
 }
 
-.status-ok { color: var(--green); }
-.status-constructing { color: var(--amber); }
-.status-waiting { color: var(--purple); }
+.status-ok {
+  color: var(--green);
+}
+.status-constructing {
+  color: var(--amber);
+}
+.status-waiting {
+  color: var(--purple);
+}
 </style>

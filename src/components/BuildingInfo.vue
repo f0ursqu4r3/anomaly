@@ -25,14 +25,18 @@
     <template v-if="building.type === 'launchplatform' && !isConstructing">
       <div class="info-row">
         <span class="info-label">Cargo</span>
-        <span :class="{ 'status-ok': platformLoaded > 0 }">{{ platformLoaded }}/{{ platState?.capacity ?? 100 }}</span>
+        <span :class="{ 'status-ok': platformLoaded > 0 }">
+          {{ platformLoaded }}/{{ platState?.capacity ?? 100 }}
+        </span>
       </div>
       <div v-if="platformLoaded > 0 && platState" class="info-row">
         <span class="info-label">Contents</span>
         <span class="cargo-detail">
           <span v-if="platState.cargo.metals > 0">{{ Math.round(platState.cargo.metals) }}m </span>
           <span v-if="platState.cargo.ice > 0">{{ Math.round(platState.cargo.ice) }}i </span>
-          <span v-if="platState.cargo.rareMinerals > 0">{{ Math.round(platState.cargo.rareMinerals) }}r</span>
+          <span v-if="platState.cargo.rareMinerals > 0">
+            {{ Math.round(platState.cargo.rareMinerals) }}r
+          </span>
         </span>
       </div>
       <div class="info-row">
@@ -63,8 +67,8 @@ const props = defineProps<{
 
 const game = useGameStore()
 
-const isConstructing = computed(() =>
-  props.building.constructionProgress !== null && props.building.constructionProgress < 1
+const isConstructing = computed(
+  () => props.building.constructionProgress !== null && props.building.constructionProgress < 1,
 )
 
 const label = computed(() => {
@@ -88,12 +92,19 @@ const consumption = computed(() => {
 })
 
 // Buildings that have workers inside
-const WORKER_BUILDINGS = new Set(['extractionrig', 'partsfactory', 'medbay', 'launchplatform', 'solar', 'o2generator'])
+const WORKER_BUILDINGS = new Set([
+  'extractionrig',
+  'partsfactory',
+  'medbay',
+  'launchplatform',
+  'solar',
+  'o2generator',
+])
 
 const showWorkers = computed(() => WORKER_BUILDINGS.has(props.building.type))
 
 const workerCount = computed(() => {
-  return game.colonists.filter(c => {
+  return game.colonists.filter((c) => {
     if (c.health <= 0 || !c.currentAction || c.currentAction.walkPath?.length) return false
     if (c.currentAction.targetId) return c.currentAction.targetId === props.building.id
     return false
@@ -136,11 +147,21 @@ const platformStatusClass = computed(() => {
   color: var(--text-secondary);
 }
 
-.status-ok { color: var(--green); }
-.status-bad { color: var(--red); }
-.rate-pos { color: var(--green); }
-.rate-neg { color: var(--amber); }
-.status-constructing { color: var(--amber); }
+.status-ok {
+  color: var(--green);
+}
+.status-bad {
+  color: var(--red);
+}
+.rate-pos {
+  color: var(--green);
+}
+.rate-neg {
+  color: var(--amber);
+}
+.status-constructing {
+  color: var(--amber);
+}
 
 .cargo-detail {
   color: var(--text-primary);
