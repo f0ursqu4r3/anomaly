@@ -28,6 +28,11 @@ const HUNGER_DRAIN = 0.3
 const HUNGER_HUNGRY = 40
 const HUNGER_STARVING = 15
 
+// Transitions
+const TRANSITION_PAUSE_SHORT: [number, number] = [2, 3]
+const TRANSITION_PAUSE_LONG: [number, number] = [3, 5]
+const BOND_DETOUR_CHANCE = 0.2
+
 const ENERGY_TIRED = 30
 const ENERGY_EXHAUSTED = 10
 const MORALE_STRESSED = 25
@@ -263,7 +268,7 @@ export function checkInterrupt(colonist: ColonistLike): boolean {
 const WALK_SPEED_PCT = 3 // % of map per second — must match useColonistMovement
 
 /** Calculate how many ticks to walk between two zones */
-function walkTicksBetween(fromId: string, toId: string): number {
+export function walkTicksBetween(fromId: string, toId: string): number {
   const from = ZONE_MAP[fromId]
   const to = ZONE_MAP[toId]
   if (!from || !to) return 3
@@ -305,13 +310,54 @@ export function advanceAction(colonist: ColonistLike): boolean {
   return false
 }
 
-function getActionDuration(type: ActionType, colonist: ColonistLike): number {
+export function getActionDuration(type: ActionType, colonist: ColonistLike): number {
   const [min, max] = DURATION[type]
   const base = min + Math.floor(Math.random() * (max - min + 1))
   const traitMult = TRAIT_MODS[colonist.trait].durationMult
   const efficiency = getEfficiencyMultiplier(colonist as any, type)
   // Higher efficiency = shorter duration
   return Math.max(1, Math.round((base * traitMult) / efficiency))
+}
+
+/** Calculate how long a colonist pauses between actions */
+export function getTransitionTicks(
+  colonist: ColonistLike,
+  completedActionTicks: number,
+  completedActionType?: ActionType,
+): number {
+  const mod = TRAIT_MODS[colonist.trait]
+  let [min, max] = completedActionTicks > 20 ? TRANSITION_PAUSE_LONG : TRANSITION_PAUSE_SHORT
+
+  // Socializing → shorter pause (already refreshed)
+  if (completedActionType === 'socialize') {
+    min = 1
+    max = 2
+  }
+
+  const base = min + Math.floor(Math.random() * (max - min + 1))
+  return Math.max(1, Math.round(base * mod.transitionMult))
+}
+
+/** Check if colonist should detour to visit a bonded partner during transition */
+export function checkBondDetour(colonist: ColonistLike, state: ColonyState): string | null {
+  if (Math.random() > BOND_DETOUR_CHANCE) return null
+  if (!colonist.bonds) return null
+
+  const currentZone = ZONE_MAP[colonist.currentZone]
+  if (!currentZone) return null
+
+  for (const [partnerId, affinity] of Object.entries(colonist.bonds)) {
+    if (affinity < 20) continue
+    const partner = state.colonists.find((p) => p.id === partnerId && p.health > 0)
+    if (!partner || partner.currentZone === colonist.currentZone) continue
+
+    // Check if partner is in an adjacent zone (direct path, 1 hop)
+    const path = findPath(colonist.currentZone, partner.currentZone)
+    if (path && path.length === 2) {
+      return partner.currentZone
+    }
+  }
+  return null
 }
 
 // ── Utility Scoring ──

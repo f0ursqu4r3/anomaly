@@ -4,8 +4,17 @@ import { simulateOffline } from './offlineEngine'
 import type { OfflineEvent, OfflineResult } from './offlineEngine'
 import type { Trait, Action, ActionType, SkillTrait, Specialization } from '@/types/colonist'
 import { randomTrait, randomSkillTrait, SPECIALIZATION_LABELS } from '@/types/colonist'
-import { getBuildingPosition, getLandingPosition } from '@/systems/mapLayout'
-import { updateNeeds, checkInterrupt, advanceAction, selectAction } from '@/systems/colonistAI'
+import { getBuildingPosition, getLandingPosition, findPath } from '@/systems/mapLayout'
+import {
+  updateNeeds,
+  checkInterrupt,
+  advanceAction,
+  selectAction,
+  getTransitionTicks,
+  checkBondDetour,
+  walkTicksBetween,
+  getActionDuration,
+} from '@/systems/colonistAI'
 import { generateChatter } from '@/systems/radioChatter'
 import {
   awardXP,
@@ -615,6 +624,31 @@ export const useGameStore = defineStore('game', {
         updateNeeds(c)
         const interrupted = checkInterrupt(c)
         if (!interrupted) {
+          // Handle transition pause countdown
+          if (c.transitionTicks > 0) {
+            c.transitionTicks--
+            // Trickle recovery during pause
+            c.energy = Math.min(100, c.energy + 0.3)
+            c.focus = Math.min(100, c.focus + 0.3)
+            if (c.transitionTicks <= 0) {
+              // Check for bond detour
+              const detourZone = checkBondDetour(c, this.$state)
+              if (detourZone) {
+                const walkPath = findPath(c.currentZone, detourZone)
+                const needsWalk = walkPath && walkPath.length > 1
+                c.currentAction = {
+                  type: 'wander',
+                  targetZone: detourZone,
+                  remainingTicks: needsWalk ? walkTicksBetween(walkPath![0], walkPath![1]) : 4,
+                  walkPath: needsWalk ? walkPath : undefined,
+                }
+              } else {
+                c.currentAction = selectAction(c, this.$state)
+              }
+            }
+            continue
+          }
+
           const prevAction = c.currentAction?.type
           const needsDecision = advanceAction(c)
           if (needsDecision) {
@@ -623,20 +657,39 @@ export const useGameStore = defineStore('game', {
               awardXP(c, prevAction)
               const newSpec = checkSpecialization(c)
               if (newSpec) {
-                this.pushMessage(`${c.name} has earned the rank of ${SPECIALIZATION_LABELS[newSpec]}.`, 'event')
+                this.pushMessage(
+                  `${c.name} has earned the rank of ${SPECIALIZATION_LABELS[newSpec]}`,
+                  'event',
+                )
+              }
+
+              // Track work action in history
+              const workActions: ActionType[] = ['extract', 'engineer', 'repair', 'construct', 'load']
+              if (workActions.includes(prevAction)) {
+                c.actionHistory.push(prevAction)
+                if (c.actionHistory.length > 5) c.actionHistory.shift()
               }
             }
-            // Check for breakdown before selecting next action
+
+            // Check for breakdown
             const breakdownTicks = checkBreakdown(c, this.totalPlaytimeMs)
             if (breakdownTicks) {
-              c.currentAction = { type: 'rest', targetZone: 'habitat', remainingTicks: breakdownTicks }
+              c.currentAction = {
+                type: 'rest',
+                targetZone: 'habitat',
+                remainingTicks: breakdownTicks,
+              }
               c.currentZone = 'habitat'
-              this.pushMessage(`${c.name}: I can't keep going. Need to stop.`, 'info')
+              this.pushMessage(`${c.name}: I can't keep going...`, 'info')
             } else {
-              c.currentAction = selectAction(c, this.$state)
+              // Enter transition pause instead of immediately selecting next action
+              const totalActionTicks = getActionDuration(prevAction ?? 'wander', c)
+              c.transitionTicks = getTransitionTicks(c, totalActionTicks, prevAction)
+              c.currentAction = null
             }
           }
         } else {
+          // Interrupted — select immediately (no pause for urgent needs)
           c.currentAction = selectAction(c, this.$state)
         }
       }
