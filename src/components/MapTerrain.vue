@@ -68,8 +68,6 @@
       <!-- Corridors connecting domes -->
       <line x1="-1" y1="0.4" x2="-2" y2="0.7" stroke="rgba(126,207,255,0.2)" stroke-width="0.6" stroke-linecap="round" />
       <line x1="1.2" y1="-0.3" x2="1.8" y2="-0.5" stroke="rgba(126,207,255,0.2)" stroke-width="0.6" stroke-linecap="round" />
-      <!-- Label (zoom-dependent, same as building labels) -->
-      <text class="habitat-label" y="5.5" text-anchor="middle" fill="rgba(126,207,255,0.6)" font-family="var(--font-mono)" font-size="1.4" font-weight="600" letter-spacing="0.1">HAB</text>
     </g>
 
     <ellipse :cx="zones.extraction.x" :cy="zones.extraction.y" rx="11" ry="8" fill="rgba(22,28,38,0.2)" />
@@ -102,9 +100,5 @@ const zones = ZONE_MAP
   height: 100%;
   pointer-events: none;
   z-index: 0;
-}
-
-.habitat-label {
-  display: none;
 }
 </style>

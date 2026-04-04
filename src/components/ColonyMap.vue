@@ -58,6 +58,12 @@
       </svg>
 
 
+      <!-- Habitat label (counter-scaled like building labels) -->
+      <div
+        class="hab-label"
+        :style="{ left: ZONE_MAP.habitat.x + '%', top: ZONE_MAP.habitat.y + 5 + '%', transform: `translateX(-50%) scale(${1 / zoom})` }"
+      >HAB</div>
+
       <MapBuilding v-for="b in game.buildings" :key="b.id" :building="b" @select="selectBuilding" />
       <MapSupplyDrop v-for="d in game.supplyDrops" :key="d.id" :drop="d" @select="selectDrop" />
 
@@ -682,7 +688,20 @@ onUnmounted(() => cancelAnimationFrame(fpsRaf))
 }
 
 .zoomed-in :deep(.building-label),
-.zoomed-in :deep(.habitat-label) {
+.zoomed-in .hab-label {
   display: block;
+}
+
+.hab-label {
+  position: absolute;
+  font-family: var(--font-mono);
+  font-size: 0.5rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  color: rgba(126, 207, 255, 0.6);
+  pointer-events: none;
+  white-space: nowrap;
+  display: none;
+  z-index: 1;
 }
 </style>
