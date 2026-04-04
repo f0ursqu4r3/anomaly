@@ -110,6 +110,7 @@ Progression is currently flat (more of same building). Research gives the colony
 - **Research Station** building — engineers generate research points
 - Tiers gated by sectors surveyed + outposts established + research points
 - Example unlocks:
+  - **Improved Mining**: +20% extraction yield
   - **Extended Ping Range**: Reveals sectors 2 rings out instead of 1
   - **Hardened Structures**: -50% damage from environmental hazards
   - **Efficient Recyclers**: Less air per colonist
