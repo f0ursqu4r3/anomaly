@@ -93,7 +93,8 @@
           v-for="opt in group.items"
           :key="opt.label"
           class="catalog-row"
-          :class="{ disabled: !canAdd(opt), tapped: tappedItem === opt.label }"
+          :class="{ tapped: tappedItem === opt.label }"
+          :disabled="!canAdd(opt)"
           @click="addFromCatalog(opt)"
         >
           <SvgIcon :name="shipmentIcon(opt)" size="sm" class="catalog-icon" />
@@ -597,12 +598,12 @@ function formatEta(arrivalAt: number): string {
   font-family: var(--font-mono);
 }
 
-.catalog-row:active:not(.disabled) {
+.catalog-row:active:not(:disabled) {
   background: var(--accent-dim);
   border-color: var(--cyan);
 }
 
-.catalog-row.disabled {
+.catalog-row:disabled {
   opacity: 0.4;
   cursor: not-allowed;
 }
