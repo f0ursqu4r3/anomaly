@@ -15,7 +15,13 @@ import {
   walkTicksBetween,
   getActionDuration,
 } from '@/systems/colonistAI'
-import { generateChatter } from '@/systems/radioChatter'
+import {
+  generateChatter,
+  emitFocusDepletedChatter,
+  emitRestlessSwitchChatter,
+  emitBondDetourChatter,
+  emitReturnFromBreakChatter,
+} from '@/systems/radioChatter'
 import {
   awardXP,
   checkSpecialization,
@@ -612,6 +618,12 @@ export const useGameStore = defineStore('game', {
       this.totalPlaytimeMs += dtMs
       this.lastTickAt = Date.now()
 
+      const buildingLabel = (id: string) => {
+        const b = this.buildings.find(b => b.id === id)
+        return b ? (BLUEPRINTS.find(bp => bp.type === b.type)?.label ?? b.type) : 'building'
+      }
+      const emitMsg = (text: string, severity: 'info' | 'event') => this.pushMessage(text, severity)
+
       if (this.aliveColonists.length === 0) {
         this.gameOver = true
         this.gameOverReason = 'All colonists have perished.'
@@ -642,8 +654,20 @@ export const useGameStore = defineStore('game', {
                   remainingTicks: needsWalk ? walkTicksBetween(walkPath![0], walkPath![1]) : 4,
                   walkPath: needsWalk ? walkPath : undefined,
                 }
+                emitBondDetourChatter(c, this.colonists, buildingLabel, emitMsg, this.totalPlaytimeMs)
               } else {
+                const prevType = c.actionHistory.length > 0 ? c.actionHistory[c.actionHistory.length - 1] : null
                 c.currentAction = selectAction(c, this.$state)
+                if (c.currentAction && ['extract', 'engineer', 'repair', 'construct', 'load'].includes(c.currentAction.type)) {
+                  emitReturnFromBreakChatter(c, this.colonists, buildingLabel, emitMsg, this.totalPlaytimeMs)
+                  // Restless switch: chose a different work action than what they were repeating
+                  if (prevType && c.currentAction.type !== prevType) {
+                    const repeatCount = c.actionHistory.filter(a => a === prevType).length
+                    if (repeatCount >= 3) {
+                      emitRestlessSwitchChatter(c, this.colonists, buildingLabel, emitMsg, this.totalPlaytimeMs)
+                    }
+                  }
+                }
               }
             }
             continue
@@ -693,6 +717,11 @@ export const useGameStore = defineStore('game', {
               const totalActionTicks = getActionDuration(prevAction ?? 'wander', c)
               c.transitionTicks = getTransitionTicks(c, totalActionTicks, prevAction)
               c.currentAction = null
+
+              // Emit focus depletion chatter if that's why they stopped
+              if (c.focus < 25 && prevAction && ['extract', 'engineer', 'repair', 'construct', 'load'].includes(prevAction)) {
+                emitFocusDepletedChatter(c, this.colonists, buildingLabel, emitMsg, this.totalPlaytimeMs)
+              }
             }
           }
         } else {
@@ -744,11 +773,8 @@ export const useGameStore = defineStore('game', {
       generateChatter(
         alive,
         this.colonists,
-        (id) => {
-          const b = this.buildings.find(b => b.id === id)
-          return b ? (BLUEPRINTS.find(bp => bp.type === b.type)?.label ?? b.type) : 'building'
-        },
-        (text, severity) => this.pushMessage(text, severity),
+        buildingLabel,
+        emitMsg,
         this.totalPlaytimeMs,
         settingsState.radioChatter,
       )
