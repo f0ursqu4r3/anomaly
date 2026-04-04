@@ -663,6 +663,13 @@ export const useGameStore = defineStore('game', {
                 )
               }
 
+              // Eat completion — restore hunger
+              if (prevAction === 'eat') {
+                c.hunger = 80 + Math.floor(Math.random() * 16) // 80-95
+                c.focus = Math.min(100, c.focus + 5 + Math.floor(Math.random() * 6)) // +5-10
+                c.morale = Math.min(100, c.morale + 2 + Math.floor(Math.random() * 2)) // +2-3
+              }
+
               // Track work action in history
               const workActions: ActionType[] = ['extract', 'engineer', 'repair', 'construct', 'load']
               if (workActions.includes(prevAction)) {

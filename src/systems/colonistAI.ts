@@ -33,6 +33,13 @@ const TRANSITION_PAUSE_SHORT: [number, number] = [2, 3]
 const TRANSITION_PAUSE_LONG: [number, number] = [3, 5]
 const BOND_DETOUR_CHANCE = 0.2
 
+// Restlessness
+const RESTLESS_THRESHOLD = 3
+const RESTLESS_HEAVY_THRESHOLD = 4
+const RESTLESS_PENALTY = 0.7
+const RESTLESS_HEAVY_PENALTY = 0.5
+const WORK_ACTIONS: ActionType[] = ['extract', 'engineer', 'repair', 'construct', 'load']
+
 const ENERGY_TIRED = 30
 const ENERGY_EXHAUSTED = 10
 const MORALE_STRESSED = 25
@@ -379,12 +386,44 @@ function countWorkers(state: ColonyState, actionType: ActionType, targetId?: str
   }).length
 }
 
+/** Calculate restlessness penalty for a given action type based on recent history */
+function getRestlessPenalty(colonist: ColonistLike, actionType: ActionType): number {
+  if (!WORK_ACTIONS.includes(actionType)) return 1.0
+  const mod = TRAIT_MODS[colonist.trait]
+  if (mod.restlessThreshold >= 99) return 1.0 // stoic: immune
+
+  const count = colonist.actionHistory.filter((a) => a === actionType).length
+  if (count >= RESTLESS_HEAVY_THRESHOLD) {
+    return RESTLESS_HEAVY_PENALTY
+  }
+  if (count >= mod.restlessThreshold) {
+    return RESTLESS_PENALTY
+  }
+  return 1.0
+}
+
 export function selectAction(colonist: ColonistLike, state: ColonyState): Action | null {
   if (colonist.health <= 0) return null
 
   const mod = TRAIT_MODS[colonist.trait]
   const dirMod = DIRECTIVE_UTILITY[state.activeDirective]
   const candidates: ScoredAction[] = []
+
+  // Focus penalty on work actions
+  let focusMult = 1.0
+  if (colonist.focus < FOCUS_DEPLETED) {
+    focusMult = 0.0 // won't select work at all
+  } else if (colonist.focus < FOCUS_LOW) {
+    focusMult = 0.4
+  }
+
+  // Hunger penalty on work actions
+  let hungerMult = 1.0
+  if (colonist.hunger < HUNGER_STARVING) {
+    hungerMult = 0.3
+  } else if (colonist.hunger < HUNGER_HUNGRY) {
+    hungerMult = 0.8
+  }
 
   // EXTRACT
   if (colonist.energy > 20) {
@@ -395,7 +434,7 @@ export function selectAction(colonist: ColonistLike, state: ColonyState): Action
         type: 'extract',
         targetZone: 'extraction',
         targetId: rig.id,
-        score: 50 * dirMod.extract * mod.workUtilityMult,
+        score: 50 * dirMod.extract * mod.workUtilityMult * focusMult * hungerMult * getRestlessPenalty(colonist, 'extract'),
       })
     }
   }
@@ -441,7 +480,7 @@ export function selectAction(colonist: ColonistLike, state: ColonyState): Action
         type: 'engineer',
         targetZone: zone,
         targetId: targetBuilding?.id,
-        score: 45 * dirMod.engineer * mod.workUtilityMult * emergencyMult * saturationDiscount,
+        score: 45 * dirMod.engineer * mod.workUtilityMult * emergencyMult * saturationDiscount * focusMult * hungerMult * getRestlessPenalty(colonist, 'engineer'),
       })
     }
 
@@ -462,7 +501,7 @@ export function selectAction(colonist: ColonistLike, state: ColonyState): Action
         type: 'engineer',
         targetZone: 'workshop',
         targetId: factory.id,
-        score: 35 * dirMod.engineer * mod.workUtilityMult * workerDiscount * kitUrgency,
+        score: 35 * dirMod.engineer * mod.workUtilityMult * workerDiscount * kitUrgency * focusMult * hungerMult * getRestlessPenalty(colonist, 'engineer'),
       })
     }
   }
@@ -479,7 +518,7 @@ export function selectAction(colonist: ColonistLike, state: ColonyState): Action
       type: 'repair',
       targetZone,
       targetId: target.id,
-      score: 80 * dirMod.repair * mod.repairUtilityMult * workerDiscount,
+      score: 80 * dirMod.repair * mod.repairUtilityMult * workerDiscount * focusMult * hungerMult * getRestlessPenalty(colonist, 'repair'),
     })
   }
 
@@ -498,7 +537,7 @@ export function selectAction(colonist: ColonistLike, state: ColonyState): Action
         type: 'construct',
         targetZone,
         targetId: site.id,
-        score: 75 * dirMod.engineer * mod.workUtilityMult * workerDiscount,
+        score: 75 * dirMod.engineer * mod.workUtilityMult * workerDiscount * focusMult * hungerMult * getRestlessPenalty(colonist, 'construct'),
       })
     }
   }
@@ -517,7 +556,7 @@ export function selectAction(colonist: ColonistLike, state: ColonyState): Action
       type: 'unpack',
       targetZone: 'landing',
       targetId: drop.id,
-      score: 70 * unpackDiscount,
+      score: 70 * unpackDiscount * focusMult * hungerMult,
     })
   }
 
@@ -549,7 +588,7 @@ export function selectAction(colonist: ColonistLike, state: ColonyState): Action
           type: 'load',
           targetZone: 'landing',
           targetId: platform.id,
-          score: 45 * mod.workUtilityMult * loaderDiscount * urgency,
+          score: 45 * mod.workUtilityMult * loaderDiscount * urgency * focusMult * hungerMult * getRestlessPenalty(colonist, 'load'),
         })
         break // only consider one platform per colonist decision
       }
@@ -579,6 +618,18 @@ export function selectAction(colonist: ColonistLike, state: ColonyState): Action
     }
     socialScore *= mod.socialUtilityMult
     candidates.push({ type: 'socialize', targetZone: 'habitat', score: socialScore })
+  }
+
+  // EAT
+  {
+    let eatScore = 5
+    if (colonist.hunger < HUNGER_HUNGRY) {
+      eatScore = 30 + (HUNGER_HUNGRY - colonist.hunger) * 1.5
+    }
+    if (colonist.hunger < HUNGER_STARVING) {
+      eatScore = 120
+    }
+    candidates.push({ type: 'eat', targetZone: 'habitat', score: eatScore })
   }
 
   // SEEK_MEDICAL
