@@ -2,7 +2,7 @@
   <div
     v-if="colonist"
     class="colonist-tracker"
-    :style="{ left: x + '%', top: y + '%' }"
+    :style="{ left: x + '%', top: y + '%', transitionDuration: transitionMs + 'ms' }"
   >
     <div class="tracker-card">
       <div class="tracker-header">
@@ -29,6 +29,7 @@ import { useGameStore } from '@/stores/gameStore'
 const props = defineProps<{
   x: number
   y: number
+  transitionMs: number
 }>()
 
 const game = useGameStore()
@@ -67,7 +68,8 @@ const moraleClass = computed(() => {
   transform: translate(-50%, -100%) translateY(-12px);
   z-index: 20;
   pointer-events: auto;
-  transition: left 0.5s ease, top 0.5s ease;
+  transition-property: left, top;
+  transition-timing-function: linear;
 }
 
 .tracker-card {

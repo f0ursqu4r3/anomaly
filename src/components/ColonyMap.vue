@@ -99,6 +99,7 @@
         v-if="trackedColonistPos"
         :x="trackedColonistPos.targetX"
         :y="trackedColonistPos.targetY"
+        :transition-ms="trackedColonistPos.transitionMs"
       />
     </div>
 
