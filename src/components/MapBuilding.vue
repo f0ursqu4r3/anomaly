@@ -149,8 +149,14 @@ const statusClass = computed(() => {
   return 'status-ok'
 })
 
-// Stub for Task 5 — alert markers
-const alertType = computed(() => null as string | null)
+const alertType = computed(() => {
+  if (props.building.damaged) return 'alert-damage'
+  if (props.building.constructionProgress !== null) return null
+  // Operational buildings that need workers
+  const needsWorkers = ['extractionrig', 'launchplatform'].includes(props.building.type)
+  if (needsWorkers && workerCount.value === 0) return 'alert-warning'
+  return null
+})
 </script>
 
 <style scoped>
@@ -363,4 +369,36 @@ const alertType = computed(() => null as string | null)
 .worker-pip.type-partsfactory { color: var(--amber); }
 .worker-pip.type-launchplatform { color: var(--amber); }
 .worker-pip.type-storageSilo { color: var(--text-secondary); }
+
+/* Alert markers */
+.alert-marker {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  z-index: 3;
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.alert-damage {
+  width: 10px;
+  height: 10px;
+  background: var(--red);
+  box-shadow: 0 0 8px rgba(233, 69, 96, 0.6);
+  animation: alert-pulse 1.5s ease-in-out infinite;
+}
+
+.alert-warning {
+  width: 9px;
+  height: 9px;
+  border-radius: 2px;
+  background: var(--amber);
+  box-shadow: 0 0 6px rgba(245, 158, 11, 0.5);
+  animation: alert-pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes alert-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(1.4); }
+}
 </style>
