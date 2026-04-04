@@ -48,6 +48,28 @@
     <!-- Diegetic zone cues -->
     <ellipse :cx="zones.habitat.x" :cy="zones.habitat.y" rx="11" ry="8" fill="rgba(20,25,35,0.25)" stroke="rgba(60,70,85,0.04)" stroke-width="0.3" />
 
+    <!-- Habitat: connected dome cluster (visual landmark) -->
+    <g :transform="`translate(${zones.habitat.x}, ${zones.habitat.y})`">
+      <!-- Shadow -->
+      <g transform="translate(0.2, 0.2)" opacity="0.25">
+        <circle r="2.8" fill="rgba(0,0,0,0.4)" filter="url(#terrain-crater-shadow-sm)" />
+        <circle cx="-3.5" cy="1" r="1.8" fill="rgba(0,0,0,0.3)" />
+        <circle cx="3.2" cy="-0.8" r="2" fill="rgba(0,0,0,0.3)" />
+      </g>
+      <!-- Main dome -->
+      <circle r="2.8" fill="rgba(126,207,255,0.08)" stroke="rgba(126,207,255,0.3)" stroke-width="0.2" />
+      <circle r="1.4" fill="none" stroke="rgba(126,207,255,0.15)" stroke-width="0.1" />
+      <!-- Left dome -->
+      <circle cx="-3.5" cy="1" r="1.8" fill="rgba(126,207,255,0.06)" stroke="rgba(126,207,255,0.25)" stroke-width="0.15" />
+      <circle cx="-3.5" cy="1" r="0.8" fill="none" stroke="rgba(126,207,255,0.1)" stroke-width="0.08" />
+      <!-- Right dome -->
+      <circle cx="3.2" cy="-0.8" r="2" fill="rgba(126,207,255,0.06)" stroke="rgba(126,207,255,0.25)" stroke-width="0.15" />
+      <circle cx="3.2" cy="-0.8" r="1" fill="none" stroke="rgba(126,207,255,0.1)" stroke-width="0.08" />
+      <!-- Corridors connecting domes -->
+      <line x1="-1" y1="0.4" x2="-2" y2="0.7" stroke="rgba(126,207,255,0.2)" stroke-width="0.6" stroke-linecap="round" />
+      <line x1="1.2" y1="-0.3" x2="1.8" y2="-0.5" stroke="rgba(126,207,255,0.2)" stroke-width="0.6" stroke-linecap="round" />
+    </g>
+
     <ellipse :cx="zones.extraction.x" :cy="zones.extraction.y" rx="11" ry="8" fill="rgba(22,28,38,0.2)" />
     <line :x1="zones.extraction.x - 5" :y1="zones.extraction.y - 2" :x2="zones.extraction.x - 3" :y2="zones.extraction.y + 3" stroke="rgba(52,211,153,0.03)" stroke-width="0.4" />
     <line :x1="zones.extraction.x + 2" :y1="zones.extraction.y - 3" :x2="zones.extraction.x + 4" :y2="zones.extraction.y + 2" stroke="rgba(52,211,153,0.03)" stroke-width="0.3" />
