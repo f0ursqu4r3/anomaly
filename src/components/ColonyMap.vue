@@ -257,16 +257,20 @@ const activitySummary = computed(() => {
     ['engineer', 'construct', 'repair'].includes(c.currentAction?.type ?? ''),
   ).length
   const medical = alive.filter((c) => c.currentAction?.type === 'seek_medical').length
-  const loading = alive.filter((c) => c.currentAction?.type === 'load').length
-  const resting = alive.filter((c) => c.currentAction?.type === 'rest').length
-  const idle = alive.filter((c) => !c.currentAction).length
+  const loading = alive.filter((c) =>
+    ['load', 'unpack'].includes(c.currentAction?.type ?? ''),
+  ).length
+  const resting = alive.filter((c) =>
+    ['rest', 'eat', 'socialize'].includes(c.currentAction?.type ?? ''),
+  ).length
+  const idle = alive.filter((c) => !c.currentAction || c.currentAction.type === 'wander').length
 
-  if (mining) counts.push({ label: 'MINING', count: mining, color: 'var(--green)' })
   if (engineering) counts.push({ label: 'ENGINEER', count: engineering, color: 'var(--amber)' })
-  if (medical) counts.push({ label: 'MEDICAL', count: medical, color: 'var(--red)' })
-  if (loading) counts.push({ label: 'LOADING', count: loading, color: 'var(--cyan)' })
-  if (resting) counts.push({ label: 'RESTING', count: resting, color: 'var(--text-secondary)' })
   if (idle) counts.push({ label: 'IDLE', count: idle, color: 'var(--text-muted)' })
+  if (loading) counts.push({ label: 'LOADING', count: loading, color: 'var(--cyan)' })
+  if (medical) counts.push({ label: 'MEDICAL', count: medical, color: 'var(--red)' })
+  if (mining) counts.push({ label: 'MINING', count: mining, color: 'var(--green)' })
+  if (resting) counts.push({ label: 'RESTING', count: resting, color: 'var(--text-secondary)' })
   return counts
 })
 
@@ -675,7 +679,8 @@ onUnmounted(() => cancelAnimationFrame(fpsRaf))
   left: calc(var(--safe-left, 0px) + 16px);
   z-index: 5;
   display: flex;
-  gap: 8px;
+  flex-direction: column;
+  gap: 2px;
   pointer-events: none;
 }
 

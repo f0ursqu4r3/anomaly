@@ -301,7 +301,12 @@
         </span>
       </template>
 
-      <button title="Operator's Manual" class="manual-btn" @click="showManual = true">
+      <button
+        title="Operator's Manual"
+        class="manual-btn"
+        :class="{ 'manual-pulse': !settings.manualOpened }"
+        @click="showManual = true; if (!settings.manualOpened) { settings.set('manualOpened', true) }"
+      >
         <SvgIcon name="manual" size="sm" />
       </button>
     </div>
@@ -331,11 +336,13 @@ import OperationsPanel from './OperationsPanel.vue'
 import PersonnelPanel from './PersonnelPanel.vue'
 import OperatorsManual from './OperatorsManual.vue'
 import { CARGO_CAPACITY } from '@/stores/gameStore'
+import { useSettingsStore } from '@/stores/settingsStore'
 
 import type { Outpost, SurveyMission } from '@/types/moon'
 
 const game = useGameStore()
 const moon = useMoonStore()
+const settings = useSettingsStore()
 const { lens } = useLensView()
 
 const tab = ref<'log' | 'shipments' | 'ops' | 'crew'>('log')
@@ -625,6 +632,21 @@ function missionStatusLabel(mission: SurveyMission): string {
 
 .manual-btn:active {
   background: var(--bg-elevated);
+}
+
+.manual-pulse {
+  animation: manual-glow 2s ease-in-out infinite;
+}
+
+@keyframes manual-glow {
+  0%, 100% {
+    border-color: var(--accent-muted);
+    box-shadow: none;
+  }
+  50% {
+    border-color: var(--cyan);
+    box-shadow: 0 0 8px rgba(0, 255, 255, 0.3);
+  }
 }
 
 /* ── Moon status bar ── */

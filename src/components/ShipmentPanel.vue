@@ -1,22 +1,47 @@
 <template>
   <div class="shipment-panel">
-    <!-- Cooldown bar -->
-    <div v-if="game.shipmentOnCooldown" class="cooldown-bar">
-      <div class="cooldown-fill" :style="{ width: cooldownPct + '%' }" />
-      <span class="cooldown-text mono">REFUELING {{ cooldownText }}</span>
-    </div>
-
-    <!-- In-transit -->
-    <div v-if="game.inTransitShipments.length > 0" class="transit-section">
-      <div class="section-label">EN ROUTE</div>
-      <div v-for="s in game.inTransitShipments" :key="s.id" class="transit-item">
-        <span class="transit-label">{{ s.contents.length }} items · {{ s.totalWeight }}kg</span>
-        <span class="transit-eta mono">ETA {{ formatEta(s.arrivalAt) }}</span>
+    <!-- Scrollable catalog area -->
+    <div class="shipment-scroll">
+      <!-- Item catalog — tap to add -->
+      <div v-for="group in catalogGroups" :key="group.label" class="catalog-group">
+        <div class="section-label">{{ group.label }}</div>
+        <div class="catalog">
+          <button
+            v-for="opt in group.items"
+            :key="opt.label"
+            class="catalog-row"
+            :class="{ tapped: tappedItem === opt.label }"
+            :disabled="!canAdd(opt)"
+            @click="addFromCatalog(opt)"
+          >
+            <SvgIcon :name="shipmentIcon(opt)" size="sm" class="catalog-icon" />
+            <span class="catalog-name">{{ opt.label }}</span>
+            <span class="catalog-stat mono">{{ opt.abbrevStat }}</span>
+            <span class="catalog-cost mono">{{ opt.cost }}cr</span>
+            <span class="catalog-weight mono">{{ opt.weight }}kg</span>
+          </button>
+        </div>
       </div>
     </div>
 
-    <!-- Manifest (only when items selected) -->
-    <Transition name="manifest-reveal">
+    <!-- Bottom section: status + manifest -->
+    <div v-if="game.manifest.length > 0 || game.inTransitShipments.length > 0 || game.shipmentOnCooldown" class="bottom-section">
+      <!-- Cooldown bar -->
+      <div v-if="game.shipmentOnCooldown" class="cooldown-bar">
+        <div class="cooldown-fill" :style="{ width: cooldownPct + '%' }" />
+        <span class="cooldown-text mono">REFUELING {{ cooldownText }}</span>
+      </div>
+
+      <!-- In-transit -->
+      <div v-if="game.inTransitShipments.length > 0" class="transit-section">
+        <div class="section-label">EN ROUTE</div>
+        <div v-for="s in game.inTransitShipments" :key="s.id" class="transit-item">
+          <span class="transit-label">{{ s.contents.length }} items · {{ s.totalWeight }}kg</span>
+          <span class="transit-eta mono">ETA {{ formatEta(s.arrivalAt) }}</span>
+        </div>
+      </div>
+
+      <!-- Manifest -->
       <div
         v-if="game.manifest.length > 0"
         class="manifest-section"
@@ -41,6 +66,7 @@
           >
             <SvgIcon :name="shipmentIcon(group.option)" size="sm" class="manifest-icon" />
             <span class="manifest-name">{{ group.option.label }}</span>
+            <span class="manifest-wt mono">{{ group.option.weight * group.count }}kg</span>
             <div class="qty-controls">
               <button class="qty-btn minus" @click="removeOne(group.option)">−</button>
               <span class="qty-count mono">{{ group.count }}</span>
@@ -52,7 +78,6 @@
                 +
               </button>
             </div>
-            <span class="manifest-wt mono">{{ group.option.weight * group.count }}kg</span>
           </div>
         </TransitionGroup>
 
@@ -82,27 +107,6 @@
             </button>
           </div>
         </div>
-      </div>
-    </Transition>
-
-    <!-- Item catalog — tap to add -->
-    <div v-for="group in catalogGroups" :key="group.label" class="catalog-group">
-      <div class="section-label">{{ group.label }}</div>
-      <div class="catalog">
-        <button
-          v-for="opt in group.items"
-          :key="opt.label"
-          class="catalog-row"
-          :class="{ tapped: tappedItem === opt.label }"
-          :disabled="!canAdd(opt)"
-          @click="addFromCatalog(opt)"
-        >
-          <SvgIcon :name="shipmentIcon(opt)" size="sm" class="catalog-icon" />
-          <span class="catalog-name">{{ opt.label }}</span>
-          <span class="catalog-stat mono">{{ opt.abbrevStat }}</span>
-          <span class="catalog-cost mono">{{ opt.cost }}cr</span>
-          <span class="catalog-weight mono">{{ opt.weight }}kg</span>
-        </button>
       </div>
     </div>
   </div>
@@ -237,9 +241,24 @@ function formatEta(arrivalAt: number): string {
 <style scoped>
 .shipment-panel {
   flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  min-height: 0;
+}
+
+.shipment-scroll {
+  flex: 1;
   overflow-y: auto;
   overscroll-behavior: contain;
   -webkit-overflow-scrolling: touch;
+  padding: 8px 10px;
+  min-height: 0;
+}
+
+.bottom-section {
+  flex-shrink: 0;
+  border-top: 1px solid var(--accent-muted);
   padding: 8px 10px;
 }
 
@@ -290,7 +309,7 @@ function formatEta(arrivalAt: number): string {
 
 /* Transit */
 .transit-section {
-  margin-bottom: 8px;
+  margin-bottom: 6px;
 }
 
 .transit-item {
@@ -317,11 +336,6 @@ function formatEta(arrivalAt: number): string {
 .manifest-section {
   position: relative;
   overflow: hidden;
-  background: var(--bg-surface);
-  border-radius: var(--radius-md);
-  padding: 8px 10px;
-  margin-bottom: 4px;
-  border: 1px solid var(--accent-muted);
 }
 
 .manifest-list {
@@ -370,7 +384,7 @@ function formatEta(arrivalAt: number): string {
   100% {
     border-color: var(--accent-muted);
     opacity: 0;
-    transform: translateY(-4px);
+    transform: translateY(4px);
   }
 }
 
@@ -412,28 +426,6 @@ function formatEta(arrivalAt: number): string {
 /* Capacity bar glow when near full */
 .capacity-bar-fill.full {
   box-shadow: 0 0 6px 1px color-mix(in srgb, var(--amber) 50%, transparent);
-}
-
-/* Manifest section reveal */
-.manifest-reveal-enter-active {
-  animation: manifest-in 0.3s cubic-bezier(0.25, 1, 0.5, 1);
-}
-.manifest-reveal-leave-active {
-  animation: manifest-in 0.15s cubic-bezier(0.25, 1, 0.5, 1) reverse;
-}
-/* Skip leave animation after launch — launch-flash already handles the exit */
-.manifest-section.launching.manifest-reveal-leave-active {
-  animation: none;
-}
-@keyframes manifest-in {
-  from {
-    opacity: 0;
-    transform: translateY(-6px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
 }
 
 /* Manifest row enter/leave */
@@ -704,9 +696,10 @@ function formatEta(arrivalAt: number): string {
 }
 
 .qty-count {
-  width: 22px;
+  width: 28px;
   text-align: center;
   font-size: 0.75rem;
+  font-variant-numeric: tabular-nums;
   color: var(--text-primary);
 }
 

@@ -16,6 +16,8 @@ export interface Settings {
   textSize: 'small' | 'normal' | 'large'
   reduceAnimations: boolean
   highContrast: boolean
+  // Onboarding
+  manualOpened: boolean
   // Debug
   showFps: boolean
   showActionStates: boolean
@@ -32,6 +34,7 @@ const DEFAULTS: Settings = {
   textSize: 'normal',
   reduceAnimations: false,
   highContrast: false,
+  manualOpened: false,
   showFps: false,
   showActionStates: false,
   timeMultiplier: 1,
