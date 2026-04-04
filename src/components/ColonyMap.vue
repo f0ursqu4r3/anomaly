@@ -35,6 +35,23 @@
           :stroke-width="p.width"
           stroke-linecap="round"
         />
+        <!-- Resource flow lines -->
+        <template v-if="showFlowLines">
+          <line
+            v-for="(fl, i) in flowLines"
+            :key="'flow-' + i"
+            :x1="fl.x1"
+            :y1="fl.y1"
+            :x2="fl.x2"
+            :y2="fl.y2"
+            :stroke="fl.color"
+            stroke-width="0.15"
+            stroke-dasharray="0.8,1.2"
+            stroke-linecap="round"
+          >
+            <animate attributeName="stroke-dashoffset" from="2" to="0" dur="3s" repeatCount="indefinite" />
+          </line>
+        </template>
       </svg>
 
 
@@ -97,6 +114,17 @@
       {{ moon.awayCount }} CREW DEPLOYED
     </div>
 
+    <!-- Activity summary -->
+    <div class="activity-summary">
+      <span
+        v-for="a in activitySummary"
+        :key="a.label"
+        class="activity-item mono"
+      >
+        <span :style="{ color: a.color }">{{ a.count }}</span> {{ a.label }}
+      </span>
+    </div>
+
     <div class="feed-indicator">
       <span class="feed-dot" />
       <span class="feed-text">LIVE</span>
@@ -157,6 +185,55 @@ const wornPaths = computed(() => {
     paths.push({ x1: zone1.x, y1: zone1.y, x2: zone2.x, y2: zone2.y, opacity, width })
   }
   return paths
+})
+
+const flowLines = computed(() => {
+  const lines: { x1: number; y1: number; x2: number; y2: number; color: string }[] = []
+  const producers = game.buildings.filter(b => b.constructionProgress === null)
+  const solarPanels = producers.filter(b => b.type === 'solar')
+  const o2Generators = producers.filter(b => b.type === 'o2generator')
+  const consumers = producers.filter(b => !['solar', 'o2generator', 'storageSilo'].includes(b.type))
+
+  for (const solar of solarPanels) {
+    for (const consumer of consumers) {
+      lines.push({
+        x1: solar.x, y1: solar.y,
+        x2: consumer.x, y2: consumer.y,
+        color: 'rgba(245, 158, 11, 0.07)',
+      })
+    }
+  }
+  for (const o2 of o2Generators) {
+    for (const consumer of consumers) {
+      lines.push({
+        x1: o2.x, y1: o2.y,
+        x2: consumer.x, y2: consumer.y,
+        color: 'rgba(126, 207, 255, 0.07)',
+      })
+    }
+  }
+  return lines
+})
+
+const showFlowLines = computed(() => zoom.value >= 0.9)
+
+const activitySummary = computed(() => {
+  const counts: { label: string; count: number; color: string }[] = []
+  const alive = game.aliveColonists
+  const mining = alive.filter(c => c.currentAction?.type === 'extract').length
+  const engineering = alive.filter(c => ['engineer', 'construct', 'repair'].includes(c.currentAction?.type ?? '')).length
+  const medical = alive.filter(c => c.currentAction?.type === 'seek_medical').length
+  const loading = alive.filter(c => c.currentAction?.type === 'load').length
+  const resting = alive.filter(c => c.currentAction?.type === 'rest').length
+  const idle = alive.filter(c => !c.currentAction).length
+
+  if (mining) counts.push({ label: 'MINING', count: mining, color: 'var(--green)' })
+  if (engineering) counts.push({ label: 'ENGINEER', count: engineering, color: 'var(--amber)' })
+  if (medical) counts.push({ label: 'MEDICAL', count: medical, color: 'var(--red)' })
+  if (loading) counts.push({ label: 'LOADING', count: loading, color: 'var(--cyan)' })
+  if (resting) counts.push({ label: 'RESTING', count: resting, color: 'var(--text-secondary)' })
+  if (idle) counts.push({ label: 'IDLE', count: idle, color: 'var(--text-muted)' })
+  return counts
 })
 
 function getColonistState(id: string) {
@@ -458,13 +535,31 @@ onUnmounted(() => cancelAnimationFrame(fpsRaf))
 
 .fps-counter {
   position: absolute;
-  bottom: 8px;
-  left: 8px;
+  bottom: calc(var(--safe-bottom, 0px) + 24px);
+  left: calc(var(--safe-left, 0px) + 8px);
   font-family: var(--font-mono);
   font-size: 0.625rem;
   color: var(--text-secondary);
   z-index: 9;
   pointer-events: none;
+}
+
+.activity-summary {
+  position: absolute;
+  bottom: calc(var(--safe-bottom, 0px) + 8px);
+  left: calc(var(--safe-left, 0px) + 8px);
+  z-index: 5;
+  display: flex;
+  gap: 8px;
+  pointer-events: none;
+}
+
+.activity-item {
+  font-family: var(--font-mono);
+  font-size: 0.5625rem;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+  opacity: 0.5;
 }
 
 .away-indicator {
