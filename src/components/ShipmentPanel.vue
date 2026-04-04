@@ -57,10 +57,11 @@
           </span>
         </div>
 
-        <TransitionGroup name="manifest-row" tag="div" class="manifest-list">
+        <TransitionGroup name="manifest-row" tag="div" class="manifest-list" @leave="onLeave">
           <div
             v-for="group in manifestGroups"
             :key="group.option.label"
+            :data-label="group.option.label"
             class="manifest-item"
             :class="{ pulse: pulsingItem === group.option.label }"
           >
@@ -204,13 +205,27 @@ const manifestGroups = computed(() => {
   return groups
 })
 
+const removingItems = ref(new Set<string>())
+
 function removeOne(opt: ShipmentOption) {
+  const count = game.manifest.filter((m) => m.label === opt.label).length
+  if (count <= 1) removingItems.value.add(opt.label)
   // Find last occurrence and remove it
   for (let i = game.manifest.length - 1; i >= 0; i--) {
     if (game.manifest[i].label === opt.label) {
       game.removeFromManifest(i)
-      return
+      break
     }
+  }
+  if (count <= 1) {
+    // Clean up after the DOM update
+    requestAnimationFrame(() => removingItems.value.delete(opt.label))
+  }
+}
+
+function onLeave(el: Element) {
+  if (removingItems.value.has((el as HTMLElement).dataset.label ?? '')) {
+    ;(el as HTMLElement).style.display = 'none'
   }
 }
 
@@ -532,8 +547,14 @@ function formatEta(arrivalAt: number): string {
   font-weight: 600;
   letter-spacing: 0.08em;
   background: var(--bg-elevated);
-  color: var(--text-muted);
+  color: var(--text-secondary);
+  border: 1px solid var(--accent-muted);
   border-radius: var(--radius-sm);
+}
+
+.clear-btn:active {
+  background: var(--accent-dim);
+  color: var(--text-primary);
 }
 
 .launch-btn {

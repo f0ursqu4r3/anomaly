@@ -33,4 +33,8 @@ const { showShiftReport, dismissReport, reportData } = useGameLoop()
 watch(() => settings.textSize, (size) => {
   document.documentElement.dataset.textSize = size
 }, { immediate: true })
+
+watch(() => settings.reduceAnimations, (on) => {
+  document.documentElement.dataset.reduceMotion = on ? 'true' : ''
+}, { immediate: true })
 </script>

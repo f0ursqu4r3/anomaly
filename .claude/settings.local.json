@@ -39,7 +39,8 @@
       "Bash(/Users/kyle/.claude/plugins/cache/claude-plugins-official/superpowers/5.0.7/skills/brainstorming/scripts/stop-server.sh:*)",
       "Bash(grep -v '^\\\\* main$')",
       "Bash(grep -v '^  main$')",
-      "Bash(find:*)"
+      "Bash(find:*)",
+      "Bash(grep:*)"
     ]
   }
 }

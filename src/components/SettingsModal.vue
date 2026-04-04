@@ -161,6 +161,17 @@
                   <option :value="5">5x</option>
                 </select>
               </div>
+              <div class="debug-group-label">GRANT RESOURCES</div>
+              <div class="debug-grant-grid">
+                <button class="grant-btn" @click="grant('credits', 500)">+500 CR</button>
+                <button class="grant-btn" @click="grant('credits', 5000)">+5K CR</button>
+                <button class="grant-btn" @click="grant('metals', 50)">+50 MTL</button>
+                <button class="grant-btn" @click="grant('metals', 200)">+200 MTL</button>
+                <button class="grant-btn" @click="grant('ice', 25)">+25 ICE</button>
+                <button class="grant-btn" @click="grant('ice', 100)">+100 ICE</button>
+                <button class="grant-btn" @click="grant('rareMinerals', 10)">+10 RARE</button>
+                <button class="grant-btn" @click="grant('rareMinerals', 50)">+50 RARE</button>
+              </div>
             </div>
           </div>
         </div>
@@ -199,6 +210,12 @@ function doReset() {
   game.resetGame()
   confirmReset.value = false
   emit('close')
+}
+
+type GrantableResource = 'credits' | 'metals' | 'ice' | 'rareMinerals'
+
+function grant(resource: GrantableResource, amount: number) {
+  game[resource] += amount
 }
 </script>
 
@@ -345,5 +362,40 @@ function doReset() {
 .reset-btn.danger {
   border-color: var(--red);
   color: var(--red);
+}
+
+.debug-group-label {
+  font-family: var(--font-mono);
+  font-size: 0.5625rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  color: var(--text-muted);
+  margin-top: 8px;
+  margin-bottom: 4px;
+}
+
+.debug-grant-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+}
+
+.grant-btn {
+  font-family: var(--font-mono);
+  font-size: 0.625rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  padding: 6px 8px;
+  border: 1px solid var(--accent-muted);
+  border-radius: var(--radius-xs);
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+  min-height: 36px;
+}
+
+.grant-btn:active {
+  background: var(--accent-dim);
+  color: var(--text-primary);
 }
 </style>

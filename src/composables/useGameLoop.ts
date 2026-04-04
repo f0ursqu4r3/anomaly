@@ -73,8 +73,11 @@ export function useGameLoop() {
       stopLoop()
       await game.save()
 
-      const eagerResult = simulateOffline(game.$state, EAGER_SIM_WINDOW_MS)
-      await scheduleOfflineNotifications(eagerResult.events, Date.now())
+      const settings = useSettingsStore()
+      if (settings.notifications) {
+        const eagerResult = simulateOffline(game.$state, EAGER_SIM_WINDOW_MS)
+        await scheduleOfflineNotifications(eagerResult.events, Date.now())
+      }
     } else {
       await cancelAllOfflineNotifications()
       handleOfflineResult(game.processOfflineTime())

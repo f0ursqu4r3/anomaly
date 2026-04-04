@@ -2,7 +2,6 @@
   <div
     ref="mapContainer"
     class="colony-map"
-    :class="{ 'reduce-animations': settings.reduceAnimations }"
     @wheel.prevent="onWheel"
     @pointerdown="onPointerDown"
     @pointermove="onPointerMove"
@@ -21,23 +20,42 @@
       <MapTerrain />
 
       <!-- Worn paths from colonist traffic (SVG) -->
+      <!-- Zone labels (toggled via settings) -->
+      <template v-if="settings.zoneLabels">
+        <div
+          v-for="zone in ZONES"
+          :key="'zl-' + zone.id"
+          class="zone-label"
+          :style="{
+            left: zone.x + '%',
+            top: zone.y - zone.radius - 1 + '%',
+            color: zone.color,
+            transform: `translateX(-50%) scale(${1 / zoom})`,
+          }"
+        >
+          {{ zone.label }}
+        </div>
+      </template>
+
       <svg
         class="zone-overlay"
         :class="{ 'high-contrast': settings.highContrast }"
         viewBox="0 0 100 100"
         preserveAspectRatio="xMidYMid meet"
       >
-        <line
-          v-for="(p, i) in wornPaths"
-          :key="'path-' + i"
-          :x1="p.x1"
-          :y1="p.y1"
-          :x2="p.x2"
-          :y2="p.y2"
-          :stroke="`rgba(200, 200, 200, ${p.opacity})`"
-          :stroke-width="p.width"
-          stroke-linecap="round"
-        />
+        <template v-if="settings.pathLines">
+          <line
+            v-for="(p, i) in wornPaths"
+            :key="'path-' + i"
+            :x1="p.x1"
+            :y1="p.y1"
+            :x2="p.x2"
+            :y2="p.y2"
+            :stroke="`rgba(200, 200, 200, ${p.opacity})`"
+            :stroke-width="p.width"
+            stroke-linecap="round"
+          />
+        </template>
         <!-- Resource flow lines -->
         <template v-if="showFlowLines">
           <line
@@ -163,7 +181,7 @@ import type { Building, SupplyDrop } from '@/stores/gameStore'
 import { useSettingsStore } from '@/stores/settingsStore'
 import { useMoonStore } from '@/stores/moonStore'
 import { useColonistMovement } from '@/composables/useColonistMovement'
-import { ZONE_MAP } from '@/systems/mapLayout'
+import { ZONE_MAP, ZONES } from '@/systems/mapLayout'
 import MapTerrain from './MapTerrain.vue'
 import HazardAlert from './HazardAlert.vue'
 import MapBuilding from './MapBuilding.vue'
@@ -656,10 +674,16 @@ onUnmounted(() => cancelAnimationFrame(fpsRaf))
   opacity: 0.3;
 }
 
-.reduce-animations .colonist-dot,
-.reduce-animations .colonist-trail,
-.reduce-animations .feed-dot {
-  animation: none !important;
+.zone-label {
+  position: absolute;
+  font-family: var(--font-mono);
+  font-size: 0.4375rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  opacity: 0.4;
+  pointer-events: none;
+  white-space: nowrap;
+  z-index: 1;
 }
 
 .fps-counter {
