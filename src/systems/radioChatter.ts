@@ -289,6 +289,52 @@ const CONSTRUCT_START: string[] = [
   '{name}: Blueprints loaded. Hands ready.',
 ]
 
+const EAT_START: string[] = [
+  "{name} heading to the hab — stomach's growling.",
+  '{name}: Taking a food break.',
+  '{name} clocking out for a meal.',
+  "{name}: Can't work on an empty stomach.",
+  '{name} heading back for rations.',
+  '{name}: Lunch break. Back in a few.',
+  '{name}: Need fuel. Heading to hab.',
+  '{name}: Ration time.',
+]
+
+const FOCUS_DEPLETED_MSGS: string[] = [
+  '{name} clocking out for a breather.',
+  "{name}: Brain's fried. Need a minute.",
+  "{name}: Can't focus. Taking five.",
+  '{name} stepping away from the {zone}.',
+  "{name}: Eyes are crossing. Break time.",
+  "{name}: Done for now. Need to reset.",
+  "{name}: Head's not in it. Taking a break.",
+]
+
+const RESTLESS_SWITCH: string[] = [
+  "{name} switching tasks — been at it too long.",
+  '{name}: Need a change of pace.',
+  '{name} heading somewhere else for a while.',
+  '{name}: Same thing all day. Mixing it up.',
+  '{name}: Gonna go do something different.',
+  '{name}: Restless. Switching it up.',
+]
+
+const BOND_DETOUR: string[] = [
+  "{name} swung by {zone} — checking on {other}.",
+  '{name} stopped to see {other} real quick.',
+  "{name} making a detour to {other}'s zone.",
+  '{name}: Just checking in on {other}.',
+  '{name} popped over to see {other}.',
+]
+
+const RETURN_FROM_BREAK: string[] = [
+  '{name} back on it, looking sharp.',
+  "{name}: Recharged. Let's go.",
+  '{name} heading back to work.',
+  "{name}: Break's over. Back at it.",
+  '{name}: Feeling better. Where was I?',
+]
+
 export {
   BREAKDOWN,
   DEATH_GRIEF,
@@ -425,6 +471,8 @@ export function generateChatter(
         emitMessage(c.id, now, emit, fill(pick(LOADING_START), { name: c.name }))
       } else if (currType === 'construct') {
         emitMessage(c.id, now, emit, fill(pick(CONSTRUCT_START), { name: c.name }))
+      } else if (currType === 'eat') {
+        emitMessage(c.id, now, emit, fill(pick(EAT_START), { name: c.name }))
       }
 
       // ── Completion messages ──
@@ -505,4 +553,61 @@ export function generateChatter(
     // Update tracking
     prevActions.set(c.id, curr ? { type: curr.type, targetId: curr.targetId } : null)
   }
+}
+
+// ── Exported chatter triggers (called from tick loop) ──
+
+export function emitFocusDepletedChatter(
+  colonist: Colonist,
+  allColonists: Colonist[],
+  buildingLabel: (id: string) => string,
+  emit: MessageEmitter,
+  now: number,
+): void {
+  if (Math.random() > 0.3) return // 30% chance
+  if (!canMessage(colonist.id, now)) return
+  const zone = colonist.currentZone ? zoneName(colonist.currentZone) : 'station'
+  emitMessage(colonist.id, now, emit, fill(pick(FOCUS_DEPLETED_MSGS), { name: colonist.name, zone }))
+}
+
+export function emitRestlessSwitchChatter(
+  colonist: Colonist,
+  allColonists: Colonist[],
+  buildingLabel: (id: string) => string,
+  emit: MessageEmitter,
+  now: number,
+): void {
+  if (Math.random() > 0.3) return
+  if (!canMessage(colonist.id, now)) return
+  emitMessage(colonist.id, now, emit, fill(pick(RESTLESS_SWITCH), { name: colonist.name }))
+}
+
+export function emitBondDetourChatter(
+  colonist: Colonist,
+  allColonists: Colonist[],
+  buildingLabel: (id: string) => string,
+  emit: MessageEmitter,
+  now: number,
+): void {
+  if (Math.random() > 0.3) return
+  if (!canMessage(colonist.id, now)) return
+  // Find a bonded partner for the {other} placeholder
+  const bondPartner = allColonists.find(
+    (o) => o.id !== colonist.id && o.health > 0 && colonist.bonds[o.id] >= 20,
+  )
+  const other = bondPartner?.name ?? 'a friend'
+  const zone = colonist.currentZone ? zoneName(colonist.currentZone) : 'station'
+  emitMessage(colonist.id, now, emit, fill(pick(BOND_DETOUR), { name: colonist.name, other, zone }))
+}
+
+export function emitReturnFromBreakChatter(
+  colonist: Colonist,
+  allColonists: Colonist[],
+  buildingLabel: (id: string) => string,
+  emit: MessageEmitter,
+  now: number,
+): void {
+  if (Math.random() > 0.3) return
+  if (!canMessage(colonist.id, now)) return
+  emitMessage(colonist.id, now, emit, fill(pick(RETURN_FROM_BREAK), { name: colonist.name }))
 }
