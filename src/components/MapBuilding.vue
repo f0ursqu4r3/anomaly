@@ -141,9 +141,8 @@ const showLabel = computed(() => true) // CSS controls visibility via zoom
 
 
 const alertType = computed(() => {
-  if (props.building.damaged) return 'alert-damage'
+  if (props.building.damaged) return null // wrench icon handles damage
   if (props.building.constructionProgress !== null) return null
-  // Operational buildings that need workers
   const needsWorkers = ['extractionrig', 'launchplatform'].includes(props.building.type)
   if (needsWorkers && workerCount.value === 0) return 'alert-warning'
   return null
@@ -332,13 +331,7 @@ const alertType = computed(() => {
   pointer-events: none;
 }
 
-.alert-damage {
-  width: 10px;
-  height: 10px;
-  background: var(--red);
-  box-shadow: 0 0 8px rgba(233, 69, 96, 0.6);
-  animation: alert-pulse 1.5s ease-in-out infinite;
-}
+
 
 .alert-warning {
   width: 9px;
