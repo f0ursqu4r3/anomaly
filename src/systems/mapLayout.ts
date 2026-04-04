@@ -121,11 +121,12 @@ export function getLandingPosition(
   avoid: { x: number; y: number }[] = [],
 ): { x: number; y: number } {
   const zone = ZONE_MAP.landing
-  const minDist = 4
+  const minDist = 7
+  const spread = zone.radius * 1.8
 
-  for (let attempt = 0; attempt < 20; attempt++) {
-    const x = zone.x + (Math.random() - 0.5) * zone.radius
-    const y = zone.y + (Math.random() - 0.5) * zone.radius
+  for (let attempt = 0; attempt < 30; attempt++) {
+    const x = zone.x + (Math.random() - 0.5) * spread
+    const y = zone.y + (Math.random() - 0.5) * spread
     const tooClose = avoid.some(a => {
       const dx = a.x - x
       const dy = a.y - y
@@ -134,9 +135,9 @@ export function getLandingPosition(
     if (!tooClose) return { x, y }
   }
 
-  // Fallback: offset from zone center
+  // Fallback: place below the zone
   return {
-    x: zone.x + (Math.random() - 0.5) * zone.radius,
-    y: zone.y + (Math.random() - 0.5) * zone.radius,
+    x: zone.x + (Math.random() - 0.5) * 4,
+    y: zone.y + zone.radius + 3,
   }
 }
