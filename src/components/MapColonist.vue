@@ -68,8 +68,8 @@ const stateClass = computed(() => {
 }
 
 .colonist-dot {
-  width: 8px;
-  height: 8px;
+  width: 6px;
+  height: 6px;
   border-radius: 50%;
   transition: all 0.2s;
 }
@@ -131,15 +131,15 @@ const stateClass = computed(() => {
   opacity: 0.15;
   box-shadow: none;
   animation: none;
-  width: 5px;
-  height: 5px;
+  width: 4px;
+  height: 4px;
 }
 
 /* Motion trail */
 .colonist-trail {
   position: absolute;
-  width: 8px;
-  height: 8px;
+  width: 6px;
+  height: 6px;
   border-radius: 50%;
   opacity: 0.15;
   animation: trail-fade 1.2s ease-out infinite;
@@ -202,7 +202,7 @@ const stateClass = computed(() => {
   bottom: -4px;
   left: 50%;
   transform: translateX(-50%);
-  width: 12px;
+  width: 10px;
   height: 2px;
   background: var(--accent-muted);
   border-radius: var(--radius-xs);
