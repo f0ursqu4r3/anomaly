@@ -203,13 +203,31 @@ export function useColonistMovement() {
       // Walking between zones
       if (action.walkPath && action.walkPath.length > 1) {
         const nextZoneId = action.walkPath[1]
-        const walkKey = `walk:${nextZoneId}`
+        const isFinalZone = action.walkPath.length === 2
+        const walkKey = `walk:${nextZoneId}:${isFinalZone ? actionKey(colonist) : ''}`
 
         if (ms._settledAction !== walkKey) {
           snapToCurrentPos(ms)
-          const nextZone = ZONE_MAP[nextZoneId]
-          if (nextZone) {
-            startWalk(ms, jitter(nextZone.x, 3), jitter(nextZone.y, 3))
+
+          // Final zone: walk directly to the building/drop, not zone center
+          if (isFinalZone && action.targetId) {
+            let targetX: number | null = null
+            let targetY: number | null = null
+            if (action.type === 'unpack') {
+              const drop = game.supplyDrops.find(d => d.id === action.targetId)
+              if (drop) { targetX = drop.x; targetY = drop.y }
+            } else {
+              const building = game.buildings.find(b => b.id === action.targetId)
+              if (building) { targetX = building.x; targetY = building.y }
+            }
+            if (targetX !== null && targetY !== null) {
+              startWalk(ms, jitter(targetX, 1.5), jitter(targetY, 1.5))
+            }
+          } else {
+            const nextZone = ZONE_MAP[nextZoneId]
+            if (nextZone) {
+              startWalk(ms, jitter(nextZone.x, 3), jitter(nextZone.y, 3))
+            }
           }
           ms._settledAction = walkKey
         } else {
