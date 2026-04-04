@@ -5,34 +5,98 @@ import { BUILDING_CONFIGS } from '@/config/buildings'
 // ── Zone Definitions ──
 
 export const ZONES: Zone[] = [
-  { id: 'habitat',  x: 50, y: 40, radius: 10, label: 'SEC-A HABITAT', color: '#4af', buildingTypes: [] },
-  { id: 'power',    x: 30, y: 25, radius: 9,  label: 'SEC-B POWER',   color: '#f80', buildingTypes: ['solar'] },
-  { id: 'lifeSup',  x: 70, y: 25, radius: 9,  label: 'SEC-C LIFESUP', color: '#0ff', buildingTypes: ['o2generator'] },
-  { id: 'extraction', x: 50, y: 65, radius: 10, label: 'SEC-D EXTRACT', color: '#0f8', buildingTypes: ['extractionrig'] },
-  { id: 'storage',   x: 65, y: 75, radius: 7,  label: 'SEC-E STORAGE', color: '#888', buildingTypes: ['storageSilo'] },
-  { id: 'medical',  x: 75, y: 48, radius: 7,  label: 'SEC-F MED',     color: '#f44', buildingTypes: ['medbay'] },
-  { id: 'workshop', x: 25, y: 70, radius: 8,  label: 'SEC-G WORKSHOP', color: '#fa0', buildingTypes: ['partsfactory'] },
-  { id: 'landing',  x: 25, y: 50, radius: 7,  label: 'LZ-1',          color: '#f80', buildingTypes: ['launchplatform'] },
+  {
+    id: 'habitat',
+    x: 50,
+    y: 40,
+    radius: 10,
+    label: 'SEC-A HABITAT',
+    color: '#4af',
+    buildingTypes: [],
+  },
+  {
+    id: 'power',
+    x: 30,
+    y: 25,
+    radius: 9,
+    label: 'SEC-B POWER',
+    color: '#f80',
+    buildingTypes: ['solar'],
+  },
+  {
+    id: 'lifeSup',
+    x: 70,
+    y: 25,
+    radius: 9,
+    label: 'SEC-C LIFESUP',
+    color: '#0ff',
+    buildingTypes: ['o2generator'],
+  },
+  {
+    id: 'extraction',
+    x: 50,
+    y: 65,
+    radius: 10,
+    label: 'SEC-D EXTRACT',
+    color: '#0f8',
+    buildingTypes: ['extractionrig'],
+  },
+  {
+    id: 'storage',
+    x: 65,
+    y: 75,
+    radius: 7,
+    label: 'SEC-E STORAGE',
+    color: '#888',
+    buildingTypes: ['storageSilo'],
+  },
+  {
+    id: 'medical',
+    x: 75,
+    y: 48,
+    radius: 7,
+    label: 'SEC-F MED',
+    color: '#f44',
+    buildingTypes: ['medbay'],
+  },
+  {
+    id: 'workshop',
+    x: 25,
+    y: 70,
+    radius: 8,
+    label: 'SEC-G WORKSHOP',
+    color: '#fa0',
+    buildingTypes: ['partsfactory'],
+  },
+  {
+    id: 'landing',
+    x: 25,
+    y: 50,
+    radius: 7,
+    label: 'LZ-1',
+    color: '#f80',
+    buildingTypes: ['launchplatform'],
+  },
 ]
 
-export const ZONE_MAP: Record<string, Zone> = Object.fromEntries(ZONES.map(z => [z.id, z]))
+export const ZONE_MAP: Record<string, Zone> = Object.fromEntries(ZONES.map((z) => [z.id, z]))
 
 export const ZONE_FOR_BUILDING: Record<string, string> = Object.fromEntries(
-  BUILDING_CONFIGS.map(c => [c.type, c.zone])
+  BUILDING_CONFIGS.map((c) => [c.type, c.zone]),
 )
 
 // ── Path Graph ──
 
 export const PATH_EDGES: PathEdge[] = [
-  { from: 'habitat', to: 'power',   weight: 1 },
+  { from: 'habitat', to: 'power', weight: 1 },
   { from: 'habitat', to: 'lifeSup', weight: 1 },
   { from: 'habitat', to: 'extraction', weight: 1 },
   { from: 'habitat', to: 'storage', weight: 1 },
   { from: 'extraction', to: 'storage', weight: 0.8 },
   { from: 'habitat', to: 'medical', weight: 1 },
-  { from: 'habitat', to: 'landing',  weight: 1 },
+  { from: 'habitat', to: 'landing', weight: 1 },
   { from: 'habitat', to: 'workshop', weight: 1 },
-  { from: 'power',   to: 'lifeSup', weight: 1.2 },
+  { from: 'power', to: 'lifeSup', weight: 1.2 },
 ]
 
 const adjacency: Record<string, { zone: string; weight: number }[]> = {}
@@ -72,13 +136,11 @@ export function getBuildingPosition(
   const zone = ZONE_MAP[zoneId]
   if (!zone) return { x: 50, y: 50, rotation: 0 }
 
-  const sameZone = existingBuildings.filter(
-    b => ZONE_FOR_BUILDING[b.type] === zoneId
-  )
+  const sameZone = existingBuildings.filter((b) => ZONE_FOR_BUILDING[b.type] === zoneId)
 
   // Check clearance against ALL buildings, not just same zone
   function clearOfAll(x: number, y: number): boolean {
-    return !existingBuildings.some(b => {
+    return !existingBuildings.some((b) => {
       const dx = b.x - x
       const dy = b.y - y
       return Math.sqrt(dx * dx + dy * dy) < MIN_BUILDING_DISTANCE
@@ -97,9 +159,10 @@ export function getBuildingPosition(
 
   // Cluster growth: anchor to a random existing building in same zone
   for (let attempt = 0; attempt < 40; attempt++) {
-    const anchor = sameZone.length > 0
-      ? sameZone[Math.floor(Math.random() * sameZone.length)]
-      : { x: zone.x, y: zone.y }
+    const anchor =
+      sameZone.length > 0
+        ? sameZone[Math.floor(Math.random() * sameZone.length)]
+        : { x: zone.x, y: zone.y }
     const angle = Math.random() * Math.PI * 2
     const x = anchor.x + Math.cos(angle) * ANCHOR_OFFSET
     const y = anchor.y + Math.sin(angle) * ANCHOR_OFFSET
@@ -125,9 +188,10 @@ export function getBuildingPosition(
   }
 }
 
-export function getLandingPosition(
-  avoid: { x: number; y: number }[] = [],
-): { x: number; y: number } {
+export function getLandingPosition(avoid: { x: number; y: number }[] = []): {
+  x: number
+  y: number
+} {
   const zone = ZONE_MAP.landing
   const minDist = 7
   const spread = zone.radius * 1.8
@@ -135,7 +199,7 @@ export function getLandingPosition(
   for (let attempt = 0; attempt < 30; attempt++) {
     const x = zone.x + (Math.random() - 0.5) * spread
     const y = zone.y + (Math.random() - 0.5) * spread
-    const tooClose = avoid.some(a => {
+    const tooClose = avoid.some((a) => {
       const dx = a.x - x
       const dy = a.y - y
       return Math.sqrt(dx * dx + dy * dy) < minDist

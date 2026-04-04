@@ -1,7 +1,7 @@
 import type { Action, ActionType, Trait, SkillTrait, Specialization } from '@/types/colonist'
-import type { ColonyState, Building, Directive, SupplyDrop } from '@/stores/gameStore'
+import type { ColonyState, Building, Directive } from '@/stores/gameStore'
 import { ZONE_FOR_BUILDING, ZONE_MAP, findPath } from '@/systems/mapLayout'
-import { getEfficiencyMultiplier, getBondBonus } from '@/systems/colonistIdentity'
+import { getEfficiencyMultiplier } from '@/systems/colonistIdentity'
 
 // ── Constants ──
 
@@ -10,7 +10,6 @@ const ENERGY_DRAIN_WALKING = 0.5
 const ENERGY_RECOVERY_RESTING = 3.0
 
 const MORALE_DRAIN_PASSIVE = 0.2
-const MORALE_DRAIN_HAZARD = 1.0
 const MORALE_RECOVERY_SOCIAL = 2.0
 const MORALE_RECOVERY_RESTING = 0.5
 
@@ -22,16 +21,16 @@ const HEALTH_SEEK_MEDICAL = 70
 const HEALTH_SEEK_MEDICAL_URGENT = 40
 
 const DURATION: Record<ActionType, [number, number]> = {
-  extract:      [12, 25],
-  engineer:     [12, 25],
-  repair:       [15, 30],
-  unpack:       [5, 10],
-  rest:         [15, 35],
-  socialize:    [10, 20],
+  extract: [12, 25],
+  engineer: [12, 25],
+  repair: [15, 30],
+  unpack: [5, 10],
+  rest: [15, 35],
+  socialize: [10, 20],
   seek_medical: [20, 40],
-  wander:       [8, 18],
-  load:         [8, 15],
-  construct:    [20, 40],
+  wander: [8, 18],
+  load: [8, 15],
+  construct: [20, 40],
 }
 
 interface TraitMod {
@@ -46,20 +45,75 @@ interface TraitMod {
 }
 
 const TRAIT_MODS: Record<Trait, TraitMod> = {
-  hardy:     { energyDrainMult: 0.75, moraleDrainMult: 1.0,  workUtilityMult: 1.0,  socialUtilityMult: 1.0,  repairUtilityMult: 1.0,  medicalThresholdBonus: 0,  durationMult: 1.0,  walkSpeedMult: 1.0 },
-  diligent:  { energyDrainMult: 1.0,  moraleDrainMult: 1.0,  workUtilityMult: 1.2,  socialUtilityMult: 0.7,  repairUtilityMult: 1.0,  medicalThresholdBonus: 0,  durationMult: 1.0,  walkSpeedMult: 1.0 },
-  social:    { energyDrainMult: 1.0,  moraleDrainMult: 1.3,  workUtilityMult: 1.0,  socialUtilityMult: 1.5,  repairUtilityMult: 1.0,  medicalThresholdBonus: 0,  durationMult: 1.0,  walkSpeedMult: 1.0 },
-  cautious:  { energyDrainMult: 1.0,  moraleDrainMult: 1.0,  workUtilityMult: 1.0,  socialUtilityMult: 1.0,  repairUtilityMult: 1.5,  medicalThresholdBonus: 15, durationMult: 1.0,  walkSpeedMult: 1.0 },
-  efficient: { energyDrainMult: 1.0,  moraleDrainMult: 1.0,  workUtilityMult: 1.0,  socialUtilityMult: 1.0,  repairUtilityMult: 1.0,  medicalThresholdBonus: 0,  durationMult: 0.85, walkSpeedMult: 1.1 },
-  stoic:     { energyDrainMult: 1.0,  moraleDrainMult: 0.7,  workUtilityMult: 1.0,  socialUtilityMult: 0.6,  repairUtilityMult: 1.0,  medicalThresholdBonus: 0,  durationMult: 1.0,  walkSpeedMult: 1.0 },
+  hardy: {
+    energyDrainMult: 0.75,
+    moraleDrainMult: 1.0,
+    workUtilityMult: 1.0,
+    socialUtilityMult: 1.0,
+    repairUtilityMult: 1.0,
+    medicalThresholdBonus: 0,
+    durationMult: 1.0,
+    walkSpeedMult: 1.0,
+  },
+  diligent: {
+    energyDrainMult: 1.0,
+    moraleDrainMult: 1.0,
+    workUtilityMult: 1.2,
+    socialUtilityMult: 0.7,
+    repairUtilityMult: 1.0,
+    medicalThresholdBonus: 0,
+    durationMult: 1.0,
+    walkSpeedMult: 1.0,
+  },
+  social: {
+    energyDrainMult: 1.0,
+    moraleDrainMult: 1.3,
+    workUtilityMult: 1.0,
+    socialUtilityMult: 1.5,
+    repairUtilityMult: 1.0,
+    medicalThresholdBonus: 0,
+    durationMult: 1.0,
+    walkSpeedMult: 1.0,
+  },
+  cautious: {
+    energyDrainMult: 1.0,
+    moraleDrainMult: 1.0,
+    workUtilityMult: 1.0,
+    socialUtilityMult: 1.0,
+    repairUtilityMult: 1.5,
+    medicalThresholdBonus: 15,
+    durationMult: 1.0,
+    walkSpeedMult: 1.0,
+  },
+  efficient: {
+    energyDrainMult: 1.0,
+    moraleDrainMult: 1.0,
+    workUtilityMult: 1.0,
+    socialUtilityMult: 1.0,
+    repairUtilityMult: 1.0,
+    medicalThresholdBonus: 0,
+    durationMult: 0.85,
+    walkSpeedMult: 1.1,
+  },
+  stoic: {
+    energyDrainMult: 1.0,
+    moraleDrainMult: 0.7,
+    workUtilityMult: 1.0,
+    socialUtilityMult: 0.6,
+    repairUtilityMult: 1.0,
+    medicalThresholdBonus: 0,
+    durationMult: 1.0,
+    walkSpeedMult: 1.0,
+  },
 }
 
-const DIRECTIVE_UTILITY: Record<Directive, { extract: number; engineer: number; repair: number }> = {
-  mining:    { extract: 1.5, engineer: 0.6, repair: 1.0 },
-  safety:    { extract: 0.6, engineer: 1.5, repair: 1.5 },
-  balanced:  { extract: 1.0, engineer: 1.0, repair: 1.0 },
-  emergency: { extract: 0.5, engineer: 2.0, repair: 2.0 },
-}
+const DIRECTIVE_UTILITY: Record<Directive, { extract: number; engineer: number; repair: number }> =
+  {
+    mining: { extract: 1.5, engineer: 0.6, repair: 1.0 },
+    safety: { extract: 0.6, engineer: 1.5, repair: 1.5 },
+    balanced: { extract: 1.0, engineer: 1.0, repair: 1.0 },
+    emergency: { extract: 0.5, engineer: 2.0, repair: 2.0 },
+  }
 
 // ── Needs Update ──
 
@@ -98,7 +152,10 @@ export function updateNeeds(colonist: ColonistLike): void {
     } else {
       // Working energy drain — Night Owl reduces drain at low energy
       if (colonist.skillTrait === 'nightOwl' && colonist.energy < 30) {
-        colonist.energy = Math.max(0, colonist.energy - ENERGY_DRAIN_WORKING * mod.energyDrainMult * 0.3)
+        colonist.energy = Math.max(
+          0,
+          colonist.energy - ENERGY_DRAIN_WORKING * mod.energyDrainMult * 0.3,
+        )
       } else {
         colonist.energy = Math.max(0, colonist.energy - ENERGY_DRAIN_WORKING * mod.energyDrainMult)
       }
@@ -123,7 +180,11 @@ export function checkInterrupt(colonist: ColonistLike): boolean {
     colonist.currentAction = null
     return true
   }
-  if (colonist.morale <= MORALE_BREAKING && colonist.currentAction?.type !== 'rest' && colonist.currentAction?.type !== 'socialize') {
+  if (
+    colonist.morale <= MORALE_BREAKING &&
+    colonist.currentAction?.type !== 'rest' &&
+    colonist.currentAction?.type !== 'socialize'
+  ) {
     colonist.currentAction = null
     return true
   }
@@ -183,7 +244,7 @@ function getActionDuration(type: ActionType, colonist: ColonistLike): number {
   const traitMult = TRAIT_MODS[colonist.trait].durationMult
   const efficiency = getEfficiencyMultiplier(colonist as any, type)
   // Higher efficiency = shorter duration
-  return Math.max(1, Math.round(base * traitMult / efficiency))
+  return Math.max(1, Math.round((base * traitMult) / efficiency))
 }
 
 // ── Utility Scoring ──
@@ -197,7 +258,7 @@ interface ScoredAction {
 
 /** Count colonists already doing a specific action, optionally on a specific target */
 function countWorkers(state: ColonyState, actionType: ActionType, targetId?: string): number {
-  return state.colonists.filter(c => {
+  return state.colonists.filter((c) => {
     if (c.health <= 0 || !c.currentAction) return false
     if (c.currentAction.type !== actionType) return false
     if (targetId && c.currentAction.targetId !== targetId) return false
@@ -205,10 +266,7 @@ function countWorkers(state: ColonyState, actionType: ActionType, targetId?: str
   }).length
 }
 
-export function selectAction(
-  colonist: ColonistLike,
-  state: ColonyState,
-): Action | null {
+export function selectAction(colonist: ColonistLike, state: ColonyState): Action | null {
   if (colonist.health <= 0) return null
 
   const mod = TRAIT_MODS[colonist.trait]
@@ -217,7 +275,7 @@ export function selectAction(
 
   // EXTRACT
   if (colonist.energy > 20) {
-    const rigs = state.buildings.filter(b => b.type === 'extractionrig' && !b.damaged)
+    const rigs = state.buildings.filter((b) => b.type === 'extractionrig' && !b.damaged)
     if (rigs.length > 0) {
       const rig = rigs[Math.floor(Math.random() * rigs.length)]
       candidates.push({
@@ -233,23 +291,23 @@ export function selectAction(
   if (colonist.energy > 20) {
     const powerPct = state.powerMax > 0 ? state.power / state.powerMax : 1
     const airPct = state.airMax > 0 ? state.air / state.airMax : 1
-    const hasSolar = state.buildings.some(b => b.type === 'solar' && !b.damaged)
-    const hasO2 = state.buildings.some(b => b.type === 'o2generator' && !b.damaged)
+    const hasSolar = state.buildings.some((b) => b.type === 'solar' && !b.damaged)
+    const hasO2 = state.buildings.some((b) => b.type === 'o2generator' && !b.damaged)
 
     if (hasSolar || hasO2) {
       let zone: string
       let targetBuilding: Building | undefined
       if (powerPct <= airPct && hasSolar) {
         zone = 'power'
-        const solars = state.buildings.filter(b => b.type === 'solar' && !b.damaged)
+        const solars = state.buildings.filter((b) => b.type === 'solar' && !b.damaged)
         targetBuilding = solars[Math.floor(Math.random() * solars.length)]
       } else if (hasO2) {
         zone = 'lifeSup'
-        const o2s = state.buildings.filter(b => b.type === 'o2generator' && !b.damaged)
+        const o2s = state.buildings.filter((b) => b.type === 'o2generator' && !b.damaged)
         targetBuilding = o2s[Math.floor(Math.random() * o2s.length)]
       } else {
         zone = 'power'
-        const solars = state.buildings.filter(b => b.type === 'solar' && !b.damaged)
+        const solars = state.buildings.filter((b) => b.type === 'solar' && !b.damaged)
         targetBuilding = solars[Math.floor(Math.random() * solars.length)]
       }
 
@@ -259,8 +317,11 @@ export function selectAction(
 
       // Soft diminishing returns — don't pile everyone into one zone
       const engineersInZone = countWorkers(state, 'engineer')
-      const buildingsInZone = state.buildings.filter(b => !b.damaged && ZONE_FOR_BUILDING[b.type] === zone).length
-      const saturation = buildingsInZone > 0 ? Math.min(1, engineersInZone / (buildingsInZone * 2)) : 0
+      const buildingsInZone = state.buildings.filter(
+        (b) => !b.damaged && ZONE_FOR_BUILDING[b.type] === zone,
+      ).length
+      const saturation =
+        buildingsInZone > 0 ? Math.min(1, engineersInZone / (buildingsInZone * 2)) : 0
       const saturationDiscount = 1 - saturation * 0.6 // at most 60% reduction
 
       candidates.push({
@@ -272,14 +333,16 @@ export function selectAction(
     }
 
     // WORKSHOP — Parts Factory needs an operator to produce repair kits
-    const factories = state.buildings.filter(b => b.type === 'partsfactory' && !b.damaged && b.constructionProgress === null)
+    const factories = state.buildings.filter(
+      (b) => b.type === 'partsfactory' && !b.damaged && b.constructionProgress === null,
+    )
     if (factories.length > 0) {
       const factory = factories[Math.floor(Math.random() * factories.length)]
       const workshopEngineers = countWorkers(state, 'engineer', factory.id)
       const workerDiscount = workshopEngineers === 0 ? 1.0 : workshopEngineers === 1 ? 0.1 : 0.02
 
       // Urgency: if buildings are damaged and no repair kits, prioritize kit production
-      const damagedCount = state.buildings.filter(b => b.damaged).length
+      const damagedCount = state.buildings.filter((b) => b.damaged).length
       const kitUrgency = damagedCount > 0 && state.repairKits === 0 ? 2.5 : 1.0
 
       candidates.push({
@@ -292,7 +355,7 @@ export function selectAction(
   }
 
   // REPAIR — only if repair kits in stock
-  const damaged = state.buildings.filter(b => b.damaged)
+  const damaged = state.buildings.filter((b) => b.damaged)
   if (damaged.length > 0 && state.repairKits > 0) {
     const target = damaged[0]
     const targetZone = ZONE_FOR_BUILDING[target.type]
@@ -309,7 +372,9 @@ export function selectAction(
 
   // CONSTRUCT — build under-construction buildings
   if (colonist.energy > 20) {
-    const sites = state.buildings.filter(b => b.constructionProgress !== null && b.constructionProgress < 1)
+    const sites = state.buildings.filter(
+      (b) => b.constructionProgress !== null && b.constructionProgress < 1,
+    )
     if (sites.length > 0) {
       const site = sites[0]
       const targetZone = ZONE_FOR_BUILDING[site.type]
@@ -326,12 +391,15 @@ export function selectAction(
   }
 
   // UNPACK — diminishes as more colonists are already unpacking
-  const activeDrops = state.supplyDrops.filter(d => d.state === 'landed' || d.state === 'unpacking')
+  const activeDrops = state.supplyDrops.filter(
+    (d) => d.state === 'landed' || d.state === 'unpacking',
+  )
   if (activeDrops.length > 0) {
     const drop = activeDrops[0]
     const unpackers = countWorkers(state, 'unpack', drop.id)
     // First unpacker high priority, 2nd moderate, 3+ low
-    const unpackDiscount = unpackers === 0 ? 1.0 : unpackers === 1 ? 0.5 : unpackers === 2 ? 0.15 : 0.05
+    const unpackDiscount =
+      unpackers === 0 ? 1.0 : unpackers === 1 ? 0.5 : unpackers === 2 ? 0.15 : 0.05
     candidates.push({
       type: 'unpack',
       targetZone: 'landing',
@@ -342,7 +410,9 @@ export function selectAction(
 
   // LOAD — haul resources to export platform (pick the best docked platform with space)
   if (colonist.energy > 20) {
-    const platforms = state.buildings.filter(b => b.type === 'launchplatform' && !b.damaged && b.constructionProgress === null)
+    const platforms = state.buildings.filter(
+      (b) => b.type === 'launchplatform' && !b.damaged && b.constructionProgress === null,
+    )
     const hasResources = state.metals > 0 || state.ice > 0 || state.rareMinerals > 0
     if (hasResources) {
       for (const platform of platforms) {
@@ -352,9 +422,12 @@ export function selectAction(
         if (loaded >= ep.capacity) continue
 
         const loaders = countWorkers(state, 'load', platform.id)
-        const loaderDiscount = loaders === 0 ? 1.0 : loaders === 1 ? 0.5 : loaders === 2 ? 0.15 : 0.05
+        const loaderDiscount =
+          loaders === 0 ? 1.0 : loaders === 1 ? 0.5 : loaders === 2 ? 0.15 : 0.05
 
-        const siloCount = state.buildings.filter(b => b.type === 'storageSilo' && !b.damaged && b.constructionProgress === null).length
+        const siloCount = state.buildings.filter(
+          (b) => b.type === 'storageSilo' && !b.damaged && b.constructionProgress === null,
+        ).length
         const metalCap = 50 + siloCount * 100
         const storagePct = metalCap > 0 ? state.metals / metalCap : 0
         const urgency = storagePct > 0.8 ? 2.0 : storagePct > 0.5 ? 1.3 : 1.0
@@ -397,13 +470,20 @@ export function selectAction(
 
   // SEEK_MEDICAL
   const medThreshold = HEALTH_SEEK_MEDICAL + mod.medicalThresholdBonus
-  const medbay = state.buildings.find(b => b.type === 'medbay' && !b.damaged && b.constructionProgress === null)
+  const medbay = state.buildings.find(
+    (b) => b.type === 'medbay' && !b.damaged && b.constructionProgress === null,
+  )
   if (colonist.health < medThreshold && medbay) {
     let medScore = 20
     if (colonist.health < HEALTH_SEEK_MEDICAL_URGENT) {
       medScore = 60 + (HEALTH_SEEK_MEDICAL_URGENT - colonist.health) * 3
     }
-    candidates.push({ type: 'seek_medical', targetZone: 'medical', targetId: medbay.id, score: medScore })
+    candidates.push({
+      type: 'seek_medical',
+      targetZone: 'medical',
+      targetId: medbay.id,
+      score: medScore,
+    })
   }
 
   // WANDER — gives colonists natural downtime between tasks
@@ -421,7 +501,7 @@ export function selectAction(
     for (const c of candidates) {
       for (const [partnerId, affinity] of Object.entries(colonist.bonds)) {
         if (affinity < 20) continue
-        const partner = state.colonists.find(p => p.id === partnerId && p.health > 0)
+        const partner = state.colonists.find((p) => p.id === partnerId && p.health > 0)
         if (partner && partner.currentZone === c.targetZone) {
           c.score *= 1.1 // small preference
           break
@@ -433,16 +513,15 @@ export function selectAction(
   candidates.sort((a, b) => b.score - a.score)
   const best = candidates[0]
 
-  const walkPath = colonist.currentZone !== best.targetZone
-    ? findPath(colonist.currentZone, best.targetZone)
-    : undefined
+  const walkPath =
+    colonist.currentZone !== best.targetZone
+      ? findPath(colonist.currentZone, best.targetZone)
+      : undefined
 
   const needsWalk = walkPath && walkPath.length > 1
 
   // Walk ticks = time to traverse first segment (distance-based)
-  const firstSegmentTicks = needsWalk
-    ? walkTicksBetween(walkPath![0], walkPath![1])
-    : 0
+  const firstSegmentTicks = needsWalk ? walkTicksBetween(walkPath![0], walkPath![1]) : 0
 
   return {
     type: best.type,

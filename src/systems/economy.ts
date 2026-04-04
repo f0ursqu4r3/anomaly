@@ -58,7 +58,7 @@ const RATE_EVENTS = [
 
 const RATE_EVENT_MIN_INTERVAL_MS = 600_000 // 10 minutes
 const RATE_EVENT_MAX_INTERVAL_MS = 900_000 // 15 minutes
-const RATE_EVENT_DURATION_MIN_MS = 90_000  // 90 seconds
+const RATE_EVENT_DURATION_MIN_MS = 90_000 // 90 seconds
 const RATE_EVENT_DURATION_MAX_MS = 120_000 // 120 seconds
 
 // ── State ──
@@ -75,7 +75,11 @@ export function getActiveEvent(): RateEvent | null {
   return activeEvent
 }
 
-export function getCurrentRates(nowMs: number): { metals: number; ice: number; rareMinerals: number } {
+export function getCurrentRates(nowMs: number): {
+  metals: number
+  ice: number
+  rareMinerals: number
+} {
   if (activeEvent && nowMs < activeEvent.expiresAt) {
     return {
       metals: BASE_RATES.metals * activeEvent.multipliers.metals,
@@ -120,12 +124,17 @@ export function tickEconomy(
       const resources = ['metals', 'ice', 'rareMinerals'] as const
       const target = resources[Math.floor(Math.random() * resources.length)]
       activeEvent.multipliers[target] = 0.5
-      const labels: Record<string, string> = { metals: 'Metals', ice: 'Ice', rareMinerals: 'Rare minerals' }
+      const labels: Record<string, string> = {
+        metals: 'Metals',
+        ice: 'Ice',
+        rareMinerals: 'Rare minerals',
+      }
       activeEvent.message = event.message.replace('{resource}', labels[target])
     }
 
     emit(activeEvent.message, 'event')
-    nextEventAt = nowMs + duration + randomBetween(RATE_EVENT_MIN_INTERVAL_MS, RATE_EVENT_MAX_INTERVAL_MS)
+    nextEventAt =
+      nowMs + duration + randomBetween(RATE_EVENT_MIN_INTERVAL_MS, RATE_EVENT_MAX_INTERVAL_MS)
   }
 }
 
@@ -135,9 +144,7 @@ export function calculatePayoutEstimate(
 ): number {
   const rates = getCurrentRates(nowMs)
   return Math.round(
-    cargo.metals * rates.metals +
-    cargo.ice * rates.ice +
-    cargo.rareMinerals * rates.rareMinerals
+    cargo.metals * rates.metals + cargo.ice * rates.ice + cargo.rareMinerals * rates.rareMinerals,
   )
 }
 
@@ -146,7 +153,10 @@ export function getEconomyState(): { activeEvent: RateEvent | null; nextEventAt:
   return { activeEvent, nextEventAt }
 }
 
-export function restoreEconomyState(state: { activeEvent: RateEvent | null; nextEventAt: number }): void {
+export function restoreEconomyState(state: {
+  activeEvent: RateEvent | null
+  nextEventAt: number
+}): void {
   activeEvent = state.activeEvent
   nextEventAt = state.nextEventAt
 }
@@ -157,7 +167,7 @@ function randomBetween(min: number, max: number): number {
   return min + Math.floor(Math.random() * (max - min + 1))
 }
 
-function pickWeightedEvent(): typeof RATE_EVENTS[number] {
+function pickWeightedEvent(): (typeof RATE_EVENTS)[number] {
   const totalWeight = RATE_EVENTS.reduce((sum, e) => sum + e.weight, 0)
   let roll = Math.random() * totalWeight
   for (const event of RATE_EVENTS) {

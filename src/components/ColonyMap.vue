@@ -652,7 +652,7 @@ onUnmounted(() => cancelAnimationFrame(fpsRaf))
 .activity-summary {
   position: absolute;
   bottom: calc(var(--safe-bottom, 0px) + 64px);
-  left: calc(var(--safe-left, 0px) + 8px);
+  left: calc(var(--safe-left, 0px) + 16px);
   z-index: 5;
   display: flex;
   gap: 8px;

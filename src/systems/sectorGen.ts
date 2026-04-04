@@ -18,7 +18,7 @@ export const TERRAIN_CONFIGS: Record<TerrainType, TerrainConfig> = {
     color: '#7ecfff',
     bgColor: '#0c1a22',
     depositTypes: ['ice', 'metals'],
-    surveyRiskBase: 0.10,
+    surveyRiskBase: 0.1,
     description: 'Smooth frozen plains. Ice deposits with some metals.',
   },
   volcanic: {
@@ -45,7 +45,7 @@ export const TERRAIN_CONFIGS: Record<TerrainType, TerrainConfig> = {
     color: '#c8a070',
     bgColor: '#1a150e',
     depositTypes: ['metals', 'ice'],
-    surveyRiskBase: 0.20,
+    surveyRiskBase: 0.2,
     description: 'Narrow canyon systems. Mixed deposits, moderate risk.',
   },
 }
@@ -66,14 +66,21 @@ function mulberry32(seed: number): () => number {
 // Using axial coordinates (q, r). Center at (0, 0).
 
 const HEX_DIRECTIONS: [number, number][] = [
-  [1, 0], [1, -1], [0, -1],
-  [-1, 0], [-1, 1], [0, 1],
+  [1, 0],
+  [1, -1],
+  [0, -1],
+  [-1, 0],
+  [-1, 1],
+  [0, 1],
 ]
 
 function hexRing(center: [number, number], radius: number): [number, number][] {
   if (radius === 0) return [center]
   const results: [number, number][] = []
-  let [q, r] = [center[0] + HEX_DIRECTIONS[4][0] * radius, center[1] + HEX_DIRECTIONS[4][1] * radius]
+  let [q, r] = [
+    center[0] + HEX_DIRECTIONS[4][0] * radius,
+    center[1] + HEX_DIRECTIONS[4][1] * radius,
+  ]
   for (let dir = 0; dir < 6; dir++) {
     for (let step = 0; step < radius; step++) {
       results.push([q, r])
@@ -93,7 +100,7 @@ function hexDistance(q1: number, r1: number, q2: number, r2: number): number {
 const TERRAIN_WEIGHTS: { terrain: TerrainType; weight: number }[] = [
   { terrain: 'rocky', weight: 0.35 },
   { terrain: 'ice', weight: 0.25 },
-  { terrain: 'crater', weight: 0.20 },
+  { terrain: 'crater', weight: 0.2 },
   { terrain: 'canyon', weight: 0.12 },
   { terrain: 'volcanic', weight: 0.08 },
 ]
@@ -166,8 +173,8 @@ export function travelTimeMs(q: number, r: number): number {
  */
 export function hexToPixel(q: number, r: number): { x: number; y: number } {
   const size = 10 // hex size in viewport %
-  const x = 50 + size * (3 / 2 * q)
-  const y = 50 + size * (Math.sqrt(3) / 2 * q + Math.sqrt(3) * r)
+  const x = 50 + size * ((3 / 2) * q)
+  const y = 50 + size * ((Math.sqrt(3) / 2) * q + Math.sqrt(3) * r)
   return { x, y }
 }
 

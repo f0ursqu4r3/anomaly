@@ -15,8 +15,6 @@ const MORALE_ON_BOND_DEATH = -30
 const MORALE_ON_HAZARD = -5
 const MORALE_ON_SURVEY_RETURN = 5
 const MORALE_OUTPOST_DRAIN_PER_60S = -1
-const MORALE_BOND_COLOC_PER_60S = 1
-const MORALE_IDLE_DRAIN_PER_30T = -2
 
 const BREAKDOWN_THRESHOLD = 15
 const BREAKDOWN_COOLDOWN_MS = 300_000 // 5 minutes
@@ -77,29 +75,38 @@ export function getEfficiencyMultiplier(colonist: Colonist, actionType: ActionTy
   mult += getSpecializationBonus(colonist.specialization, actionType)
 
   // Morale bonus/penalty
-  if (colonist.morale > 80) mult += 0.10
-  else if (colonist.morale < 30) mult -= 0.20
+  if (colonist.morale > 80) mult += 0.1
+  else if (colonist.morale < 30) mult -= 0.2
 
   return mult
 }
 
 function getSkillTraitBonus(skillTrait: SkillTrait, actionType: ActionType): number {
   switch (skillTrait) {
-    case 'steadyHands': return actionType === 'repair' ? 0.20 : 0
-    case 'geologist': return actionType === 'extract' ? 0.10 : 0
-    case 'fieldMedic': return actionType === 'seek_medical' ? 0.15 : 0
-    case 'tinkerer': return actionType === 'engineer' ? 0.15 : 0
-    default: return 0
+    case 'steadyHands':
+      return actionType === 'repair' ? 0.2 : 0
+    case 'geologist':
+      return actionType === 'extract' ? 0.1 : 0
+    case 'fieldMedic':
+      return actionType === 'seek_medical' ? 0.15 : 0
+    case 'tinkerer':
+      return actionType === 'engineer' ? 0.15 : 0
+    default:
+      return 0
   }
 }
 
 function getSpecializationBonus(spec: Specialization | null, actionType: ActionType): number {
   if (!spec) return 0
   switch (spec) {
-    case 'prospector': return actionType === 'extract' ? 0.10 : 0
-    case 'mechanic': return actionType === 'repair' ? 0.50 : 0 // "50% fewer ticks" = +50% speed
-    case 'medic': return actionType === 'seek_medical' ? 1.0 : 0 // 2x healing
-    default: return 0
+    case 'prospector':
+      return actionType === 'extract' ? 0.1 : 0
+    case 'mechanic':
+      return actionType === 'repair' ? 0.5 : 0 // "50% fewer ticks" = +50% speed
+    case 'medic':
+      return actionType === 'seek_medical' ? 1.0 : 0 // 2x healing
+    default:
+      return 0
   }
 }
 
@@ -109,9 +116,9 @@ export function getBondBonus(colonist: Colonist, allColonists: Colonist[]): numb
   if (!colonist.bonds) return 0
   for (const [partnerId, affinity] of Object.entries(colonist.bonds)) {
     if (affinity < BOND_THRESHOLD) continue
-    const partner = allColonists.find(c => c.id === partnerId && c.health > 0)
+    const partner = allColonists.find((c) => c.id === partnerId && c.health > 0)
     if (partner && partner.currentZone === colonist.currentZone) {
-      return 0.10
+      return 0.1
     }
   }
   return 0
@@ -126,7 +133,7 @@ export function updateBonds(colonists: Colonist[]): void {
   bondAccrualCounter++
   bondDecayCounter++
 
-  const alive = colonists.filter(c => c.health > 0)
+  const alive = colonists.filter((c) => c.health > 0)
 
   // Accrue affinity every 60s
   if (bondAccrualCounter >= BOND_ACCRUAL_INTERVAL_S) {
@@ -161,7 +168,7 @@ export function updateBonds(colonists: Colonist[]): void {
     for (const c of alive) {
       if (!c.bonds) continue
       for (const [partnerId, affinity] of Object.entries(c.bonds)) {
-        const partner = alive.find(p => p.id === partnerId)
+        const partner = alive.find((p) => p.id === partnerId)
         if (!partner || partner.currentZone !== c.currentZone) {
           c.bonds[partnerId] = affinity - 1
           if (c.bonds[partnerId] <= 0) delete c.bonds[partnerId]
@@ -238,9 +245,10 @@ export function applySurveyReturnMorale(colonistIds: string[], allColonists: Col
 }
 
 export function applyOutpostIsolationMorale(colonist: Colonist): void {
-  const drain = colonist.skillTrait === 'claustrophobic'
-    ? MORALE_OUTPOST_DRAIN_PER_60S * 2
-    : MORALE_OUTPOST_DRAIN_PER_60S
+  const drain =
+    colonist.skillTrait === 'claustrophobic'
+      ? MORALE_OUTPOST_DRAIN_PER_60S * 2
+      : MORALE_OUTPOST_DRAIN_PER_60S
   colonist.morale = Math.max(0, colonist.morale + drain)
 }
 
@@ -249,11 +257,14 @@ export function applyOutpostIsolationMorale(colonist: Colonist): void {
 export function checkBreakdown(colonist: Colonist, nowMs: number): number | null {
   if (colonist.health <= 0) return null
   if (colonist.morale >= BREAKDOWN_THRESHOLD) return null
-  if (colonist.lastBreakdownAt && nowMs - colonist.lastBreakdownAt < BREAKDOWN_COOLDOWN_MS) return null
-  if (colonist.currentAction?.type === 'rest' || colonist.currentAction?.type === 'socialize') return null
+  if (colonist.lastBreakdownAt && nowMs - colonist.lastBreakdownAt < BREAKDOWN_COOLDOWN_MS)
+    return null
+  if (colonist.currentAction?.type === 'rest' || colonist.currentAction?.type === 'socialize')
+    return null
 
   colonist.lastBreakdownAt = nowMs
-  const duration = BREAKDOWN_DURATION_TICKS_MIN +
+  const duration =
+    BREAKDOWN_DURATION_TICKS_MIN +
     Math.floor(Math.random() * (BREAKDOWN_DURATION_TICKS_MAX - BREAKDOWN_DURATION_TICKS_MIN + 1))
   return duration
 }
