@@ -53,8 +53,7 @@
         <rect x="1" y="1" width="18" height="18" rx="2" fill="currentColor" fill-opacity="0.15" stroke="currentColor" stroke-opacity="0.5" stroke-width="1" />
       </svg>
     </div>
-    <!-- Status pip -->
-    <div v-if="!alertType" class="status-pip" :class="statusClass" />
+    <!-- Alert marker (damage/warnings only) -->
     <div v-if="alertType" class="alert-marker" :class="alertType" />
     <!-- Zoom-dependent label -->
     <div v-if="showLabel" class="building-label" :style="{ transform: `translateX(-50%) scale(var(--marker-scale, 1))` }">{{ shortLabel }}</div>
@@ -139,15 +138,7 @@ const shortLabel = computed(() => SHORT_LABELS[props.building.type] || '???')
 
 const showLabel = computed(() => true) // CSS controls visibility via zoom
 
-const statusClass = computed(() => {
-  if (props.building.damaged) return 'status-damaged'
-  if (isConstructing.value) return 'status-constructing'
-  if (workerCount.value === 0 && !isConstructing.value && props.building.constructionProgress === null) {
-    const needsWorkers = ['extractionrig', 'launchplatform'].includes(props.building.type)
-    if (needsWorkers) return 'status-warning'
-  }
-  return 'status-ok'
-})
+
 
 const alertType = computed(() => {
   if (props.building.damaged) return 'alert-damage'
@@ -210,44 +201,6 @@ const alertType = computed(() => {
 .type-partsfactory .building-footprint { filter: drop-shadow(0 0 4px var(--amber-glow)); }
 .type-launchplatform .building-footprint { filter: drop-shadow(0 0 4px var(--amber-glow)); }
 .type-storageSilo .building-footprint { filter: drop-shadow(0 0 3px rgba(136,136,136,0.1)); }
-
-/* Status pip */
-.status-pip {
-  position: absolute;
-  top: -3px;
-  right: -3px;
-  width: 5px;
-  height: 5px;
-  border-radius: 50%;
-  z-index: 1;
-}
-
-.status-ok {
-  background: var(--green);
-  box-shadow: 0 0 4px rgba(52, 211, 153, 0.5);
-}
-
-.status-damaged {
-  background: var(--red);
-  box-shadow: 0 0 6px rgba(233, 69, 96, 0.6);
-  animation: pip-pulse 1.5s ease-in-out infinite;
-}
-
-.status-warning {
-  background: var(--amber);
-  box-shadow: 0 0 5px rgba(245, 158, 11, 0.5);
-}
-
-.status-constructing {
-  background: var(--amber);
-  box-shadow: 0 0 4px rgba(245, 158, 11, 0.4);
-  opacity: 0.6;
-}
-
-@keyframes pip-pulse {
-  0%, 100% { opacity: 1; transform: scale(1); }
-  50% { opacity: 0.4; transform: scale(1.3); }
-}
 
 /* Building label (zoom-dependent via CSS) */
 .building-label {
