@@ -1,7 +1,7 @@
 <template>
-  <InfoCard :x="x" :y="y" :show-header="false">
+  <InfoCard :title="colonist.name" :x="x" :y="y">
     <div class="info-row">
-      <span class="colonist-name">{{ colonist.name }}</span>
+      <span class="info-label">Action</span>
       <span>{{ actionLabel }}</span>
     </div>
     <div class="info-row">
