@@ -1,7 +1,7 @@
 <template>
   <div
     class="map-building"
-    :class="[typeClass, { damaged: building.damaged, constructing: isConstructing, 'just-completed': justCompleted }]"
+    :class="[typeClass, { damaged: building.damaged, constructing: isConstructing, 'just-completed': justCompleted, 'platform-away': platformAway }]"
     :style="{ left: building.x + '%', top: building.y + '%', transform: `translate(-50%, -50%) rotate(${building.rotation || 0}deg)` }"
     @click.stop="emit('select', building)"
   >
@@ -36,11 +36,11 @@
         <rect x="1" y="1" width="14" height="10" rx="1" fill="currentColor" fill-opacity="0.15" stroke="currentColor" stroke-opacity="0.5" stroke-width="0.8" />
         <line x1="1" y1="5" x2="15" y2="5" stroke="currentColor" stroke-opacity="0.2" stroke-width="0.5" />
       </svg>
-      <!-- Launch Platform: square with H -->
+      <!-- Launch Platform: square with H (dashed when vehicle is away) -->
       <svg v-else-if="building.type === 'launchplatform'" class="fp-svg" viewBox="0 0 26 26">
-        <rect x="1" y="1" width="24" height="24" rx="2" fill="currentColor" fill-opacity="0.06" stroke="currentColor" stroke-opacity="0.5" stroke-width="1.2" />
-        <rect x="5" y="5" width="16" height="16" rx="1" fill="none" stroke="currentColor" stroke-opacity="0.25" stroke-width="0.5" />
-        <text x="13" y="17" text-anchor="middle" fill="currentColor" fill-opacity="0.35" font-family="var(--font-mono)" font-size="10" font-weight="700">H</text>
+        <rect x="1" y="1" width="24" height="24" rx="2" fill="currentColor" :fill-opacity="platformAway ? 0.02 : 0.06" stroke="currentColor" :stroke-opacity="platformAway ? 0.25 : 0.5" stroke-width="1.2" :stroke-dasharray="platformAway ? '2,2' : 'none'" />
+        <rect x="5" y="5" width="16" height="16" rx="1" fill="none" stroke="currentColor" :stroke-opacity="platformAway ? 0.12 : 0.25" stroke-width="0.5" />
+        <text v-if="!platformAway" x="13" y="17" text-anchor="middle" fill="currentColor" fill-opacity="0.35" font-family="var(--font-mono)" font-size="10" font-weight="700">H</text>
       </svg>
       <!-- Parts Factory: rectangle -->
       <svg v-else-if="building.type === 'partsfactory'" class="fp-svg" viewBox="0 0 24 16">
@@ -140,6 +140,12 @@ const showLabel = computed(() => true) // CSS controls visibility via zoom
 
 
 
+const platformAway = computed(() => {
+  if (props.building.type !== 'launchplatform') return false
+  const ep = game.exportPlatforms[props.building.id]
+  return ep?.status === 'in_transit' || ep?.status === 'returning'
+})
+
 const alertType = computed(() => {
   if (props.building.damaged) return null // wrench icon handles damage
   if (props.building.constructionProgress !== null) return null
@@ -200,6 +206,12 @@ const alertType = computed(() => {
 .type-partsfactory .building-footprint { filter: drop-shadow(0 0 4px var(--amber-glow)); }
 .type-launchplatform .building-footprint { filter: drop-shadow(0 0 4px var(--amber-glow)); }
 .type-storageSilo .building-footprint { filter: drop-shadow(0 0 3px rgba(136,136,136,0.1)); }
+
+/* Launch platform away state */
+.platform-away .building-footprint {
+  filter: drop-shadow(0 0 2px rgba(245, 158, 11, 0.1));
+  opacity: 0.5;
+}
 
 /* Building label (zoom-dependent via CSS) */
 .building-label {
