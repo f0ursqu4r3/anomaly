@@ -614,7 +614,8 @@ onUnmounted(() => cancelAnimationFrame(fpsRaf))
   opacity: 0.6;
 }
 
-.zoomed-in :deep(.building-label) {
+.zoomed-in :deep(.building-label),
+.zoomed-in :deep(.habitat-label) {
   display: block;
 }
 </style>
