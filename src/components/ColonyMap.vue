@@ -14,7 +14,7 @@
     <!-- Hazard flash vignette -->
     <div v-if="hazardFlash" class="hazard-flash" />
 
-    <div class="map-content" :style="transformStyle">
+    <div class="map-content" :class="{ 'zoomed-in': isZoomedIn }" :style="transformStyle">
       <MapTerrain />
 
       <!-- Worn paths from colonist traffic (SVG) -->
@@ -255,6 +255,8 @@ const panX = ref(0)
 const panY = ref(0)
 const isPanning = ref(false)
 const lastPointer = ref({ x: 0, y: 0 })
+
+const isZoomedIn = computed(() => zoom.value > 1.2)
 
 const transformStyle = computed(() => ({
   transform: `scale(${zoom.value}) translate(${panX.value}px, ${panY.value}px)`,
@@ -515,5 +517,9 @@ onUnmounted(() => cancelAnimationFrame(fpsRaf))
   letter-spacing: 0.1em;
   color: var(--text-muted);
   opacity: 0.6;
+}
+
+.zoomed-in :deep(.building-label) {
+  display: block;
 }
 </style>
