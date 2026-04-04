@@ -71,10 +71,9 @@
         v-for="c in visibleColonists"
         :key="c.id"
         :colonist="c"
-        :x="getColonistState(c.id).targetX"
-        :y="getColonistState(c.id).targetY"
+        :x="getColonistState(c.id).x"
+        :y="getColonistState(c.id).y"
         :visual-state="getColonistState(c.id).visualState"
-        :transition-ms="getColonistState(c.id).transitionMs"
         @select="selectColonist"
       />
 
@@ -108,8 +107,8 @@
       <ColonistInfo
         v-if="trackedColonist"
         :colonist="trackedColonist"
-        :x="trackedColonistPos!.targetX"
-        :y="trackedColonistPos!.targetY"
+        :x="trackedColonistPos!.x"
+        :y="trackedColonistPos!.y"
       />
     </div>
 
@@ -296,7 +295,7 @@ const selectedDrop = ref<SupplyDrop | null>(null)
 const selectedEntityPos = computed(() => {
   if (selectedBuilding.value) return { x: selectedBuilding.value.x, y: selectedBuilding.value.y }
   if (selectedDrop.value) return { x: selectedDrop.value.x, y: selectedDrop.value.y }
-  if (trackedColonistPos.value) return { x: trackedColonistPos.value.targetX, y: trackedColonistPos.value.targetY }
+  if (trackedColonistPos.value) return { x: trackedColonistPos.value.x, y: trackedColonistPos.value.y }
   return null
 })
 

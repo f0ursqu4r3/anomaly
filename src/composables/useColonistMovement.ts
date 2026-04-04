@@ -1,4 +1,4 @@
-import { ref, watch } from 'vue'
+import { ref, watch, onMounted, onUnmounted } from 'vue'
 import { useGameStore } from '@/stores/gameStore'
 import { useMoonStore } from '@/stores/moonStore'
 import type { Colonist } from '@/stores/gameStore'
@@ -9,19 +9,20 @@ export type VisualState = 'walking' | 'working' | 'resting' | 'socializing' | 'i
 
 export interface ColonistMapState {
   colonistId: string
-  x: number            // current visual position (what CSS reads)
+  x: number            // current interpolated position (what renders)
   y: number
   targetX: number      // where we're heading
   targetY: number
   visualState: VisualState
-  transitionMs: number // CSS transition duration for current move
   assignedDropId: string | null
-  _settledAction: string | null // tracks what action we've committed to visually
-  _arrivalTime: number          // timestamp when current walk completes
+  _settledAction: string | null
+  _walkStartX: number  // origin of current walk
+  _walkStartY: number
+  _walkStartTime: number
+  _walkDuration: number // ms
 }
 
-const WALK_SPEED = 3 // % of map per second — realistic walking pace
-const UNPACK_WORK_TIME = 1500
+const WALK_SPEED = 3 // % of map per second
 
 function jitter(base: number, range: number): number {
   return base + (Math.random() - 0.5) * range
@@ -48,16 +49,20 @@ function actionToVisualState(action: ActionType | null, colonist: Colonist): Vis
   }
 }
 
-/** Build a key that identifies the current action+target combo */
 function actionKey(colonist: Colonist): string | null {
   const a = colonist.currentAction
   if (!a) return null
   return `${a.type}:${a.targetZone}:${a.targetId ?? ''}`
 }
 
+function lerp(a: number, b: number, t: number): number {
+  return a + (b - a) * t
+}
+
 export function useColonistMovement() {
   const game = useGameStore()
   const positions = ref<Map<string, ColonistMapState>>(new Map())
+  let rafId = 0
 
   function getOrCreate(colonistId: string): ColonistMapState {
     let state = positions.value.get(colonistId)
@@ -72,10 +77,12 @@ export function useColonistMovement() {
         targetX: startX,
         targetY: startY,
         visualState: 'idle',
-        transitionMs: 0,
         assignedDropId: null,
         _settledAction: null,
-        _arrivalTime: 0,
+        _walkStartX: startX,
+        _walkStartY: startY,
+        _walkStartTime: 0,
+        _walkDuration: 0,
       }
       positions.value.set(colonistId, state)
     }
@@ -90,49 +97,78 @@ export function useColonistMovement() {
     return count
   }
 
-  /** Start a walk from current position to target. CSS handles the animation. */
   function startWalk(ms: ColonistMapState, toX: number, toY: number) {
     const tx = clamp(toX, 5, 95)
     const ty = clamp(toY, 12, 92)
     const d = dist(ms.x, ms.y, tx, ty)
     if (d < 0.5) {
-      // Already there
-      ms.transitionMs = 0
+      ms._walkDuration = 0
       return
     }
+    ms._walkStartX = ms.x
+    ms._walkStartY = ms.y
     ms.targetX = tx
     ms.targetY = ty
-    ms.transitionMs = (d / WALK_SPEED) * 1000
-    ms._arrivalTime = Date.now() + ms.transitionMs
-    // DON'T set ms.x/ms.y yet — CSS animates from current to target
-    // We'll snap ms.x/ms.y to target when the walk completes
+    ms._walkDuration = (d / WALK_SPEED) * 1000
+    ms._walkStartTime = Date.now()
   }
 
-  /** Snap ms.x/ms.y to the estimated current visual position (lerped along the walk) */
-  function snapToCurrentVisualPos(ms: ColonistMapState) {
-    if (ms._arrivalTime <= 0 || ms.transitionMs <= 0) return
-    const now = Date.now()
-    const elapsed = ms.transitionMs - (ms._arrivalTime - now)
-    const t = clamp(elapsed / ms.transitionMs, 0, 1)
-    ms.x = ms.x + (ms.targetX - ms.x) * t
-    ms.y = ms.y + (ms.targetY - ms.y) * t
-    ms.targetX = ms.x
-    ms.targetY = ms.y
-    ms._arrivalTime = 0
-    ms.transitionMs = 0
+  function isWalking(ms: ColonistMapState): boolean {
+    return ms._walkDuration > 0 && Date.now() < ms._walkStartTime + ms._walkDuration
   }
 
-  /** Check if current walk animation is done, snap position if so */
   function checkArrival(ms: ColonistMapState): boolean {
-    if (ms._arrivalTime > 0 && Date.now() >= ms._arrivalTime) {
+    if (ms._walkDuration > 0 && Date.now() >= ms._walkStartTime + ms._walkDuration) {
       ms.x = ms.targetX
       ms.y = ms.targetY
-      ms._arrivalTime = 0
-      ms.transitionMs = 0
+      ms._walkDuration = 0
       return true
     }
-    return ms._arrivalTime === 0
+    return ms._walkDuration === 0
   }
+
+  function snapToCurrentPos(ms: ColonistMapState) {
+    if (ms._walkDuration <= 0) return
+    const now = Date.now()
+    const elapsed = now - ms._walkStartTime
+    const t = clamp(elapsed / ms._walkDuration, 0, 1)
+    ms.x = lerp(ms._walkStartX, ms.targetX, t)
+    ms.y = lerp(ms._walkStartY, ms.targetY, t)
+    ms.targetX = ms.x
+    ms.targetY = ms.y
+    ms._walkDuration = 0
+  }
+
+  /** rAF loop — interpolate x/y each frame */
+  function animationFrame() {
+    const now = Date.now()
+    let changed = false
+
+    for (const ms of positions.value.values()) {
+      if (ms._walkDuration <= 0) continue
+      const elapsed = now - ms._walkStartTime
+      const t = clamp(elapsed / ms._walkDuration, 0, 1)
+      const newX = lerp(ms._walkStartX, ms.targetX, t)
+      const newY = lerp(ms._walkStartY, ms.targetY, t)
+      if (newX !== ms.x || newY !== ms.y) {
+        ms.x = newX
+        ms.y = newY
+        changed = true
+      }
+      if (t >= 1) {
+        ms._walkDuration = 0
+        changed = true
+      }
+    }
+
+    if (changed) {
+      positions.value = new Map(positions.value)
+    }
+
+    rafId = requestAnimationFrame(animationFrame)
+  }
+
+  const UNPACK_WORK_TIME = 1500
 
   function update(_dtMs: number) {
     const moonStore = useMoonStore()
@@ -148,7 +184,7 @@ export function useColonistMovement() {
 
       if (colonist.health <= 0) {
         ms.visualState = 'idle'
-        ms.transitionMs = 0
+        ms._walkDuration = 0
         ms.assignedDropId = null
         ms._settledAction = null
         continue
@@ -156,33 +192,28 @@ export function useColonistMovement() {
 
       const action = colonist.currentAction
 
-      // No action — idle at current position
       if (!action) {
-        snapToCurrentVisualPos(ms)
+        snapToCurrentPos(ms)
         ms.visualState = 'idle'
         ms.assignedDropId = null
         ms._settledAction = null
         continue
       }
 
-      // Walking between zones (action has walkPath with >1 entries)
+      // Walking between zones
       if (action.walkPath && action.walkPath.length > 1) {
         const nextZoneId = action.walkPath[1]
         const walkKey = `walk:${nextZoneId}`
 
         if (ms._settledAction !== walkKey) {
-          // Snap to interpolated position if previous walk was in progress
-          snapToCurrentVisualPos(ms)
+          snapToCurrentPos(ms)
           const nextZone = ZONE_MAP[nextZoneId]
           if (nextZone) {
             startWalk(ms, jitter(nextZone.x, 3), jitter(nextZone.y, 3))
           }
           ms._settledAction = walkKey
         } else {
-          // Check if this walk segment finished
-          if (checkArrival(ms)) {
-            ms.transitionMs = 0
-          }
+          checkArrival(ms)
         }
 
         ms.visualState = colonist.health < 40 ? 'injured' : 'walking'
@@ -190,13 +221,12 @@ export function useColonistMovement() {
         continue
       }
 
-      // At target zone — check if we need to walk to our work spot
+      // At target zone
       const currentKey = actionKey(colonist)
       const alreadySettled = ms._settledAction === currentKey
 
       if (!alreadySettled) {
-        // New action — figure out where to go and walk there
-        snapToCurrentVisualPos(ms) // snap to interpolated position if mid-walk
+        snapToCurrentPos(ms)
 
         const zone = ZONE_MAP[action.targetZone] || ZONE_MAP.habitat
         let targetX = zone.x
@@ -212,7 +242,6 @@ export function useColonistMovement() {
           }
         }
 
-        // Walk to the work spot — tight jitter for buildings, wider for zones
         const jitterRange = action.targetId ? 1.5 : 4
         startWalk(ms, jitter(targetX, jitterRange), jitter(targetY, jitterRange))
         ms.visualState = 'walking'
@@ -224,7 +253,6 @@ export function useColonistMovement() {
           ms.assignedDropId = null
         }
       } else {
-        // Already settled — check if we've arrived at our work spot
         const arrived = checkArrival(ms)
         if (arrived) {
           ms.visualState = actionToVisualState(action.type, colonist)
@@ -233,7 +261,7 @@ export function useColonistMovement() {
         }
       }
 
-      // Handle unpack progress (runs every tick while at drop)
+      // Unpack progress
       if (action.type === 'unpack' && action.targetId && checkArrival(ms)) {
         const drop = game.supplyDrops.find(d => d.id === action.targetId)
         if (drop && (drop.state === 'landed' || drop.state === 'unpacking')) {
@@ -257,7 +285,7 @@ export function useColonistMovement() {
       }
     }
 
-    // Trigger reactivity
+    // Trigger reactivity for tick-based updates
     positions.value = new Map(positions.value)
   }
 
@@ -265,6 +293,14 @@ export function useColonistMovement() {
     () => game.lastTickAt,
     () => update(1000),
   )
+
+  onMounted(() => {
+    rafId = requestAnimationFrame(animationFrame)
+  })
+
+  onUnmounted(() => {
+    cancelAnimationFrame(rafId)
+  })
 
   return { positions, getOrCreate }
 }

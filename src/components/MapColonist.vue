@@ -5,7 +5,6 @@
     :style="{
       left: x + '%',
       top: y + '%',
-      transitionDuration: transitionMs + 'ms',
     }"
     @click.stop="emit('select', colonist)"
   >
@@ -38,7 +37,6 @@ const props = defineProps<{
   x: number
   y: number
   visualState: VisualState
-  transitionMs: number
 }>()
 
 const injuryThreshold = COLONIST_INJURY_VISIBLE_THRESHOLD * 100
@@ -66,8 +64,6 @@ const stateClass = computed(() => {
   pointer-events: auto;
   cursor: pointer;
   z-index: 3;
-  transition-property: left, top;
-  transition-timing-function: linear;
 }
 
 .colonist-dot {
