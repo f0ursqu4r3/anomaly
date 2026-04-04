@@ -57,7 +57,7 @@
     <div v-if="!alertType" class="status-pip" :class="statusClass" />
     <div v-if="alertType" class="alert-marker" :class="alertType" />
     <!-- Zoom-dependent label -->
-    <div v-if="showLabel" class="building-label">{{ shortLabel }}</div>
+    <div v-if="showLabel" class="building-label" :style="{ transform: `translateX(-50%) scale(var(--marker-scale, 1))` }">{{ shortLabel }}</div>
     <div v-if="building.damaged" class="dmg-badge">
       <SvgIcon name="repair" size="xs" />
     </div>
@@ -254,7 +254,6 @@ const alertType = computed(() => {
   position: absolute;
   bottom: -12px;
   left: 50%;
-  transform: translateX(-50%);
   font-family: var(--font-mono);
   font-size: 0.5rem;
   font-weight: 600;
