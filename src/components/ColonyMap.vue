@@ -195,7 +195,10 @@ const flowLines = computed(() => {
   const producers = game.buildings.filter(b => b.constructionProgress === null)
   const solarPanels = producers.filter(b => b.type === 'solar')
   const o2Generators = producers.filter(b => b.type === 'o2generator')
-  const consumers = producers.filter(b => !['solar', 'o2generator', 'storageSilo'].includes(b.type))
+  const consumerBuildings = producers.filter(b => !['solar', 'o2generator', 'storageSilo'].includes(b.type))
+  // Habitat is a visual landmark, not a game building — include it as a consumer
+  const hab = ZONE_MAP.habitat
+  const consumers = [...consumerBuildings.map(b => ({ x: b.x, y: b.y })), { x: hab.x, y: hab.y }]
 
   for (const solar of solarPanels) {
     for (const consumer of consumers) {
