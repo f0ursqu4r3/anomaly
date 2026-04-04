@@ -312,12 +312,18 @@ const connectorPoints = computed(() => {
   const bx = pos.x
   const by = pos.y
   const below = by < 30
-  const overlayX = Math.max(15, Math.min(85, bx))
-  const overlayY = below ? by + 6 : by - 6
+  const overlayX = Math.max(20, Math.min(80, bx))
+  const overlayY = below ? by + 8 : by - 8
 
-  let anchorX = overlayX
-  if (Math.abs(overlayX - bx) < 1.5) {
-    anchorX = overlayX - 3
+  // Anchor point on the card matches InfoCard's adaptive translate
+  // At x=20 the card anchors from its left edge, at x=80 from its right
+  // Pick a connector anchor near the entity's X to keep the line short
+  let anchorX = bx
+  // Clamp anchor to stay within reasonable range of the overlay
+  anchorX = Math.max(overlayX - 8, Math.min(overlayX + 8, anchorX))
+
+  if (Math.abs(anchorX - bx) < 1.5) {
+    anchorX = bx + (bx < 50 ? 3 : -3)
   }
 
   const elbowDx = Math.abs(anchorX - bx)

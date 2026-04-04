@@ -2,7 +2,7 @@
   <div
     class="info-card"
     :class="{ below: y < 30 }"
-    :style="{ left: Math.max(20, Math.min(80, x)) + '%', top: (y < 30 ? y + 8 : y - 8) + '%' }"
+    :style="cardStyle"
   >
     <div class="info-header">
       <span>{{ title }}</span>
@@ -13,7 +13,9 @@
 </template>
 
 <script setup lang="ts">
-withDefaults(
+import { computed } from 'vue'
+
+const props = withDefaults(
   defineProps<{
     title: string
     x: number
@@ -24,13 +26,27 @@ withDefaults(
 )
 
 defineEmits<{ dismiss: [] }>()
+
+const cardStyle = computed(() => {
+  const clampedX = Math.max(20, Math.min(80, props.x))
+  const clampedY = props.y < 30 ? props.y + 8 : props.y - 8
+  // Shift horizontal anchor based on position: left edge → anchor left, center → center, right → anchor right
+  // Map 20-80 range to 0%-100% translate
+  const tPct = ((clampedX - 20) / 60) * 100
+  const translateX = -tPct
+  const translateY = props.y < 30 ? 0 : -100
+  return {
+    left: clampedX + '%',
+    top: clampedY + '%',
+    transform: `translate(${translateX}%, ${translateY}%) scale(var(--marker-scale, 1))`,
+    transformOrigin: props.y < 30 ? 'top center' : 'bottom center',
+  }
+})
 </script>
 
 <style scoped>
 .info-card {
   position: absolute;
-  transform: translate(-50%, -100%) scale(var(--marker-scale, 1));
-  transform-origin: bottom center;
   z-index: 20;
   background: var(--overlay-bg);
   border: 1px solid var(--accent-muted);
@@ -41,11 +57,7 @@ defineEmits<{ dismiss: [] }>()
   color: var(--text-secondary);
   pointer-events: auto;
   min-width: 100px;
-}
-
-.info-card.below {
-  transform: translate(-50%, 0) scale(var(--marker-scale, 1));
-  transform-origin: top center;
+  max-width: 200px;
 }
 
 .info-header {
