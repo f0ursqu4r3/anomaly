@@ -94,6 +94,7 @@
         :y="getColonistState(c.id).targetY"
         :visual-state="getColonistState(c.id).visualState"
         :transition-ms="getColonistState(c.id).transitionMs"
+        @select="selectColonist"
       />
       <ColonistTracker
         v-if="trackedColonistPos"
@@ -321,16 +322,25 @@ watch(
 function clearSelection() {
   selectedBuilding.value = null
   selectedDrop.value = null
+  game.trackColonist(null)
 }
 
 function selectBuilding(b: Building) {
   selectedDrop.value = null
+  game.trackColonist(null)
   selectedBuilding.value = selectedBuilding.value?.id === b.id ? null : b
 }
 
 function selectDrop(d: SupplyDrop) {
   selectedBuilding.value = null
+  game.trackColonist(null)
   selectedDrop.value = selectedDrop.value?.id === d.id ? null : d
+}
+
+function selectColonist(c: { id: string }) {
+  selectedBuilding.value = null
+  selectedDrop.value = null
+  game.trackColonist(game.trackedColonistId === c.id ? null : c.id)
 }
 
 // Pan & Zoom

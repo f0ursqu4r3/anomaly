@@ -18,7 +18,6 @@
         <span class="tracker-val" :class="moraleClass">{{ Math.round(colonist.morale) }}</span>
       </div>
     </div>
-    <div class="tracker-pip" />
   </div>
 </template>
 
@@ -73,12 +72,11 @@ const moraleClass = computed(() => {
 }
 
 .tracker-card {
-  background: var(--bg-elevated);
-  border: 1px solid var(--cyan);
+  background: var(--overlay-bg);
+  border: 1px solid var(--accent-muted);
   border-radius: var(--radius-sm);
   padding: 6px 8px;
   min-width: 100px;
-  box-shadow: 0 0 8px var(--cyan-glow);
 }
 
 .tracker-header {
@@ -86,13 +84,15 @@ const moraleClass = computed(() => {
   justify-content: space-between;
   align-items: center;
   margin-bottom: 4px;
+  border-bottom: 1px solid var(--accent-dim);
+  padding-bottom: 3px;
 }
 
 .tracker-name {
   font-family: var(--font-mono);
-  font-size: 0.6875rem;
+  font-size: 0.625rem;
   font-weight: 700;
-  color: var(--cyan);
+  color: var(--text-primary);
 }
 
 .tracker-close {
@@ -116,12 +116,13 @@ const moraleClass = computed(() => {
   justify-content: space-between;
   gap: 8px;
   font-family: var(--font-mono);
-  font-size: 0.625rem;
+  font-size: 0.6875rem;
+  color: var(--text-secondary);
+  line-height: 1.6;
 }
 
 .tracker-label {
-  color: var(--text-muted);
-  letter-spacing: 0.1em;
+  color: var(--text-secondary);
 }
 
 .tracker-val {
@@ -131,13 +132,4 @@ const moraleClass = computed(() => {
 .morale-ok { color: var(--green); }
 .morale-low { color: var(--amber); }
 .morale-critical { color: var(--red); }
-
-.tracker-pip {
-  width: 6px;
-  height: 6px;
-  background: var(--cyan);
-  border-radius: 50%;
-  margin: 2px auto 0;
-  box-shadow: 0 0 4px var(--cyan-glow);
-}
 </style>

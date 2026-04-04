@@ -7,6 +7,7 @@
       top: y + '%',
       transitionDuration: transitionMs + 'ms',
     }"
+    @click.stop="emit('select', colonist)"
   >
     <div class="colonist-dot" />
     <div
@@ -30,6 +31,7 @@ import type { VisualState } from '@/composables/useColonistMovement'
 import { useSettingsStore } from '@/stores/settingsStore'
 
 const settings = useSettingsStore()
+const emit = defineEmits<{ select: [colonist: Colonist] }>()
 
 const props = defineProps<{
   colonist: Colonist
@@ -61,7 +63,8 @@ const stateClass = computed(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  pointer-events: none;
+  pointer-events: auto;
+  cursor: pointer;
   z-index: 3;
   transition-property: left, top;
   transition-timing-function: linear;
