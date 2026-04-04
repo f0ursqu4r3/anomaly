@@ -2,7 +2,7 @@
   <div
     class="info-card"
     :class="{ below: y < 30 }"
-    :style="{ left: Math.max(15, Math.min(85, x)) + '%', top: (y < 30 ? y + 6 : y - 6) + '%' }"
+    :style="{ left: Math.max(20, Math.min(80, x)) + '%', top: (y < 30 ? y + 8 : y - 8) + '%' }"
   >
     <div class="info-header">
       <span>{{ title }}</span>

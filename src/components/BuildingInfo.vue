@@ -30,9 +30,9 @@
       <div v-if="platformLoaded > 0 && platState" class="info-row">
         <span class="info-label">Contents</span>
         <span class="cargo-detail">
-          <span v-if="platState.cargo.metals > 0">{{ platState.cargo.metals }}m </span>
-          <span v-if="platState.cargo.ice > 0">{{ platState.cargo.ice }}i </span>
-          <span v-if="platState.cargo.rareMinerals > 0">{{ platState.cargo.rareMinerals }}r</span>
+          <span v-if="platState.cargo.metals > 0">{{ Math.round(platState.cargo.metals) }}m </span>
+          <span v-if="platState.cargo.ice > 0">{{ Math.round(platState.cargo.ice) }}i </span>
+          <span v-if="platState.cargo.rareMinerals > 0">{{ Math.round(platState.cargo.rareMinerals) }}r</span>
         </span>
       </div>
       <div class="info-row">
@@ -106,7 +106,7 @@ const platState = computed(() => game.exportPlatforms[props.building.id])
 const platformLoaded = computed(() => {
   const c = platState.value?.cargo
   if (!c) return 0
-  return c.metals + c.ice + c.rareMinerals
+  return Math.round(c.metals + c.ice + c.rareMinerals)
 })
 
 const platformStatus = computed(() => {
