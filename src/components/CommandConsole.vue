@@ -285,7 +285,7 @@
         </span>
       </template>
 
-      <button class="manual-btn" @click="showManual = true" title="Operator's Manual">MAN</button>
+      <button class="manual-btn" @click="showManual = true" title="Operator's Manual"><SvgIcon name="manual" size="sm" /></button>
     </div>
   </div>
 </template>

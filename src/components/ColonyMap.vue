@@ -116,7 +116,7 @@
     <HazardAlert />
 
     <!-- Settings gear — top right -->
-    <button class="settings-btn" @click="$emit('openSettings')">CFG</button>
+    <button class="settings-btn" @click="$emit('openSettings')"><SvgIcon name="settings" size="md" /></button>
 
     <!-- Edge stats -->
     <div class="edge-stats">
@@ -164,6 +164,7 @@ import MapSupplyDrop from './MapSupplyDrop.vue'
 import BuildingInfo from './BuildingInfo.vue'
 import DropInfo from './DropInfo.vue'
 import ColonistInfo from './ColonistInfo.vue'
+import SvgIcon from './SvgIcon.vue'
 
 defineEmits<{ openSettings: [] }>()
 

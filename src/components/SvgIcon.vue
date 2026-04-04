@@ -172,6 +172,18 @@ const ICONS: Record<string, IconDef> = {
     path: `<path d="M9.5 1L5 9h3.5L7 15l6-8H9.5L11.5 1z" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/>
            <path d="M2 8h2M12 8h2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" opacity="0.5"/>`,
   },
+  settings: {
+    viewBox: '0 0 16 16',
+    path: `<circle cx="8" cy="8" r="3" stroke="currentColor" stroke-width="1.2" fill="none"/>
+           <circle cx="8" cy="8" r="1" fill="currentColor" opacity="0.5"/>
+           <path d="M8 1.5v2M8 12.5v2M1.5 8h2M12.5 8h2M3.4 3.4l1.4 1.4M11.2 11.2l1.4 1.4M3.4 12.6l1.4-1.4M11.2 4.8l1.4-1.4" stroke="currentColor" stroke-width="1.1" stroke-linecap="round"/>`,
+  },
+  manual: {
+    viewBox: '0 0 16 16',
+    path: `<path d="M3 2.5h8.5a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H3" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/>
+           <path d="M3 2.5v11" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+           <path d="M6 5.5h4M6 8h3" stroke="currentColor" stroke-width="1" stroke-linecap="round" opacity="0.5"/>`,
+  },
   crew: {
     viewBox: '0 0 16 16',
     path: `<circle cx="6" cy="5" r="2" stroke="currentColor" stroke-width="1.1"/>
