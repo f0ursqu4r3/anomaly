@@ -1,7 +1,7 @@
 <template>
-  <InfoCard :title="colonist.name" :x="x" :y="y" dismissable @dismiss="game.trackColonist(null)">
+  <InfoCard :x="x" :y="y" :show-header="false">
     <div class="info-row">
-      <span class="info-label">Action</span>
+      <span class="colonist-name">{{ colonist.name }}</span>
       <span>{{ actionLabel }}</span>
     </div>
     <div class="info-row">
@@ -61,6 +61,11 @@ const moraleClass = computed(() => {
 
 .info-label {
   color: var(--text-secondary);
+}
+
+.colonist-name {
+  color: var(--text-primary);
+  font-weight: 600;
 }
 
 .morale-ok { color: var(--green); }

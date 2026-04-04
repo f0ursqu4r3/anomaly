@@ -4,7 +4,7 @@
     :class="{ below: y < 30 }"
     :style="cardStyle"
   >
-    <div class="info-header">
+    <div v-if="showHeader" class="info-header">
       <span>{{ title }}</span>
       <button v-if="dismissable" class="info-dismiss" @click="$emit('dismiss')">&times;</button>
     </div>
@@ -17,12 +17,13 @@ import { computed } from 'vue'
 
 const props = withDefaults(
   defineProps<{
-    title: string
+    title?: string
     x: number
     y: number
     dismissable?: boolean
+    showHeader?: boolean
   }>(),
-  { dismissable: false },
+  { dismissable: false, showHeader: true, title: '' },
 )
 
 defineEmits<{ dismiss: [] }>()
