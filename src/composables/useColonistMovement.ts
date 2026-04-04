@@ -40,6 +40,7 @@ function actionToVisualState(action: ActionType | null, colonist: Colonist): Vis
   if (!action) return 'idle'
   switch (action) {
     case 'rest': return 'resting'
+    case 'eat': return 'resting'
     case 'socialize': return 'socializing'
     case 'seek_medical': return colonist.health < 40 ? 'injured' : 'walking'
     case 'wander': return 'idle'
