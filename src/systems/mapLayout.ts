@@ -117,9 +117,26 @@ export function getBuildingPosition(
   }
 }
 
-export function getLandingPosition(): { x: number; y: number } {
+export function getLandingPosition(
+  avoid: { x: number; y: number }[] = [],
+): { x: number; y: number } {
   const zone = ZONE_MAP.landing
-  const jitterX = (Math.random() - 0.5) * zone.radius
-  const jitterY = (Math.random() - 0.5) * zone.radius
-  return { x: zone.x + jitterX, y: zone.y + jitterY }
+  const minDist = 4
+
+  for (let attempt = 0; attempt < 20; attempt++) {
+    const x = zone.x + (Math.random() - 0.5) * zone.radius
+    const y = zone.y + (Math.random() - 0.5) * zone.radius
+    const tooClose = avoid.some(a => {
+      const dx = a.x - x
+      const dy = a.y - y
+      return Math.sqrt(dx * dx + dy * dy) < minDist
+    })
+    if (!tooClose) return { x, y }
+  }
+
+  // Fallback: offset from zone center
+  return {
+    x: zone.x + (Math.random() - 0.5) * zone.radius,
+    y: zone.y + (Math.random() - 0.5) * zone.radius,
+  }
 }

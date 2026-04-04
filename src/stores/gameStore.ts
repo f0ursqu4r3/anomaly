@@ -1154,7 +1154,11 @@ export const useGameStore = defineStore('game', {
 
         if (crateItems.length > 0) {
           const crateWeight = crateItems.reduce((sum, o) => sum + o.weight, 0)
-          const landingPos = getLandingPosition()
+          const avoid = [
+            ...this.buildings.map(b => ({ x: b.x, y: b.y })),
+            ...this.supplyDrops.map(d => ({ x: d.x, y: d.y })),
+          ]
+          const landingPos = getLandingPosition(avoid)
           this.supplyDrops.push({
             id: uid(),
             contents: crateItems,
