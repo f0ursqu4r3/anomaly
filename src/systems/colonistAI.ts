@@ -13,6 +13,21 @@ const MORALE_DRAIN_PASSIVE = 0.2
 const MORALE_RECOVERY_SOCIAL = 2.0
 const MORALE_RECOVERY_RESTING = 0.5
 
+// Focus
+const FOCUS_DRAIN_WORKING = 2.5
+const FOCUS_RECOVERY_REST = 2.0
+const FOCUS_RECOVERY_SOCIAL = 1.5
+const FOCUS_RECOVERY_EAT = 1.0
+const FOCUS_RECOVERY_WANDER = 0.5
+const FOCUS_RECOVERY_TRANSITION = 0.3
+const FOCUS_LOW = 25
+const FOCUS_DEPLETED = 10
+
+// Hunger
+const HUNGER_DRAIN = 0.3
+const HUNGER_HUNGRY = 40
+const HUNGER_STARVING = 15
+
 const ENERGY_TIRED = 30
 const ENERGY_EXHAUSTED = 10
 const MORALE_STRESSED = 25
@@ -173,6 +188,8 @@ export function updateNeeds(colonist: ColonistLike): void {
       colonist.energy = Math.min(100, colonist.energy + ENERGY_RECOVERY_RESTING)
     } else if (action.type === 'socialize') {
       colonist.energy = Math.min(100, colonist.energy + ENERGY_RECOVERY_RESTING * 0.3)
+    } else if (action.type === 'eat') {
+      colonist.energy = Math.min(100, colonist.energy + ENERGY_RECOVERY_RESTING * 0.3)
     } else if (action.type === 'wander') {
       // No drain while wandering
     } else {
@@ -193,9 +210,33 @@ export function updateNeeds(colonist: ColonistLike): void {
     colonist.morale = Math.min(100, colonist.morale + MORALE_RECOVERY_SOCIAL)
   } else if (action?.type === 'rest') {
     colonist.morale = Math.min(100, colonist.morale + MORALE_RECOVERY_RESTING)
+  } else if (action?.type === 'eat') {
+    colonist.morale = Math.min(100, colonist.morale + MORALE_RECOVERY_RESTING * 0.5)
   } else {
     colonist.morale = Math.max(0, colonist.morale - MORALE_DRAIN_PASSIVE * mod.moraleDrainMult)
   }
+
+  // Focus
+  if (action) {
+    if (action.walkPath && action.walkPath.length > 0) {
+      // Walking — no focus drain
+    } else if (action.type === 'rest') {
+      colonist.focus = Math.min(100, colonist.focus + FOCUS_RECOVERY_REST)
+    } else if (action.type === 'socialize') {
+      colonist.focus = Math.min(100, colonist.focus + FOCUS_RECOVERY_SOCIAL)
+    } else if (action.type === 'eat') {
+      colonist.focus = Math.min(100, colonist.focus + FOCUS_RECOVERY_EAT)
+    } else if (action.type === 'wander') {
+      colonist.focus = Math.min(100, colonist.focus + FOCUS_RECOVERY_WANDER)
+    } else {
+      // Working — drain focus
+      colonist.focus = Math.max(0, colonist.focus - FOCUS_DRAIN_WORKING * mod.focusDrainMult)
+    }
+  }
+
+  // Hunger — drains passively every tick regardless of action
+  const hungerDrainMult = colonist.skillTrait === 'ironStomach' ? 0.7 : 1.0
+  colonist.hunger = Math.max(0, colonist.hunger - HUNGER_DRAIN * hungerDrainMult)
 }
 
 // ── Forced Interrupts ──
