@@ -59,10 +59,23 @@
 
 
       <MapBuilding v-for="b in game.buildings" :key="b.id" :building="b" @select="selectBuilding" />
-      <!-- Connector line from building to info overlay (45° elbow) -->
+      <MapSupplyDrop v-for="d in game.supplyDrops" :key="d.id" :drop="d" @select="selectDrop" />
+
+      <MapColonist
+        v-for="c in visibleColonists"
+        :key="c.id"
+        :colonist="c"
+        :x="getColonistState(c.id).targetX"
+        :y="getColonistState(c.id).targetY"
+        :visual-state="getColonistState(c.id).visualState"
+        :transition-ms="getColonistState(c.id).transitionMs"
+        @select="selectColonist"
+      />
+
+      <!-- Connector line from selected entity to info overlay (45° elbow) -->
       <svg
-        v-if="selectedBuilding"
-        :key="selectedBuilding.id"
+        v-if="selectedEntityPos"
+        :key="selectedEntityKey"
         class="info-connector"
         viewBox="0 0 100 100"
       >
@@ -77,30 +90,20 @@
           vector-effect="non-scaling-stroke"
         />
       </svg>
+
+      <!-- Info overlays -->
       <BuildingInfo
         v-if="selectedBuilding"
         :building="selectedBuilding"
         :x="selectedBuilding.x"
         :y="selectedBuilding.y"
       />
-      <MapSupplyDrop v-for="d in game.supplyDrops" :key="d.id" :drop="d" @select="selectDrop" />
       <DropInfo v-if="selectedDrop" :drop="selectedDrop" :x="selectedDrop.x" :y="selectedDrop.y" />
-
-      <MapColonist
-        v-for="c in visibleColonists"
-        :key="c.id"
-        :colonist="c"
-        :x="getColonistState(c.id).targetX"
-        :y="getColonistState(c.id).targetY"
-        :visual-state="getColonistState(c.id).visualState"
-        :transition-ms="getColonistState(c.id).transitionMs"
-        @select="selectColonist"
-      />
-      <ColonistTracker
-        v-if="trackedColonistPos"
-        :x="trackedColonistPos.targetX"
-        :y="trackedColonistPos.targetY"
-        :transition-ms="trackedColonistPos.transitionMs"
+      <ColonistInfo
+        v-if="trackedColonist"
+        :colonist="trackedColonist"
+        :x="trackedColonistPos!.targetX"
+        :y="trackedColonistPos!.targetY"
       />
     </div>
 
@@ -154,7 +157,7 @@ import MapColonist from './MapColonist.vue'
 import MapSupplyDrop from './MapSupplyDrop.vue'
 import BuildingInfo from './BuildingInfo.vue'
 import DropInfo from './DropInfo.vue'
-import ColonistTracker from './ColonistTracker.vue'
+import ColonistInfo from './ColonistInfo.vue'
 
 defineEmits<{ openSettings: [] }>()
 
@@ -253,6 +256,11 @@ const trackedColonistPos = computed(() => {
   return getColonistState(game.trackedColonistId)
 })
 
+const trackedColonist = computed(() => {
+  if (!game.trackedColonistId) return null
+  return game.colonists.find(c => c.id === game.trackedColonistId) ?? null
+})
+
 // Colonists working inside buildings are shown as pips on the building, not as map markers
 const INSIDE_ACTIONS = new Set([
   'extract',
@@ -275,35 +283,44 @@ const visibleColonists = computed(() =>
 )
 
 const selectedBuilding = ref<Building | null>(null)
+const selectedDrop = ref<SupplyDrop | null>(null)
+
+// Unified entity position for connector line
+const selectedEntityPos = computed(() => {
+  if (selectedBuilding.value) return { x: selectedBuilding.value.x, y: selectedBuilding.value.y }
+  if (selectedDrop.value) return { x: selectedDrop.value.x, y: selectedDrop.value.y }
+  if (trackedColonistPos.value) return { x: trackedColonistPos.value.targetX, y: trackedColonistPos.value.targetY }
+  return null
+})
+
+const selectedEntityKey = computed(() => {
+  if (selectedBuilding.value) return 'b-' + selectedBuilding.value.id
+  if (selectedDrop.value) return 'd-' + selectedDrop.value.id
+  if (game.trackedColonistId) return 'c-' + game.trackedColonistId
+  return ''
+})
 
 const connectorPoints = computed(() => {
-  const b = selectedBuilding.value
-  if (!b) return ''
-  const bx = b.x
-  const by = b.y
+  const pos = selectedEntityPos.value
+  if (!pos) return ''
+  const bx = pos.x
+  const by = pos.y
   const below = by < 30
-  // Overlay center (mirrors BuildingInfo positioning logic)
   const overlayX = Math.max(15, Math.min(85, bx))
   const overlayY = below ? by + 6 : by - 6
 
-  // Anchor point on overlay — offset left when centered to force a diagonal
   let anchorX = overlayX
   if (Math.abs(overlayX - bx) < 1.5) {
     anchorX = overlayX - 3
   }
 
-  // Elbow: straight vertical from overlay anchor toward building, then 45° diagonal to building
-  // Vertical goes from overlay toward building. At the elbow, it turns 45° to reach building.
-  // The 45° diagonal covers elbowDx both horizontally and vertically.
   const elbowDx = Math.abs(anchorX - bx)
-  // Elbow is elbowDx away from the building (vertically), on the overlay's side
   const elbowY = below
-    ? by + elbowDx // overlay is below → elbow is below building, diagonal goes up to building
-    : by - elbowDx // overlay is above → elbow is above building, diagonal goes down to building
+    ? by + elbowDx
+    : by - elbowDx
   return `${anchorX},${overlayY} ${anchorX},${elbowY} ${bx},${by}`
 })
 
-const selectedDrop = ref<SupplyDrop | null>(null)
 const hazardFlash = ref(false)
 
 // Watch for hazard events — flash the screen

@@ -1,6 +1,5 @@
 <template>
-  <div class="building-info" :class="{ below: y < 30 }" :style="{ left: Math.max(15, Math.min(85, x)) + '%', top: (y < 30 ? y + 6 : y - 6) + '%' }">
-    <div class="info-header">{{ label }}</div>
+  <InfoCard :title="label" :x="x" :y="y">
     <div class="info-row">
       <span class="info-label">Status</span>
       <span v-if="isConstructing" class="status-constructing">
@@ -41,7 +40,7 @@
         <span :class="platformStatusClass">{{ platformStatus }}</span>
       </div>
     </template>
-  </div>
+  </InfoCard>
 </template>
 
 <script setup lang="ts">
@@ -54,6 +53,7 @@ import {
   POWER_CONSUMPTION_PER_BUILDING,
   useGameStore,
 } from '@/stores/gameStore'
+import InfoCard from './InfoCard.vue'
 
 const props = defineProps<{
   building: Building
@@ -125,35 +125,6 @@ const platformStatusClass = computed(() => {
 </script>
 
 <style scoped>
-.building-info {
-  position: absolute;
-  transform: translate(-50%, -100%) scale(var(--marker-scale, 1));
-  transform-origin: bottom center;
-  z-index: 20;
-  background: var(--overlay-bg);
-  border: 1px solid var(--accent-muted);
-  border-radius: var(--radius-sm);
-  padding: 6px 8px;
-  font-family: var(--font-mono);
-  font-size: 0.6875rem;
-  color: var(--text-secondary);
-  pointer-events: none;
-  min-width: 100px;
-}
-
-.building-info.below {
-  transform: translate(-50%, 0) scale(var(--marker-scale, 1));
-  transform-origin: top center;
-}
-
-.info-header {
-  font-size: 0.625rem;
-  color: var(--text-primary);
-  margin-bottom: 4px;
-  border-bottom: 1px solid var(--accent-dim);
-  padding-bottom: 3px;
-}
-
 .info-row {
   display: flex;
   justify-content: space-between;
@@ -165,25 +136,11 @@ const platformStatusClass = computed(() => {
   color: var(--text-secondary);
 }
 
-.status-ok {
-  color: var(--green);
-}
-
-.status-bad {
-  color: var(--red);
-}
-
-.rate-pos {
-  color: var(--green);
-}
-
-.rate-neg {
-  color: var(--amber);
-}
-
-.status-constructing {
-  color: var(--amber);
-}
+.status-ok { color: var(--green); }
+.status-bad { color: var(--red); }
+.rate-pos { color: var(--green); }
+.rate-neg { color: var(--amber); }
+.status-constructing { color: var(--amber); }
 
 .cargo-detail {
   color: var(--text-primary);

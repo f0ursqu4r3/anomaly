@@ -32,7 +32,8 @@
       "Bash(npx vue-tsc:*)",
       "Bash(bun install:*)",
       "Bash(git:*)",
-      "Bash(grep -rn \"safe-top\\\\|safe-bottom\\\\|safe-left\\\\|safe-right\\\\|landscape\\\\|orientation\\\\|min-height\" /Users/kyle/git/anomaly/.worktrees/console-ui-overhaul/src/components/*.vue --include=\"*.vue\")"
+      "Bash(grep -rn \"safe-top\\\\|safe-bottom\\\\|safe-left\\\\|safe-right\\\\|landscape\\\\|orientation\\\\|min-height\" /Users/kyle/git/anomaly/.worktrees/console-ui-overhaul/src/components/*.vue --include=\"*.vue\")",
+      "Bash(grep -E \"\\\\.\\(md|txt\\)$\")"
     ]
   }
 }
