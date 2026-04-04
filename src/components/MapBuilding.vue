@@ -2,7 +2,7 @@
   <div
     class="map-building"
     :class="[typeClass, { damaged: building.damaged, constructing: isConstructing, 'just-completed': justCompleted }]"
-    :style="{ left: building.x + '%', top: building.y + '%', transform: `translate(-50%, -50%) scale(var(--marker-scale, 1)) rotate(${building.rotation || 0}deg)` }"
+    :style="{ left: building.x + '%', top: building.y + '%', transform: `translate(-50%, -50%) rotate(${building.rotation || 0}deg)` }"
     @click.stop="emit('select', building)"
   >
     <div class="building-shadow" />
