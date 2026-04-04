@@ -53,8 +53,10 @@
         <rect x="1" y="1" width="18" height="18" rx="2" fill="currentColor" fill-opacity="0.15" stroke="currentColor" stroke-opacity="0.5" stroke-width="1" />
       </svg>
     </div>
-    <!-- Alert marker (damage/warnings only) -->
-    <div v-if="alertType" class="alert-marker" :class="alertType" />
+    <!-- No-workers badge -->
+    <div v-if="alertType === 'alert-warning'" class="no-worker-badge">
+      <SvgIcon name="no-worker" size="xs" />
+    </div>
     <!-- Zoom-dependent label -->
     <div v-if="showLabel" class="building-label" :style="{ transform: `translateX(-50%) scale(var(--marker-scale, 1))` }">{{ shortLabel }}</div>
     <div v-if="building.damaged" class="dmg-badge">
@@ -333,29 +335,31 @@ const alertType = computed(() => {
 .worker-pip.type-launchplatform { color: var(--amber); }
 .worker-pip.type-storageSilo { color: var(--text-secondary); }
 
-/* Alert markers */
-.alert-marker {
+/* No-workers badge */
+.no-worker-badge {
   position: absolute;
-  top: -6px;
-  right: -6px;
-  z-index: 3;
-  border-radius: 50%;
-  pointer-events: none;
-}
-
-
-
-.alert-warning {
-  width: 9px;
-  height: 9px;
-  border-radius: 2px;
+  top: -4px;
+  right: -4px;
+  width: 14px;
+  height: 14px;
+  border-radius: var(--radius-xs);
   background: var(--amber);
+  color: var(--bg-deep);
+  display: flex;
+  align-items: center;
+  justify-content: center;
   box-shadow: 0 0 6px rgba(245, 158, 11, 0.5);
-  animation: alert-pulse 1.5s ease-in-out infinite;
+  animation: badge-blink 1s ease-in-out infinite;
+  z-index: 2;
 }
 
-@keyframes alert-pulse {
-  0%, 100% { opacity: 1; transform: scale(1); }
-  50% { opacity: 0.4; transform: scale(1.4); }
+.no-worker-badge .svg-icon {
+  width: 10px;
+  height: 10px;
+}
+
+@keyframes badge-blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.2; }
 }
 </style>

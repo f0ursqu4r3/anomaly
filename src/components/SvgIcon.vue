@@ -173,16 +173,22 @@ const ICONS: Record<string, IconDef> = {
            <path d="M2 8h2M12 8h2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" opacity="0.5"/>`,
   },
   settings: {
-    viewBox: '0 0 16 16',
-    path: `<circle cx="8" cy="8" r="3" stroke="currentColor" stroke-width="1.2" fill="none"/>
-           <circle cx="8" cy="8" r="1" fill="currentColor" opacity="0.5"/>
-           <path d="M8 1.5v2M8 12.5v2M1.5 8h2M12.5 8h2M3.4 3.4l1.4 1.4M11.2 11.2l1.4 1.4M3.4 12.6l1.4-1.4M11.2 4.8l1.4-1.4" stroke="currentColor" stroke-width="1.1" stroke-linecap="round"/>`,
+    viewBox: '0 0 24 24',
+    path: `<path d="M9.671 4.136a2.34 2.34 0 0 1 4.659 0 2.34 2.34 0 0 0 3.319 1.915 2.34 2.34 0 0 1 2.33 4.033 2.34 2.34 0 0 0 0 3.831 2.34 2.34 0 0 1-2.33 4.033 2.34 2.34 0 0 0-3.319 1.915 2.34 2.34 0 0 1-4.659 0 2.34 2.34 0 0 0-3.32-1.915 2.34 2.34 0 0 1-2.33-4.033 2.34 2.34 0 0 0 0-3.831A2.34 2.34 0 0 1 6.35 6.051a2.34 2.34 0 0 0 3.319-1.915" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+           <circle cx="12" cy="12" r="3" fill="currentColor"/>`,
   },
   manual: {
     viewBox: '0 0 16 16',
     path: `<path d="M3 2.5h8.5a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H3" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/>
            <path d="M3 2.5v11" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
            <path d="M6 5.5h4M6 8h3" stroke="currentColor" stroke-width="1" stroke-linecap="round" opacity="0.5"/>`,
+  },
+  'no-worker': {
+    viewBox: '0 0 24 24',
+    path: `<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+           <circle cx="9" cy="7" r="4" stroke="currentColor" stroke-width="2"/>
+           <line x1="17" x2="22" y1="8" y2="13" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+           <line x1="22" x2="17" y1="8" y2="13" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>`,
   },
   crew: {
     viewBox: '0 0 16 16',
